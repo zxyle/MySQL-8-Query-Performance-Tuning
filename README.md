@@ -13,4 +13,5 @@
 ## 资源
 
 - [美国亚马逊购买链接](https://www.amazon.com/-/zh/MySQL-Query-Performance-Tuning-Systematic/dp/1484255836)
+- [源代码下载](https://github.com/Apress/mysql-8-query-perf-tuning)
 
