@@ -1,4 +1,4 @@
-# MySQL 工作台
+# MySQL Workbench
 
 是 Oracle 用于查询和管理 MySQL 服务器的图形用户界面。它可以被看做是使用 MySQL 的两把瑞士军刀之一，另一把是 MySQL 壳牌，下一章将讨论。
 
@@ -20,31 +20,31 @@ MySQL 工作台的主要功能是可以执行查询的查询模式。 但是，�
 
 你可以从 。图显示了下载部分。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig1_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig1_HTML.jpg)
+![](../附图/Figure 11-1.png)
 
 安装程序有两种选择。第一个称为Web安装程序只是 MySQL安装程序，还包括 MySQL 服务器。如果您也计划安装 MySQL Server，则选择包含 MySQL 安装程序和 MySQL 服务器的下载是有意义的，因为您避免等待安装程序稍后下载 MySQL 服务器安装文件。此示例假定您选择 Web 安装程序。
 
 单击"下载按钮访问下载。如果您尚未登录，它将带您到"开始下载"页面，您可以在登录和立即开始下载进行选择。如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig2_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig2_HTML.jpg)
+![](../附图/Figure 11-2.png)
 
 如果您已经拥有帐户，可以登录。否则，您可以选择注册 Oracle 帐户。您也可以选择下载安装程序，而无需登录通过点击"链接。
 
 下载完成后，启动下载的文件。除了确认您将允许安装程序和 MySQL 安装程序修改已安装的程序外，无需执行任何操作来安装 MySQL 安装程序。安装完成后，MySQL 安装程序将自动启动安装程序安装的 MySQL 程序，如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig3_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig3_HTML.jpg)
+![](../附图/Figure 11-3.png)
 
 如果您没有安装任何 MySQL 程序，您将被带到一个屏幕，要求您确认您同意许可条款。请仔细阅读许可条款，然后再继续。如果您可以接受许可证，请勾选"，然后单击标有"下一继续。
 
 下一步是选择要安装什么。设置屏幕如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig4_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig4_HTML.jpg)
+![](../附图/Figure 11-4.png)
 
 You can choose between several bundles such as the developer bundle (called *Developer Default*) which installs the products typically used in a development environment. When you choose a setup type, the description in the right of the screen includes a list of the products that will be installed. For this example, the custom installation type will be used.
 
 The next step is to choose which products to install. That uses the selector shown in Figure [11-5](#Fig5).
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig5_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig5_HTML.jpg)
+![](../附图/Figure 11-5.png)
 
 您可以在"应用程序"下的可用产品列表中找到 MySQL 工作台。单击右侧箭头，将 MySQL 工作台添加到要安装的产品和功能列表中。随意选择其他产品;对于本书，建议也包括 MySQL 雪壳。添加所有需要的产品后，单击"下一步继续。
 
@@ -52,7 +52,7 @@ The next step is to choose which products to install. That uses the selector sho
 
 如果您以后想要安装更多产品或执行升级或删除产品，程序，这将带您到主 MySQL 安装程序屏幕，如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig6_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig6_HTML.jpg)
+![](../附图/Figure 11-6.png)
 
 选择要屏幕最右侧执行的操作。操作是
 
@@ -70,279 +70,200 @@ The next step is to choose which products to install. That uses the selector sho
 
 您可以在下一个位置找到存储库 也有 APT 和 SUSE 的存储库。选择与 Linux 发行版对应的文件，然后单击"下载图显示了企业 Linux 7 的文件。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig7_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig7_HTML.jpg)
+![](../附图/Figure 11-7.png)
 
 如果您没有登录，它会将您带至第二个屏幕，例如在 Microsoft Windows 上安装 MySQL 工作台的示例。这将允许您登录到您的 Oracle Web 帐户、创建帐户或下载而无需登录。下载 RPM 文件并保存在要从目录中安装的目录中，或者右键单击"下载"按钮（如果您已登录），或者"否"感谢我的下载链接并复制 URL，如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig8_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig8_HTML.jpg)
+![](../附图/Figure 11-8.png)
 
 现在，您可以安装，如清单。
 
-壳 $
-
+```
+Listing 11-1. Installing the MySQL community repository
+shell$ wget https://dev.mysql.com/get/mysql80-community-release-el7-3.
+noarch.rpm
 ...
-
-HTTP 请求已发送，正在等待响应...200 确定
-
-长度： 26024 （25K） [应用程序/x 红帽子包装管理器]
-
-保存到： 'mysql80 - 社区发布 - el7 - 3. noarch. rpm'
-
-100%= ===>= 26，024 --.-K/s 在 0.001 s
-
-2019-08-18 12：13：47 （20.6 MB/s） - "mysql80-社区发布-el7-3.noarch.rpm"保存 [26024/26024]
-
-shell$
-
-加载的插件： 朗包， ulninfo
-
-检查 mysql80 - 社区发布 - el7 - 3. noarch. rpm： mysql80 - 社区发布 - el7 - 3. noarch
-
-标记要安装的 mysql80 - 社区发布 - el7 - 3. noarch. rpm
-
-解析依赖项
-
---> 正在运行事务检查
-
----> 包 mysql80 - 社区发布. noarch 0：el7-3 将安装
-
---> 完成依赖关系解析
-
-已解决的依赖项
-
+HTTP request sent, awaiting response... 200 OK
+Length: 26024 (25K) [application/x-redhat-package-manager]
+Saving to: 'mysql80-community-release-el7-3.noarch.rpm'
+100%[=========================>] 26,024 --.-K/s in 0.001s
+2019-08-18 12:13:47 (20.6 MB/s) - 'mysql80-community-release-el7-3.noarch.rpm'
+saved [26024/26024]
+Figure 11-8. Copying the link to the repository installation file
+shell$ sudo yum install mysql80-community-release-el7-3.noarch.rpm
+Loaded plugins: langpacks, ulninfo
+Examining mysql80-community-release-el7-3.noarch.rpm: mysql80-communityrelease-el7-3.noarch
+Marking mysql80-community-release-el7-3.noarch.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package mysql80-community-release.noarch 0:el7-3 will be installed
+--> Finished Dependency Resolution
+Dependencies Resolved
 =================================================================
-
-包
-
-拱门版本
-
-存储库大小
-
+ Package
+ Arch Version
+ Repository Size
 =================================================================
-
-安装：
-
-mysql80 - 社区发布
-
-Noarch el7-3 /mysql80 - 社区释放 - el7 - 3. noarch 31 k
-
-交易摘要
-
+Installing:
+ mysql80-community-release
+ noarch el7-3 /mysql80-community-release-el7-3.noarch 31 k
+Transaction Summary
 =================================================================
+Install 1 Package
+Total size: 31 k
+Installed size: 31 k
+Is this ok [y/d/N]: y
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+ Installing : mysql80-community-release-el7-3.noarch 1/1
+ Verifying : mysql80-community-release-el7-3.noarch 1/1
+Installed:
+ mysql80-community-release.noarch 0:el7-3
+Complete!
+```
 
-安装 1 包
+MySQL Workbench 需要来自 EPEL 存储库的一些包。在 Oracle Linux 7 上，您可以启用它，如
 
-总尺寸： 31 k
+```
+sudo yum install oracle-epel-release-el7
+```
 
-安装尺寸： 31 k
 
-可以 [y/d/N]： y
-
-下载软件包：
-
-正在运行事务检查
-
-正在运行事务测试
-
-事务测试成功
-
-正在运行事务
-
-安装 ： mysql80 - 社区发布 - el7-3. noarch 1/1
-
-验证 ： mysql80 - 社区发布 - el7-3. noarch 1/1
-
-安装：
-
-mysql80 - 社区发布. noarch 0：el7-3
-
-完成！
-
-MySQL 工作台需要来自 EPEL 存储库的一些包。在 Oracle Linux 7 上，您可以启用它，如
-
-sudo yum 安装 oracle - epel - 释放 - el7
 
 在红帽企业 Linux 和 CentOS 上，您需要从 Fedora 下载存储库定义：
 
+```
 wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum install epel-release-latest-7.noarch.rpm
+```
 
-sudo yum 安装 epel - 发布 - 最新 - 7. noarch. rpm
+现在，您可以安装 MySQL Workbench如清单。
 
-现在，您可以安装 MySQL如清单。
-
-壳 $ sudo yum 安装 mysql 工作台
-
+```
+shell$ sudo yum install mysql-workbench
 ...
-
-已解决的依赖项
-
+Dependencies Resolved
 ================================================================
-
-包拱形版本存储库大小
-
+ Package Arch Version Repository Size
 ================================================================
-
-安装：
-
-mysql - 工作台社区
-
-x86_64 8.0.18-1.el7 mysql 工具社区 26 M
-
-交易摘要
-
+Installing:
+ mysql-workbench-community
+ x86_64 8.0.18-1.el7 mysql-tools-community 26 M
+Transaction Summary
 ================================================================
-
-安装 1 包
-
-下载总大小： 26 M
-
-安装尺寸： 116 M
-
-可以 [y/d/N]： y
-
-下载软件包：
-
-警告： /var/缓存/yum/x86_64/7Server/mysql 工具-社区/包/mysql-工作台-社区-8.0.18-1.el7.x86_64.rpm：标题V3 DSA/SHA1 签名，密钥 ID 5072e1f5：NOKEY
-
-未安装 mysql 工作台社区 8.0.18- 1.el7.x86_64. rpm 的公钥
-
-mysql - 工作台社区 - 8.0.18 - 1. |31 MB 00：14
-
-从用户中file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
-
-导入 GPG 密钥 0x5072E1F5：
-
-Userid ：" MySQL 发布工程 <mysql-build@oss.oracle.com>"
-
-指纹： a4a9 4068 76fc bd3c 4567 70c8 8c71 8d3b 5072 e1f5
-
-包 ： mysql80 - 社区发布 - el7 - 3. noarch （@/mysql80 - 社区发布 - el7 - 3. noarch）
-
-从 ： /etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
-
-**可以 [y/N]： y**
-
-正在运行事务检查
-
-正在运行事务测试
-
-事务测试成功
-
-正在运行事务
-
-安装 ： mysql -工作台社区-8.0.18-1.el7.x86 1/1
-
-验证 ： mysql -工作台社区-8.0.18-1.el7.x86 1/1
-
-安装：
-
-mysql 工作台 - community.x86_64 0：8.0.17-1.el7
-
-完成！
+Install 1 Package
+Total download size: 26 M
+Installed size: 116 M
+Is this ok [y/d/N]: y
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/mysql-tools-community/packages/
+mysql-workbench-community-8.0.18-1.el7.x86_64.rpm: Header V3 DSA/SHA1
+Signature, key ID 5072e1f5: NOKEY
+Public key for mysql-workbench-community-8.0.18-1.el7.x86_64.rpm is not
+installed
+mysql-workbench-community-8.0.18-1. | 31 MB 00:14
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+Importing GPG key 0x5072E1F5:
+ Userid : "MySQL Release Engineering <mysql-build@oss.oracle.com>"
+ Fingerprint: a4a9 4068 76fc bd3c 4567 70c8 8c71 8d3b 5072 e1f5
+ Package : mysql80-community-release-el7-3.noarch (@/mysql80-communityrelease-el7-3.noarch)
+ From : /etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+Is this ok [y/N]: y
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+ Installing : mysql-workbench-community-8.0.18-1.el7.x86 1/1
+ Verifying : mysql-workbench-community-8.0.18-1.el7.x86 1/1
+Installed:
+ mysql-workbench-community.x86_64 0:8.0.17-1.el7
+Complete!
+```
 
 例如，您的输出可能看起来不同，具体取决于已安装的包，可能会拉扯依赖项。首次从 MySQL 存储库安装包时，系统将要求您接受用于验证下载的包的 GPG 密钥。如果您从 Fedora 安装了 EPEL 存储库，则还需要接受该存储库中的 GPG 密钥。
 
-### 德比安和乌本图
+### Debian和Ubuntu
 
 在 Debian 和 Ubuntu 上安装 MySQL 工作台遵循与上一示例相同的原则。对于此处演示的步骤，将使用 Ubuntu 19.10。
 
 对于 Debian 和 Ubuntu，您需要安装可以从定义文件下载的 MySQL https://dev.mysql.com/downloads/repo/apt/ 。在编写本文时，只有一个文件可用（参见它独立于体系结构，适用于所有支持的 Debian 和 Ubuntu 版本。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig9_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig9_HTML.jpg)
+![](../附图/Figure 11-9.png)
 
 如果您未登录，您将被带到屏幕上，您可以在登录和立即开始下载之间进行选择。下载 DEB 包或右键单击下载（如果您已登录）或启动我的下载链接并复制 URL，如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig10_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig10_HTML.jpg)
+![](../附图/Figure 11-10.png)
 
 现在，您可以安装 MySQL如清单。
 
-壳 $
-
+```
+shell$ wget https://dev.mysql.com/get/mysql-apt-config_0.8.14-1_all.deb
 ...
+Connecting to repo.mysql.com (repo.mysql.com)|23.202.169.138|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 35564 (35K) [application/x-debian-package]
+Saving to: 'mysql-apt-config_0.8.14-1_all.deb'
+mysql-apt-config_0. 100%[==================>] 34.73K --.-KB/s in 0.02s
+2019-10-26 17:16:46 (1.39 MB/s) - 'mysql-apt-config_0.8.14-1_all.deb' saved
+[35564/35564]
+Figure 11-10. Copying the link to the repository installation file
+shell$ sudo dpkg -i mysql-apt-config_0.8.14-1_all.deb
+Selecting previously unselected package mysql-apt-config.
+(Reading database ... 161301 files and directories currently installed.)
+Preparing to unpack mysql-apt-config_0.8.14-1_all.deb ...
+Unpacking mysql-apt-config (0.8.14-1) ...
+Setting up mysql-apt-config (0.8.14-1) ...
+Warning: apt-key should not be used in scripts (called from postinst
+maintainerscript of the package mysql-apt-config)
+OK
+```
 
-连接到repo.mysql.com （存储库.mysql.com） +23.202.169.138\：443...连接。
 
-HTTP 请求已发送，正在等待响应...200 确定
-
-长度： 35564 （35K） [应用程序/x-debian-封装]
-
-保存到： "mysql - apt - config_0.8.14 - 1_all. deb"
-
-mysql - apt - config_0。100%= =>= 34.73K --.-KB/s 在 0.02 s
-
-2019-10-26 17：16：46 （1.39 MB/s） - "mysql-apt-config_0.8.14-1_all.deb" 保存 [35564/35564]
-
-壳 $
-
-选择以前未选择的包 mysql-apt-config。
-
-（读取数据库...当前已安装 161301 个文件和目录。
-
-准备拆包 mysql - apt - config_0. 8.14 - 1_all. deb...
-
-拆包 mysql - apt - config （0.8.14 - 1） ...
-
-设置 mysql - apt - 配置 （0.8.14 - 1） ...
-
-警告： 在脚本中不应使用 apt-key（从包 mysql-apt-config 的 postinst 维护脚本调用）
-
-还行
 
 在第二步命令）中，您可以选择哪些 MySQL 产品应该通过存储库提供。图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig11_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig11_HTML.jpg)
+![](../附图/Figure 11-11.png)
 
 默认值是启用 MySQL 服务器和群集以及工具和连接器。对于 MySQL 服务器和群集，您还可以选择要使用的版本，默认为 8。为了安装 MySQL 外壳，您需要设置为启用。在后，选择"确定"。
 
 在开始使用存储库之前，需要执行：
 
-shell$ sudo apt - get 更新
-
-点击：1 http://repo.mysql.com/apt/ubuntu ean 发布
-
-点击：2 http://au.archive.ubuntu.com/ubuntu ean 发布
-
-点击：3 http://au.archive.ubuntu.com/ubuntu ean 更新发布
-
-命中：4 http://au.archive.ubuntu.com/ubuntu ean 回端口发布
-
-点击：5 http://security.ubuntu.com/ubuntu ean 安全发布
-
-正在读取包列表...做
+```
+shell$ sudo apt-get update
+Hit:1 http://repo.mysql.com/apt/ubuntu eoan InRelease
+Hit:2 http://au.archive.ubuntu.com/ubuntu eoan InRelease
+Hit:3 http://au.archive.ubuntu.com/ubuntu eoan-updates InRelease
+Hit:4 http://au.archive.ubuntu.com/ubuntu eoan-backports InRelease
+Hit:5 http://security.ubuntu.com/ubuntu eoan-security InRelease
+Reading package lists... Done
+```
 
 现在，您可以使用 apt-get 的安装命令安装 MySQL 产品。清单显示了安装（请注意，包名称为末尾的"-社区"很重要）。
 
-shell$ sudo apt - get 安装 mysql 工作台社区
-
-正在读取包列表...做
-
-生成依赖项树
-
-正在读取状态信息...做
-
+```
+Listing 11-4. Installing MySQL Workbench from the APT repository
+shell$ sudo apt-get install mysql-workbench-community
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
 ...
+Setting up mysql-workbench-community (8.0.18-1ubuntu19.10) ...
+Setting up libgail-common:amd64 (2.24.32-4ubuntu1) ...
+Processing triggers for libc-bin (2.30-0ubuntu2) ...
+Processing triggers for man-db (2.8.7-3) ...
+Processing triggers for shared-mime-info (1.10-1) ...
+Processing triggers for desktop-file-utils (0.24-1ubuntu1) ...
+Processing triggers for mime-support (3.63ubuntu1) ...
+Processing triggers for hicolor-icon-theme (0.17-2) ...
+Processing triggers for gnome-menus (3.32.0-1ubuntu1) ...
+```
 
-设置 mysql 工作台社区 （8.0.18-1ubuntu19.10）...
+输出相当详细，包括安装 MySQL Workbench 所需的其他包的更改列表。包列表取决于您已经安装过什么。
 
-设置 libgail - 共： amd64 （2.24.32-4ubuntu1） ...
-
-libc-bin （2.30-0ubuntu2） 的处理触发器...
-
-人 db （2.8.7-3） 的处理触发器...
-
-处理共享哑剧信息 （1.10-1） 的触发器...
-
-桌面文件实用程序 （0.24-1ubuntu1） 的处理触发器...
-
-哑剧支持 （3.63ubuntu1） 的处理触发器...
-
-高色图标主题 （0.17-2） 的处理触发器...
-
-侏儒菜单的处理触发器 （3.32.0-1ubuntu1） ...
-
-输出相当详细，包括安装 MySQL 工作台所需的其他包的更改列表。包列表取决于您已经安装过什么。
-
-您现在可以开始使用 MySQL 工作台了。
+您现在可以开始使用 MySQL Workbench了。
 
 ## 创建连接
 
@@ -350,7 +271,7 @@ libc-bin （2.30-0ubuntu2） 的处理触发器...
 
 您还可以根据需要创建连接。一个选项是从 MySQL 工作台连接屏幕执行此操作，如图。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig12_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig12_HTML.jpg)
+![](../附图/Figure 11-12.png)
 
 通过单击左上角的图标显示海豚数据库，即可访问连接屏幕。下面通过行连接的表格的图标将带您到数据库建模功能，三个图标中的最后一个将打开数据迁移功能的选项卡。
 
@@ -358,13 +279,13 @@ libc-bin （2.30-0ubuntu2） 的处理触发器...
 
 单击 MySQL 连接右侧的 +。图。用于创建新连接和编辑现有连接的对话框非常相似。
 
-![../images/484666_1_En_11_Chapter/484666_1_En_11_Fig13_HTML.jpg](../images/484666_1_En_11_Chapter/484666_1_En_11_Fig13_HTML.jpg)
+![](../附图/Figure 11-13.png)
 
 您可以使用您选择的名称来命名连接。它是一个自由格式的字符串，仅用于更轻松地标识连接的用途。其余的选项是通常的连接选项。
 
 连接后可以从连接屏幕双击它以创建连接。
 
-## 使用 MySQL 工作台
+## 使用 MySQL Workbench
 
 MySQL 工作台中使用最多的功能是执行查询的能力。这是从查询选项卡完成的，该选项卡除了执行查询的功能外，还包括多个功能。这些功能包括显示结果集、获取名为 Visual Explain 的查询计划的可视化表示、获取上下文帮助、重新格式化查询等。本节将介绍一些从概述开始的功能。
 
@@ -448,12 +369,4 @@ MySQL 工作台默认两个安全设置，以帮助防止更改或删除表中�
 
 所讨论的两个功能是查询美化和 EER 图。这些并不是唯一的功能，以后的章节将显示性能报告和可视化解释查询计划图的示例。
 
-下一章将讨论 MySQL 壳牌，这是 MySQL 提供的两把"瑞士军刀"中的第二把。
-
-脚注
-
-[1](#Fn1_source)
-
-[www.mysql.com/why-mysql/windows/notifier/](https://www.mysql.com/why-mysql/windows/notifier)
-
- 
+下一章将讨论 MySQL Shell，这是 MySQL 提供的两把"瑞士军刀"中的第二把。

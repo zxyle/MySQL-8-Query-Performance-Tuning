@@ -1,16 +1,29 @@
 # Performance数据库
 
-性能架构是 MySQL 中与性能相关的诊断信息的主要来源。它首先在 MySQL 中引入版本 5.5，然后在版本 5.6 中严重修改到其当前结构，此后在 5.7 和 8 中逐渐改进。
+Performance Schema是与MySQL性能相关的诊断信息的主要来源。它最初是在MySQL 5.5版中引入的，然后在5.6版中对其当前结构进行了重大修改，此后在5.7和8中逐渐得到了改进。
 
-本章介绍并概述了性能架构，因此，在本书剩余部分使用性能架构时，它的工作方式非常清晰。性能架构的近亲是下一章将讨论的系统架构，信息架构是第 7 章的主题。
+本章介绍并概述了性能架构，因此，在本书剩余部分使用Performance Schema时，它的工作方式非常清晰。性能架构的近亲是下一章将讨论的系统架构，信息架构是第 7 章的主题。
 
-本章讨论性能架构所独有的概念，特别侧重于线程、仪器、使用者、事件、摘要和动态配置。但是，首先，有必要熟悉性能架构中使用的术语
+本章讨论了Performance Schema特有的概念，特别关注线程，工具，使用者，事件，摘要和动态配置。 但是，首先，必须熟悉Performance Schema中使用的术语。
 
 ## 术语
 
-在研究新学科时，可能很难的事情之一是术语，性能架构也不例外。由于术语之间几乎存在循环关系，因此没有明确的顺序来描述它们。相反，本节将简要概述本章中使用的最重要的术语，因此您有术语的意思。到本章结束时，您应该更好地理解概念意味着什么，以及它们彼此之间的关系
+在研究新学科时，可能很难的事情之一是术语，Performance Schema也不例外。由于术语之间几乎存在循环关系，因此没有明确的顺序来描述它们。相反，本节将简要概述本章中使用的最重要的术语，因此您可以了解这些术语的含义。在本章结束时，您应该更好地理解这些概念的含义以及它们之间的关系。
 
 表5-1总结了性能模式中最重要的术语
+
+| 术语                  | 描述信息                                                     |
+| :-------------------- | ------------------------------------------------------------ |
+| Actor                 | 用户名和主机名（帐户）的组合。                               |
+| Consumer              | 收集仪器生成的数据的过程                                     |
+| Digest                | 标准化查询的校验和。 摘要用于汇总类似查询的统计信息。        |
+| Dynamic configuration | 可以在运行时配置性能模式，这称为动态配置。 这是通过设置表而不是通过更改系统变量来完成的。 |
+| Event                 | 一个事件是消费者从仪器中收集数据的结果。 因此，事件包含度量标准以及有关何时何地收集度量标准的信息。 |
+| Instrument            | 代码指向进行测量的地方。                                     |
+| Object                | 表，事件，函数，过程或触发器。                               |
+| Setup table           | 性能模式有几个用于动态配置的表。 这些称为设置表，表名以setup_开头。 |
+| Summary table         | 具有汇总数据的表。 表名包含单词summary，名称的其余部分指示数据的类型及其分组依据。 |
+| Thread                | 线程对应于连接或后台线程。 性能架构线程和操作系统线程之间存在一一对应的关系。 |
 
 在阅读本章时，如果遇到不确定其含义的术语，请参考该表。
 
@@ -18,15 +31,86 @@
 
 线程是性能架构中的基本概念。当 MySQL 中执行任何操作时，无论是处理连接还是执行后台工作，工作都是由线程完成的。MySQL 在任何给定时间都有多个线程，因为它允许 MySQL 并行执行工作。对于连接，有一个线程。
 
-**注意：对 InnoDB 中群集索引和分区执行并行读取的支持引入，使一个线程的一个连接的图片变得有些混乱。但是，由于执行并行扫描的线程被视为后台线程，因此对于本讨论，您可以考虑连接单线程。**
+------
+
+**注意**：对 InnoDB 中群集索引和分区执行并行读取的支持引入，使一个线程的一个连接的图片变得有些混乱。但是，由于执行并行扫描的线程被视为后台线程，因此对于本讨论，您可以考虑连接单线程。
+
+------
 
 每个线程都有一个 ID，该 ID 是唯一标识线程的 ID，在性能架构表中存储此 ID 的列称为THREAD_ID。检查线程的主表是包含清单 5-1 的线程表，该表显示了 MySQL 8 中存在的线程类型的典型示例。线程数和确切的线程类型可用取决于在查询线程表时实例的配置和使用情况。
 
-补充清单5-1
+```
+Listing 5-1. Threads in MySQL 8
+mysql> SELECT THREAD_ID AS TID,
+ SUBSTRING_INDEX(NAME, '/', -2) AS THREAD_NAME,
+ IF(TYPE = 'BACKGROUND', '*', ") AS B,
+ IFNULL(PROCESSLIST_ID, ") AS PID
+ FROM performance_schema.threads;
++-----+--------------------------------------+---+-----+
+| TID | THREAD_NAME                          | B | PID |
++-----+--------------------------------------+---+-----+
+| 1   | sql/main                             | * | |
+| 2   | mysys/thread_timer_notifier          | * | |
+| 4   | innodb/io_ibuf_thread                | * | |
+| 5   | innodb/io_log_thread                 | * | |
+| 6   | innodb/io_read_thread | * | |
+| 7   | innodb/io_read_thread | * | |
+| 8   | innodb/io_read_thread | * | |
+| 9   | innodb/io_read_thread | * | |
+| 10  | innodb/io_write_thread | * | |
+| 11  | innodb/io_write_thread | * | |
+| 12  | innodb/io_write_thread | * | |
+| 13  | innodb/io_write_thread | * | |
+| 14  | innodb/page_flush_coordinator_thread | * | |
+| 15  | innodb/log_checkpointer_thread | * | |
+| 16  | innodb/log_closer_thread | * | |
+| 17  | innodb/log_flush_notifier_thread | * | |
+| 18  | innodb/log_flusher_thread | * | |
+| 19  | innodb/log_write_notifier_thread | * | |
+| 20  | innodb/log_writer_thread | * | |
+| 21  | innodb/srv_lock_timeout_thread | * | |
+| 22  | innodb/srv_error_monitor_thread | * | |
+| 23  | innodb/srv_monitor_thread | * | |
+| 24  | innodb/buf_resize_thread | * | |
+| 25  | innodb/srv_master_thread | * | |
+| 26  | innodb/dict_stats_thread | * | |
+| 27  | innodb/fts_optimize_thread | * | |
+| 28  | mysqlx/worker | | 9 |
+| 29  | mysqlx/acceptor_network | * | |
+| 30  | mysqlx/acceptor_network | * | |
+| 31  | mysqlx/worker | * | |
+| 34  | innodb/buf_dump_thread | * | |
+| 35  | innodb/clone_gtid_thread | * | |
+| 36  | innodb/srv_purge_thread | * | |
+| 37  | innodb/srv_purge_thread | * | |
+| 38  | innodb/srv_worker_thread | * | |
+| 39  | innodb/srv_worker_thread | * | |
+| 40  | innodb/srv_worker_thread | * | |
+| 41  | innodb/srv_worker_thread | * | |
+| 42  | innodb/srv_worker_thread | * | |
+| 43  | innodb/srv_worker_thread | * | |
+| 44  | sql/event_scheduler | | 4 |
+| 45  | sql/compress_gtid_table | | 6 |
+| 46  | sql/con_sockets | * | |
+| 47  | sql/one_connection | | 7 |
+| 48  | mysqlx/acceptor_network | * | |
+| 49  | innodb/parallel_read_thread | * | |
+| 50  | innodb/parallel_read_thread | * | |
+| 51  | innodb/parallel_read_thread | * | |
+| 52  | innodb/parallel_read_thread | * | |
++-----+--------------------------------------+---+-----+
+49 rows in set (0.0615 sec)
+```
+
+
 
 TID 列是每个线程的 THREAD_ID，THREAD_NAME 列包括线程名称的最后两个组件（第一个组件是所有线程的线程），B 列具有背景线程的星号，PID 列具有前台线程的进程列表 ID。
 
-注意 遗憾的是，术语线程在 MySQL 中过载，并位于用作连接同义词的某处。在本书中，连接是指用户连接，线程引用性能架构线程，即它可以是背景或前景（包括连接）线程。例外是讨论一个明显违反该约定的表时。
+------
+
+**注意** 遗憾的是，术语线程在 MySQL 中过载，并位于用作连接同义词的某处。在本书中，连接是指用户连接，线程引用性能架构线程，即它可以是背景或前景（包括连接）线程。例外是讨论一个明显违反该约定的表时。
+
+------
 
 线程列表显示了线程的几个重要概念。进程列表 ID 和线程 ID 不相关。事实上，线程 ID = 28 的线程具有比线程 ID 44 （4） 的线程更高的进程列表 ID （9）。因此，它甚至不保证顺序是相同的（虽然对于非 mysqlx 线程，它一般情况下）。
 
@@ -34,7 +118,11 @@ TID 列是每个线程的 THREAD_ID，THREAD_NAME 列包括线程名称的最后
 
 也有"混合"线程不是完全的背景，也不是完全的前景线程。例如，sql/compress_gtid_table压缩表的mysql.gtid_executed线程。它是一个前景线程，但如果执行 SHOWPROCESSLIST，则它将被不包括。
 
-提示 performance_schema.threads 表非常有用，还包括 SHOW 流程列表显示的所有信息。由于与执行 SHOW 进程列表或查询查询表相比，查询此表的开销theinformation_schema。ProcessLIST 表，使用线程表以及 sys.processlist 和 sys.session 视图是获取连接列表的推荐方法。
+------
+
+**提示** performance_schema.threads 表非常有用，还包括 SHOW 流程列表显示的所有信息。由于与执行 SHOW 进程列表或查询查询表相比，查询此表的开销theinformation_schema。ProcessLIST 表，使用线程表以及 sys.processlist 和 sys.session 视图是获取连接列表的推荐方法。
+
+------
 
 有时获得连接的线程ID可能很有用。 为此，有两个功能：
 
@@ -54,9 +142,38 @@ PS_CURRENT_THREAD_ID(): 54
 1 row in set (0.0003 sec)
 ```
 
-使用这些函数等效于查询 PROCESSLIST_ID.THREAD_IDcolumns表中的performance_schema和查询，以将连接 ID 与线程 ID 链接。清单 5-2 显示了使用 PS_CURRENT_THREAD_ID（） 函数来查询当前连接的线程表的示例。
+使用这些函数等效于查询 PROCESSLIST_ID.THREAD_IDcolumns表中的performance_schema和查询，以将连接 ID 与线程 ID 链接。清单 5-2 显示了使用 PS_CURRENT_THREAD_ID( )函数来查询当前连接的线程表的示例。
 
-补充清单 5-2
+```
+Listing 5-2. Querying the threads table for the current connection
+mysql> SELECT *
+ FROM performance_schema.threads
+ WHERE THREAD_ID = PS_CURRENT_THREAD_ID()\G
+*************************** 1. row ***************************
+ THREAD_ID: 54
+ NAME: thread/mysqlx/worker
+ TYPE: FOREGROUND
+ PROCESSLIST_ID: 13
+ PROCESSLIST_USER: root
+ PROCESSLIST_HOST: localhost
+ PROCESSLIST_DB: performance_schema
+PROCESSLIST_COMMAND: Query
+ PROCESSLIST_TIME: 0
+ PROCESSLIST_STATE: statistics
+ PROCESSLIST_INFO: SELECT *
+ FROM threads
+ WHERE THREAD_ID = PS_CURRENT_THREAD_ID()
+ PARENT_THREAD_ID: 1
+ ROLE: NULL
+ INSTRUMENTED: YES
+ HISTORY: YES
+ CONNECTION_TYPE: SSL/TLS
+ THREAD_OS_ID: 31516
+ RESOURCE_GROUP: SYS_default
+1 row in set (0.0005 sec)
+```
+
+
 
 有几个列在性能调优的上下文中提供有用的信息，将在后几章中使用。值得注意的是，这里是他们的名字以PROCESSLIST_。这些等效于 SHOW ProcessLIST 返回的信息，但查询线程表对连接的影响较小。"仪器"和"历史记录"列指定是否为线程收集检测数据，以及是否为线程保留事件历史记录。您可以更新这两列以更改线程的行为，也可以根据 setup_threadstable 中的线程类型或使用 setup_actors 表定义线程的默认行为。这就引出了一个问题，什么是工具和事件。接下来的三节将讨论这一点，以及如何消耗这些仪器。
 
@@ -71,6 +188,16 @@ PS_CURRENT_THREAD_ID(): 54
 随着新功能的添加，仪器的数量不断增加，并且更多的仪器点入到现有代码中。在 MySQL 8.0.18 中，当没有安装额外的插件或组件时，有 1229 个仪器（仪器的确切数量也取决于平台）。这些仪器在表5-2中列出的顶级组件之间拆分。"定时"列显示仪器是否可以定时，Count 列显示该顶级组件的仪器总数，以及默认情况下在 8.0.18 中启用的仪器数量。
 
 补充表5-2
+
+| Component | Timed | Count | Description |
+| --------- | ----- | ----- | ----------- |
+|           |       |       |             |
+|           |       |       |             |
+|           |       |       |             |
+|           |       |       |             |
+|           |       |       |             |
+|           |       |       |             |
+|           |       |       |             |
 
 命名方案使得确定仪器测量方法相对容易。您可以在"计算机"表中找到所有setup_instruments，这些仪器还允许您配置仪器是否启用和时间。对于一些仪器，还有一个简短的文档，说明仪器收集的数据。
 
