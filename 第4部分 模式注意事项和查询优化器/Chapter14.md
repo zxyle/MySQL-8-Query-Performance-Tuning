@@ -267,7 +267,7 @@ ALTER TABLE db1.person DROP INDEX name_2;
 
 生活中很少有东西是免费的——索引也不例外。虽然索引非常适合提高查询性能，但还需要存储和保持最新。此外，执行查询时不太明显的开销，索引越多，优化器需要做的工作也越多。本节将介绍索引的这三个缺点。
 
-### Storage
+### 存储
 
 添加索引最明显的成本之一是需要存储索引，因此需要时随时可用。您不希望每次需要时首先创建索引，因为这将扼杀索引的性能优势。
 
@@ -520,7 +520,6 @@ VIRTUAL,
  PRIMARY KEY (`_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 1 row in set (0.0006 sec)
-
 ```
 
 UPDATE 语句使用 JSON_ARRAYAGG（） 函数创建一个 JSON 数组，其中包含三个 JSON 对象（地区、名称和人口）。最后，执行 SELECT 语句以返回澳大利亚城市的名称。
