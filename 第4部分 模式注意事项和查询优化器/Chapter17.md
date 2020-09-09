@@ -14,53 +14,40 @@
 
 优化器进行的最简单转换类型之一是恒定传播。作为示例，请考虑以下查询：
 
-选择 *
+```sql
+SELECT *
+ FROM world.country
+ INNER JOIN world.city
+ ON city.CountryCode = country.Code
+ WHERE city.CountryCode = 'AUS';
+```
 
-来自世界. 国家
 
-内加入世界. city
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里的城市。国家代码 = "澳大利亚";
 
 此查询有两个条件：/地区代码"列必须等于"AUS"，代码"列/地区表的列。从这两个条件，可以得出，列还必须等于"AUS"。优化器使用此知识直接筛选国家/地区表。由于"列是国家，这意味着优化器知道只有一行匹配条件，并且优化器可以将视为常量。实际上，查询最终以国家/地区表中的列作为常量在选择列表中执行，并扫描城市表中的条目，使用国家/地区代码=
 
-选择"澳大利亚"作为"代码"，
+```sql
+SELECT 'AUS' AS `Code`,
+ 'Australia' AS `Name`,
+ 'Oceania' AS `Continent`,
+ 'Australia and New Zealand' AS `Region`,
+ 7741220.00 AS `SurfaceArea`,
+ 1901 AS `IndepYear`,
+ 18886000 AS `Population`,
+ 79.8 AS `LifeExpectancy`,
+ 351182.00 AS `GNP`,
+ 392911.00 AS `GNPOld`,
+ 'Australia' AS `LocalName`,
+ 'Constitutional Monarchy, Federation' AS `GovernmentForm`,
+ 'Elisabeth II' AS `HeadOfState`,
+ 135 AS `Capital`,
+ 'AU' AS `Code2`,
+ city.*
+ FROM world.city
+ WHERE CountryCode = 'AUS';
+```
 
-"澳大利亚"作为"名称"，
 
-"大洋洲"作为"大陆"，
-
-"澳大利亚和新西兰"作为"地区"，
-
-7741220.00 作为"表面区域"，
-
-1901年作为"独立年"，
-
-18886000 作为"人口"，
-
-79.8 作为"生命目标"，
-
-351182.00 作为"GNP"，
-
-392911.00 作为"GNPOld"，
-
-"澳大利亚"作为"本地名称"，
-
-"君主立宪制，联邦"作为"政府形式"，
-
-"伊丽莎白二世" 作为 "国家头"，
-
-135 作为"资本"，
-
-"AU"作为"代码2"，
-
-城市。
-
-来自世界. city
-
-国家代码 = "澳大利亚";
 
 从性能的角度来看，这是一个安全的转换。其他转换更为复杂，并不总是能提高性能。因此，无论是否启用优化，都可以进行配置。配置使用"optimizer_switch器提示"完成，这些提示在以及如何配置优化器时进行了讨论。
 
@@ -74,41 +61,36 @@ MySQL 使用基于成本的查询优化。这意味着优化器计算执行查�
 
 无论查询如何，计算成本的原则都是一样的，但很明显，查询越复杂，成本估算就变得越复杂。作为一，请考虑查询索引列上具有子句的单个表的查询：
 
-选择 *
+```sql
+SELECT *
+ FROM world.city
+ WHERE CountryCode = 'IND';
+```
 
-来自世界. city
 
-国家代码 = "IND";
 
 在"国家代码"列上具有辅助一索引，从表定义中可以看到：
 
-mysql> 显示创建表世界. city\ g
+```sql
+mysql> SHOW CREATE TABLE world.city\G
+**************************** 1. row ****************************
+ Table: city
+Create Table: CREATE TABLE `city` (
+ `ID` int(11) NOT NULL AUTO_INCREMENT,
+ `Name` char(35) NOT NULL DEFAULT ",
+ `CountryCode` char(3) NOT NULL DEFAULT ",
+ `District` char(20) NOT NULL DEFAULT ",
+ `Population` int(11) NOT NULL DEFAULT '0',
+ PRIMARY KEY (`ID`),
+ KEY `CountryCode` (`CountryCode`),
+ CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country`
+(`Code`)
+) ENGINE=InnoDB AUTO_INCREMENT=4080 DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_0900_ai_ci
+1 row in set (0.0008 sec)
+```
 
-1.行***************************************************************************************************
 
-表： 城市
-
-创建表：创建表"城市"（
-
-"ID" int （11） 不AUTO_INCREMENT，
-
-"名称" 字符 （35） 不空默认"，
-
-"国家代码" 字符 （3） 非空默认 "，
-
-"区域" 字符 （20） 非空默认"，
-
-"人口" int（11） 不是空默认"0"，
-
-主键（"ID"），
-
- **关键"国家代码"（"国家代码"），**
-
-约束 "city_ibfk_1"外键 （"国家代码"） 引用 "国家" （"代码"）
-
-） 引擎=Innodb AUTO_INCREMENT=4080 默认字符集=utf8mb4 科拉特utf8mb4_0900_ai_ci
-
-设置 1 行（0.008 秒）
 
 优化器可以选择两种方式来获取匹配的行。一种方法就是使用国家代码上的索引中的匹配行，然后查找请求的行值。另一种方式是执行完整的表扫描并检查每行以确定它是否满足筛选器条件。
 
@@ -142,7 +124,7 @@ MySQL 支持联接多达 61 个表，在这种情况下，可能有 5.1E83 个�
 
 使用索引时，当筛选器与其他表不相关时，优化器可以非常准确地估计索引的匹配行数。如果没有索引，可以使用直方图统计信息来获取良好的筛选估计值。当筛选的列没有统计信息时，会出现困难。在这种情况下，优化器将回放在内置的默认估计值上。表包括筛选效果的示例，这些示例在没有可以使用索引或直方图统计信息时使用。
 
-| 类型   | 过滤器 %                | 备注/示例                                  |
+| 类型   | 过滤器  %               | 备注/示例                                  |
 | :----- | :---------------------- | :----------------------------------------- |
 | 所有   | 100                     | 当按索引筛选或没有筛选条件时，使用此选项。 |
 | 平等   | 10                      | 名称 = "悉尼"                              |
@@ -167,53 +149,44 @@ MySQL 支持联接多达 61 个表，在这种情况下，可能有 5.1E83 个�
 
 作为一个简单的示例，请考虑一个数据库的国家表：
 
-选择 *
+```sql
+SELECT *
+ FROM world.country
+ INNER JOIN world.city
+ ON CountryCode = Code;
+```
 
-来自世界. 国家
 
-内加入世界. city
-
-关于国家代码 = 代码;
 
 图显示了查询的可视化解释图，包括城市表详细信息。
 
-![../images/484666_1_En_17_Chapter/484666_1_En_17_Fig1_HTML.jpg](C:/Program Files/images/484666_1_En_17_Chapter/484666_1_En_17_Fig1_HTML.jpg)
+![](../附图/Figure 17-1.png)
 
 该图显示了优化器如何决定执行查询。如何阅读图表将在第。这里的重要部分是箭头指向的数字。这些是优化器已针对查询执行的各个部分以更低的成本到达的成本估计值，越好。该示例显示，成本估算是为非常特定的任务（如读取数据、评估筛选器条件等）计算的。在关系图的顶部，总查询成本估计为 1535.43。
 
 执行查询后，还可以从用户状态变量获取成本。清单显示了对图。
 
+```
+Listing 17-1. Obtaining the estimated query cost after executing a query
 mysql> SELECT *
-
-​     FROM world.country
-
-​       INNER JOIN world.city
-
-​         ON CountryCode = Code;
-
+ FROM world.country
+ INNER JOIN world.city
+ ON CountryCode = Code;
 ...
-
 mysql> SHOW SESSION STATUS LIKE 'Last_query_cost';
-
 +-----------------+-------------+
-
-| Variable_name  | Value    |
-
+| Variable_name   | Value       |
 +-----------------+-------------+
-
 | Last_query_cost | 1535.425669 |
-
 +-----------------+-------------+
-
 1 row in set (0.0013 sec)
+```
 
-**Listing 17-1**
 
-Obtaining the estimated query cost after executing a query
 
-The result of the query has been removed from the output as it is not important for this discussion. An important thing to note about Last_query_cost is that it is the estimated cost which is why it shows the same value as the total cost in the Visual Explain diagram. If you want information about the actual cost of executing the query, you need to use EXPLAIN ANALYZE.
+查询结果已从输出中删除，因为在此讨论中这并不重要。 有关Last_query_cost的重要注意事项是它是估计成本，这就是为什么它在Visual Explain图中显示与总成本相同的值的原因。 如果需要有关执行查询的实际成本的信息，则需要使用EXPLAIN ANALYZE。
 
-The Visual Explain diagram mentions the query is executed using a *nested loop* . That is just one of the join algorithms MySQL supports.
+Visual Explain图提到使用*嵌套循环*执行查询。 那只是MySQL支持的连接算法之一。
 
 ## Join Algorithms
 
@@ -237,47 +210,46 @@ The nested loop algorithm is the simplest of the algorithms used in MySQL. Until
 
 Consider a query on the world.country table joining on the world.city table querying for countries and cities in Asia. You can write the query in the following way:
 
+```sql
 SELECT CountryCode, country.Name AS Country,
-
-​    city.Name AS City, city.District
-
+ city.Name AS City, city.District
  FROM world.country
+ INNER JOIN world.city
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-​    INNER JOIN world.city
 
-​       ON city.CountryCode = country.Code
-
-哪里大陆 = "亚洲";
 
 它将使用嵌套循环执行，该循环在国家/地区，子句中的筛选器，后在城市表上查找。在树表示法中，查询如下所示
 
--> 嵌套循环内部联接
+```
+-> Nested loop inner join
+ -> Filter: (country.Continent = 'Asia')
+ -> Table scan on country
+ -> Index lookup on city using CountryCode
+ (CountryCode=country.`Code`)
+```
 
--> 过滤器： （国家/ 地区。大陆 = "亚洲"）
 
--> 国家/地区表扫描
-
--> 使用国家代码查找城市索引
-
-（国家代码=国家代码.'代码'）
 
 您也可以将此编写为伪代码。使用与 Python 一样语法，可以像以下代码段一样编写嵌套循环联接：
 
-结果 |
+```python
+result = []
+for country_row in country:
+ if country_row.Continent == 'Asia':
+ for city_row in city.CountryCode['country_row.Code']:
+ result.append(join_rows(country_row, city_row))
+```
 
-对于country_row国家/地区：
 
-如果country_row。大陆 = "亚洲"：
-
-在城市city_row一样国家代码country_row。代码']：
-
-结果.附录（join_rows（country_rowcity_row））
 
 在伪代码中国家地区和城市城市的国家/地区。国家/是上的"国家代码和"国家代码"表示一行。函数用于表示将所需的列从两行合并到结果集中的一行的过程。
 
 图显示了使用关系图的相同嵌套循环。为简单起见和专注于联接，即使从国家/地区表读取所有行，也只包含匹配行的主要值。
 
-![../images/484666_1_En_17_Chapter/484666_1_En_17_Fig2_HTML.png](C:/Program Files/images/484666_1_En_17_Chapter/484666_1_En_17_Fig2_HTML.png)
+![](../附图/Figure 17-2.png)
 
 该图显示 MySQL 扫描国家/地区表，直到找到与子句匹配的行。在图中，第一个匹配行是 AFG（对于阿富汗）。然后找到国家代码行等于 1、2、3 和 4），并且每个组合都用于在结果中形成一行。这与等于 ARE（阿拉伯联合酋长国）的国家代码一起继续，直到 YEM（也门）。
 
@@ -287,99 +259,82 @@ SELECT CountryCode, country.Name AS Country,
 
 虽然简单通常是一个很好的属性，但嵌套循环联接有一些限制。它不能用于执行完全外部联接，因为嵌套循环联接需要第一个表返回行，而完全外部联接的情况并不总是如此。解决方法是将完整的外部联接编写为左侧联接和右外部联接的联接。考虑查询所有国家和城市，包括那些国家/地区没有城市，城市没有国家/地区的情况。可以编写为完整的外部联接（在 MySQL 中无效）：
 
-选择 *
+```sql
+SELECT *
+ FROM world.country
+ FULL OUTER JOIN world.city
+ ON city.CountryCode = country.Code;
+```
 
-来自世界. 国家
 
-全外加入世界. city
-
-在城市。国家/地区代码 = 国家/地区。代码;
 
 为了在 Mysql 中执行， 您可以使用国家联盟城市和国家喜欢
 
-选择 *
+```sql
+SELECT *
+ FROM world.country
+ LEFT OUTER JOIN world.city
+ ON city.CountryCode = country.Code
+ UNION
+SELECT *
+ FROM world.country
+ RIGHT OUTER JOIN world.city
+ ON city.CountryCode = country.Code;
+```
 
-来自世界. 国家
 
-左外加入世界. city
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-联盟
-
-选择 *
-
-来自世界. 国家
-
-右外加入世界. city
-
-在城市。国家/地区代码 = 国家/地区。代码;
 
 另个限制是嵌套循环联接对于无法使用索引的联接不是很有效。由于嵌套循环一次从联接中的第一个表连接一行，因此需要对第一个表中的每一行进行第二个表的完整扫描。这很快就会变得过于昂贵。考虑较早一点检查的查询，其中发现亚洲所有城市：
 
-mysql> 选择PS_CURRENT_THREAD_ID （）;
-
+```sql
+mysql> SELECT PS_CURRENT_THREAD_ID();
 +------------------------+
-
-|PS_CURRENT_THREAD_ID（） |
-
+| PS_CURRENT_THREAD_ID() |
 +------------------------+
-
-|30 |
-
+| 30                     | 
 +------------------------+
-
 1 row in set (0.0017 sec)
+SELECT CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country
+ INNER JOIN world.city
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-选择国家代码、国家/地区。名称为国家/地区，
 
-城市。名称为"城市"，城市。区
-
-来自世界. 国家
-
-内加入世界. city
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 通过国家/地区表（239 行）上的表扫描和城市表上的索引查找，将检查总共 2005 行（在第二个连接中执行此查询）：
 
-mysql> 选择rows_examined， rows_sent，
-
-last_statement_latency延迟
-
-从系统. 会话
-
-在哪里thd_id = 30°G
-
-1.行***************************************************************************************************
-
-rows_examined： 2005
-
-rows_sent： 1766
-
-延迟： 4.36 ms
-
+```sql
+mysql> SELECT rows_examined, rows_sent,
+ last_statement_latency AS latency
+ FROM sys.session
+ WHERE thd_id = 30\G
+*************************** 1. row ***************************
+rows_examined: 2005
+ rows_sent: 1766
+ latency: 4.36 ms
 1 row in set (0.0539 sec)
+```
+
+
 
 thd_id 上的需要匹配执行查询的连接的性能架构线程 ID（这可以在 MySQL 8.0.16 及更晚的函数中找到）。2005年检查的行来自检查国家表中的239行，进行完整的表格扫描，然后阅读亚洲国家城市的1766行。
 
 如果 MySQL 不能对联接使用索引，则查询性能将发生巨大变化。您可以使用嵌套循环联接执行查询，而无需以以下方式使用注释是优化器提示）：
 
-选择 /** NO_BNL（城市） */
+```sql
+SELECT /*+ NO_BNL(city) */
+ CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-国家代码，国家/地区。名称为国家/地区，
 
-城市。名称为"城市"，城市。区
-
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 忽略 子句是一个索引提示，它告诉 MySQL 忽略括号之间给出的索引。此版本的查询统计信息显示，现在检查超过 200，000 行，并且查询的执行时间比之前长大约十倍（执行此测试的方式与上一个查询相同，其中查询查找亚洲城市在一个连接中执行，中执行 thd_id = 更改为使用第一个连接的线程 ID）：
 
