@@ -181,7 +181,7 @@ Count: 3 Time=0.00s (0s) Lock=0.00s (0s) Rows=7.7 (23), root[root]
 
 由于 mysqldumpslow 脚本是用 Perl 编写的，因此如果您想要包含对新排序选项的支持或更改输出，则修改脚本相对容易。例如，如果您想要在平均执行时间中包含更多的小数，可以在使用子例程（包含 MySQL 8.0.18 的脚本中的第 168-169 行）之前修改 printf 语句，例如
 
-```
+```perl
 printf "Count: %d Time=%.6fs (%ds) Lock=%.2fs (%ds) Rows=%.1f (%d),
 $user\@$host\n%s\n\n",
  $c, $at,$t, $al,$l, $ar,$r, $_;

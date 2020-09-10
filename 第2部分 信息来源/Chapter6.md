@@ -1,14 +1,20 @@
-# sys数据库
+# sys schema
 
-系统架构是马克·莱思的创意，他长期以来一直是开发 MySQL 企业监视器的团队的一员。他开始了ps_helper项目，以监控理念进行实验，并展示性能架构可以做什么，同时使性能架构更简单。该项目后来重命名为 thesys 架构并移动到 MySQL 中。此后，包括这本书的作者在内的其他几个人也做出了贡献。
+sys schema是马克·莱思的创意，他长期以来一直是开发 MySQL 企业监视器的团队的一员。他开始了ps_helper项目，以监控理念进行实验，并展示sys schema可以做什么，同时使sys schema更简单。该项目后来重命名为 thesys 架构并移动到 MySQL 中。此后，包括这本书的作者在内的其他几个人也做出了贡献。
 
-系统架构适用于 MySQL 服务器 5.6 及更晚版本。在 MySQL 5.7 中，它成为标准安装的一部分，因此您无需执行任何操作来安装系统或升级系统。截至 MySQL 8.0.18，系统架构源代码是 MySQL 服务器源的一部分。
+sys schema适用于 MySQL Server 5.6 及更晚版本。在 MySQL 5.7 中，它成为标准安装的一部分，因此您无需执行任何操作来安装系统或升级系统。截至 MySQL 8.0.18，系统架构源代码是 MySQL 服务器源的一部分。
 
 系统架构在整本书中用于分析查询、锁等。本章将介绍 sys 架构的高级别概述，包括如何配置它、格式化函数、视图如何工作以及各种帮助程序例程。
 
-**提示 sys 架构源代码 （https://github.com/mysql/mysqlserver/tree/8.0/scripts/sys_schema 和较旧的 MySQL versionshttps://github.com/mysql/mysql-sys/） 也是了解如何根据性能架构编写查询的有用资源。**
+------
 
-## sys Schema Configuration
+**提示** sys 架构源代码 （https://github.com/mysql/mysqlserver/tree/8.0/scripts/sys_schema 和较旧的 MySQL versionshttps://github.com/mysql/mysql-sys/） 也是了解如何根据性能架构编写查询的有用资源。
+
+------
+
+
+
+## sys Schema配置
 
 sys 架构使用自己的配置系统，因为它最初是独立于 MySQL 服务器实现的。有两种方法可以更改配置，取决于是永久更改设置还是只更改会话设置。
 
@@ -93,13 +99,13 @@ city.CountryCode
 1 row in set (0.0266 sec)
 ```
 
-首先，在用户变量的@query查询。这纯粹是为了方便起见，所以很容易继续引用相同的查询。sys_get_config（）函数用于获取当前配置值statement_truncate_len选项。这会说明是否设置了@sys.语句_trauncate_len 用户变量。如果提供的选项不存在，则第二个保证提供要返回的值。
+首先，在用户变量的@query查询。这纯粹是为了方便起见，所以很容易继续引用相同的查询。sys_get_configt( ) 函数用于获取当前配置值statement_truncate_len选项。这会说明是否设置了@sys.语句_trauncate_len 用户变量。如果提供的选项不存在，则第二个保证提供要返回的值。
 
-format_statement（） 函数用于演示 @query 中的语句格式，首先默认值为 statement_truncate_len 的默认值 64，然后 updatingsys_config 的值为 48，最后将会话的值设置为 96。 请注意，在更新 sys_config 表后，@sys.语句_truncate_len 用户变量如何设置为 NULL，以使 MySQL 应用更新到会话的设置。
+format_statementt( ) 函数用于演示 @query 中的语句格式，首先默认值为 statement_truncate_len 的默认值 64，然后 updatingsys_config 的值为 48，最后将会话的值设置为 96。 请注意，在更新 sys_config 表后，@sys.语句_truncate_len 用户变量如何设置为 NULL，以使 MySQL 应用更新到会话的设置。
 
 注意 默认情况下，某些 sysschema 功能支持一些配置选项，这些sys_config在 sys_config 表中，例如调试选项。sys 架构对象（https://dev.mysql.com/doc/refman/en/sys-schema-reference.html）的文档包括支持哪些配置选项的信息。
 
-format_statement（）函数并不是 sysschema 中的唯一格式函数，因此让我们来看看所有这些格式。
+format_statement( ) 函数并不是 sysschema 中的唯一格式函数，因此让我们来看看所有这些格式。
 
 
 
