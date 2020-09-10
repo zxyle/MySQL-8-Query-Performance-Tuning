@@ -38,11 +38,19 @@
 
 如果您将 MySQL Shell 与 2020 年 1 月左右或之前的世界数据库副本一起使用，则需要使用传统协议，因为 X 协议（默认）需要 UTF-8，而世界数据库使用拉丁语 1。您可以使用从 MySQL 命令程序加载数据：
 
-MySQL [本地主机 ssl] SQL> [源世界.sql
+```
+MySQL [localhost ssl] SQL> \source world.sql
+```
+
+
 
 如果使用旧版命令行客户端，请改为命令：
 
-mysql > 来源世界. sql
+```
+mysql> SOURCE world.sql
+```
+
+
 
 在这两种情况下，如果位于启动 MySQL Shell 或 mysql 的目录中，请将其添加到。
 
@@ -66,7 +74,11 @@ MySQL 8 增加了对 MySQL 文档存储的支持，该存储存储和支持作�
 
 由于使用 UTF-8，因此可以使用其中任一 MySQL 协议安装它。例如，使用 MySQL 外壳：
 
-MySQL [本地主机] ssl _ SQL> [源world_x. sql
+```
+MySQL [localhost+ ssl] SQL> \source world_x.sql
+```
+
+
 
 如果路径不位于world_x，请将路径添加到文件。
 
@@ -130,9 +142,12 @@ MySQL [本地主机] ssl _ SQL> [源world_x. sql
 
 首先从 sakila-schema.sql 文件采购，然后采购 数据库。例如，以下是使用 MySQL 外壳：
 
-MySQL [本地主机] ssl _ SQL> _源 sakila 架构. sql
+```
+MySQL [localhost+ ssl] SQL> \source sakila-schema.sql
+MySQL [localhost+ ssl] SQL> \source sakila-data.sql
+```
 
-MySQL [本地主机] ssl _ SQL> _源 sakila 数据.sql
+
 
 如果文件不位于当前目录中，请向它们添加路径。
 
@@ -150,45 +165,31 @@ MySQL [本地主机] ssl _ SQL> _源 sakila 数据.sql
 
 可以选择按清单列表和。
 
-按范围划分列（from_date）
+```
+Listing 4-1. The optional partitioning of the salaries and titles tables
+PARTITION BY RANGE COLUMNS(from_date)
+(PARTITION p01 VALUES LESS THAN ('1985-12-31') ENGINE = InnoDB,
+ PARTITION p02 VALUES LESS THAN ('1986-12-31') ENGINE = InnoDB,
+ PARTITION p03 VALUES LESS THAN ('1987-12-31') ENGINE = InnoDB,
+ PARTITION p04 VALUES LESS THAN ('1988-12-31') ENGINE = InnoDB,
+ PARTITION p05 VALUES LESS THAN ('1989-12-31') ENGINE = InnoDB,
+ PARTITION p06 VALUES LESS THAN ('1990-12-31') ENGINE = InnoDB,
+ PARTITION p07 VALUES LESS THAN ('1991-12-31') ENGINE = InnoDB,
+ PARTITION p08 VALUES LESS THAN ('1992-12-31') ENGINE = InnoDB,
+ PARTITION p09 VALUES LESS THAN ('1993-12-31') ENGINE = InnoDB,
+ PARTITION p10 VALUES LESS THAN ('1994-12-31') ENGINE = InnoDB,
+ PARTITION p11 VALUES LESS THAN ('1995-12-31') ENGINE = InnoDB,
+ PARTITION p12 VALUES LESS THAN ('1996-12-31') ENGINE = InnoDB,
+ PARTITION p13 VALUES LESS THAN ('1997-12-31') ENGINE = InnoDB,
+ PARTITION p14 VALUES LESS THAN ('1998-12-31') ENGINE = InnoDB,
+ PARTITION p15 VALUES LESS THAN ('1999-12-31') ENGINE = InnoDB,
+ PARTITION p16 VALUES LESS THAN ('2000-12-31') ENGINE = InnoDB,
+ PARTITION p17 VALUES LESS THAN ('2001-12-31') ENGINE = InnoDB,
+ PARTITION p18 VALUES LESS THAN ('2002-12-31') ENGINE = InnoDB,
+ PARTITION p19 VALUES LESS THAN (MAXVALUE) ENGINE = InnoDB)
+```
 
-（分区 p01 值小于 （'1985-12-31'） 引擎 = Innodb，
 
-分区 p02 值小于 （'1986-12-31'） 引擎 = Innodb，
-
-分区 p03 值小于 （'1987-12-31'） 引擎 = Innodb，
-
-分区 p04 值小于 （'1988-12-31'） 引擎 = Innodb，
-
-分区 p05 值小于 （'1989-12-31'） 引擎 = Innodb，
-
-分区 p06 值小于 （'1990-12-31'） 引擎 = Innodb，
-
-分区 p07 值小于 （'1991-12-31'） 引擎 = Innodb，
-
-分区 p08 值小于 （'1992-12-31'） 引擎 = Innodb，
-
-分区 p09 值小于 （'1993-12-31'） 引擎 = Innodb，
-
-分区 p10 值小于 （'1994-12-31'） 引擎 = Innodb，
-
-分区 p11 值小于 （'1995-12-31'） 引擎 = Innodb，
-
-分区 p12 值小于 （'1996-12-31'） 引擎 = Innodb，
-
-分区 p13 值小于 （'1997-12-31'） 引擎 = Innodb，
-
-分区 p14 值小于 （'1998-12-31'） 引擎 = Innodb，
-
-分区 p15 值小于 （'1999-12-31'） 引擎 = Innodb，
-
-分区 p16 值小于 （'2000-12-31'） 引擎 = Innodb，
-
-分区 p17 值小于 （'2001-12-31'） 引擎 = Innodb，
-
-分区 p18 值小于 （'2002-12-31'） 引擎 = Innodb，
-
-分区 p19 值小于 （最大值） 引擎 = Innodb）
 
 表显示了表的行数和请注意，加载数据时大小可能会略有不同）。大小假定您加载非分区数据;分区表稍大一些。
 
@@ -209,37 +210,27 @@ MySQL [本地主机] ssl _ SQL> _源 sakila 数据.sql
 
 dept_emp_latest_date和视图一起安装，而其余对象则单独安装在文件中。具有它们自己的内置帮助，您可以使用 帮助。后者列于清单
 
-mysql> employees_help（）\G
+```
+mysql> CALL employees_help()\G
+*************************** 1. row ***************************
+info:
+ == USAGE ==
+ ====================
+ PROCEDURE show_departments()
+ shows the departments with the manager and
+ number of employees per department
+ FUNCTION current_manager (dept_id)
+ Shows who is the manager of a given departmennt
+ FUNCTION emp_name (emp_id)
+ Shows name and surname of a given employee
+Figure 4-11. The views and routines in the employees database
+ FUNCTION emp_dept_id (emp_id)
+ Shows the current department of given employee
+1 row in set (0.00 sec)
+Query OK, 0 rows affected (0.02 sec)
+```
 
-1.行***************************************************************************************************
 
-信息：
-
-[使用情况]
-
-  ====================
-
-程序show_departments（）
-
-显示部门与经理和
-
-每个部门的员工数
-
-功能current_manager （dept_id）
-
-显示谁是给定的离开者的经理
-
-功能emp_name （emp_id）
-
-显示给定员工的姓名和姓氏
-
-功能emp_dept_id （emp_id）
-
-显示给定员工的当前部门
-
-设置 1 行（0.00 秒）
-
-查询确定，0 行受影响（0.02 秒）
 
 ### 安装
 
@@ -249,25 +240,32 @@ mysql> employees_help（）\G
 
 通过使用 SOURCE 命令源来数据。在编写时 Shell 不支持 SOURCE 命令，因此您需要使用命令行客户端导入数据。转到包含源文件的目录，然后选择 文件，具体取决于是否要使用分区，例如：
 
-mysql> 来源员工. sql
+```
+mysql> SOURCE employees.sql
+```
+
+
 
 导入需要一点时间，通过显示它所用的时间完成：
 
+```
 +---------------------+
-
-|data_load_time_diff |
-
+| data_load_time_diff |
 +---------------------+
-
-|00：01：51 |
-
+| 00:01:51            |
 +---------------------+
+1 row in set (0.44 sec)
+```
 
-设置 1 行（0.44 秒）
+
 
 或者，您可以通过源对象.sql 文件来加载一些额外的视图程：
 
-mysql> 源对象. sql
+```
+mysql> SOURCE objects.sql
+```
+
+
 
 除了此处讨论的之外，还有其他一些选择来获取要使用的示例数据。
 

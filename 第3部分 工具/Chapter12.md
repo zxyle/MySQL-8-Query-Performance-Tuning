@@ -8,17 +8,17 @@ MySQL Shell是第二代命令行客户端，与传统的mysql命令行客户端�
 
 第一个具有常规可用性状态的 MySQL Shell 版本是在 2017 年，因此它仍然是 MySQL 工具箱中一个非常新的工具。然而，它已经拥有了大量的功能，远远超出了传统的命令行客户端的功能。这些功能不限于使用 MySQL 命令行管理程序作为 MySQL InnoDB 群集解决方案的一部分所需的功能;还有一些功能可用于日常数据库管理任务和性能优化。
 
-MySQL Shell 比命令行客户端的优势在于 MySQL Shell 编辑器在 Linux 和 Microsoft Windows 上的行为相同，因此，如果您在这两个平台上工作，您就可获得一致的用户体验。 这意味着 Ctrl+D 在 Linux、macOS 和 Microsoft Windows 上都存在外壳，Ctrl+W 会删除上一个单词，等等。
+MySQL Shell 比命令行客户端的优势在于 MySQL Shell 编辑器在 Linux 和 Microsoft Windows 上的行为相同，因此，如果您在这两个平台上工作，您就可获得一致的用户体验。 这意味着 Ctrl+D 在 Linux、macOS 和 Microsoft Windows 上都存在 Shell，Ctrl+W 会删除上一个单词，等等。
 
-本节将介绍安装 MySQL Shell、调用它以及一些基本功能。但是，无法详细介绍 MySQL 命令行程序的所有功能。在使用 MySQL 雪壳时在线手册，以了解更多信息。
+本节将介绍安装 MySQL Shell、调用它以及一些基本功能。但是，无法详细介绍 MySQL 命令行程序的所有功能。在使用 MySQL  Shell时在线手册，以了解更多信息。
 
 ### 安装 MySQL Shell
 
 的安装方式与其他 MySQL 产品相同（MySQL 企业监视器除外）。你可以从它可用于微软 Windows、Linux 和 macOS，并用作源代码。对于 Microsoft Windows，您也可以通过 MySQL 安装程序安装它。
 
-如果使用本机包格式和 Microsoft Windows 的 MySQL 安装程序安装 MySQL 外壳，则安装说明与 MySQL 工作台的安装说明相同，名称除外。有关详细信息，请参阅上一章。
+如果使用本机包格式和 Microsoft Windows 的 MySQL 安装程序安装 MySQL  Shell，则安装说明与 MySQL 工作台的安装说明相同，名称除外。有关详细信息，请参阅上一章。
 
-您还可以在 Microsoft Windows 上使用 ZIP 存档或在 Linux 和 macOS 上使用 TAR 存档安装 MySQL 外壳。如果选择该选项，只需解压缩下载的文件，即可完成。
+您还可以在 Microsoft Windows 上使用 ZIP 存档或在 Linux 和 macOS 上使用 TAR 存档安装 MySQL  Shell。如果选择该选项，只需解压缩下载的文件，即可完成。
 
 ### 调用 MySQL Shell
 
@@ -26,19 +26,19 @@ MySQL Shell或 Microsoft Windows 上的二进制文件调用。 使用本机包�
 
 这意味着启动 MySQL 命令行程序的最简单的方法是执行：
 
-壳 > mysqlsh
-
-MySQL 壳牌 8.0.18
-
-版权所有 （c） 2016， 2019， 甲骨文和/或其附属公司.保留所有权利。
-
-甲骨文是甲骨文公司和/或其附属公司的注册商标。
-
-其他名称可能是其各自所有者的商标。
-
-键入"\help"或"+？"寻求帮助;"=退出"以退出。
-
+```
+shell> mysqlsh
+MySQL Shell 8.0.18
+Copyright (c) 2016, 2019, Oracle and/or its affiliates. All rights
+reserved.
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates.
+Other names may be trademarks of their respective owners.
+Type '\help' or '\?' for help; '\quit' to exit.
 MySQL JS>
+```
+
+
 
 提示符看起来与此输出中不同，因为默认提示无法完全以纯文本表示。与命令行不同，MySQL 命令行不需要存在连接，默认情况下不会创建任何连接。
 
@@ -48,39 +48,36 @@ MySQL JS>
 
 如果在调用时添加任何与连接相关的参数，则 MySQL 命令行程序将在启动时创建连接。未指定的任何连接选项都将使用其默认值。例如，要使用默认（以及 Linux 和 macOS 套接字）值作为根 MySQL 用户连接到本地主机上的 MySQL 实例，只需指定参数：
 
-外壳> mysqlsh -- -- 用户=根
+```
+shell> mysqlsh --user=root
+Please provide the password for 'root@localhost': ********
+Save password for 'root@localhost'? [Y]es/[N]o/Ne[v]er (default No): yes
+MySQL Shell 8.0.18
+Copyright (c) 2016, 2019, Oracle and/or its affiliates. All rights
+reserved.
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates.
+Other names may be trademarks of their respective owners.
+Type '\help' or '\?' for help; '\quit' to exit.
+Creating a session to 'root@localhost'
+Fetching schema names for autocompletion... Press ^C to stop.
+Your MySQL connection id is 39581 (X protocol)
+Server version: 8.0.18 MySQL Community Server - GPL
+No default schema selected; type \use <schema> to set one.
+MySQL localhost:33060+ ssl JS >
+```
 
-请提供"root@localhost密码"： ***
 
-是否为"root@localhost保存密码"{Y}es/\N\o/Ne\v\er（默认否）：是
-
-MySQL 壳牌 8.0.18
-
-版权所有 （c） 2016， 2019， 甲骨文和/或其附属公司.保留所有权利。
-
-甲骨文是甲骨文公司和/或其附属公司的注册商标。
-
-其他名称可能是其各自所有者的商标。
-
-键入"\help"或"+？"寻求帮助;"=退出"以退出。
-
-创建会话以"root@localhost"
-
-正在获取自动完成架构名称...按 +C 停止。
-
-您的 MySQL 连接 ID 是 39581 （X 协议）
-
-服务器版本： 8.0.18 MySQL 社区服务器 - GPL
-
-未选择默认架构;未选择默认架构。键入 [使用 <架构>设置一个。
-
-MySQL 本地主机：33060+ ssl JS >
 
 首次连接时，系统会要求您输入帐户的密码。如果 MySQL Shell中找到 mysql_config_editor 命令，或者您在 Microsoft Windows 上，MySQL Shell 可以使用 Windows 密钥环服务，则 MySQL Shell 将提供为您保存密码，因此您将来不需要输入密码。
 
 或者，您可以使用 URI 指定连接选项，例如：
 
-shell> mysqlsh root@localhost：3306？ schema = 世界
+```
+shell> mysqlsh root@localhost:3306?schema=world
+```
+
+
 
 MySQL 命令程序启动后，请注意提示是如何更改的。MySQL 命令行管理程序具有自适应提示，该提示会更改以反映连接状态。默认提示包括您连接到的端口号。如果连接到 MySQL Server 8，则使用的默认端口是 33060，而不是端口 3306，因为默认情况下，当服务器支持 X 协议时，MySQL 命令行程序使用 X 协议，而不是传统的 MySQL 协议。这就是端口号不是您所期望的原因。
 
@@ -97,25 +94,27 @@ MySQL 命令程序启动后，请注意提示是如何更改的。MySQL 命令�
 
 创建会话的所有命令和方法都支持格式的 URI 这些方法还支持在字典中提供选项。如果您不包含密码，并且 MySQL Shell 没有帐户的存储密码，则系统将提示您以交互方式输入密码（与传统的命令行客户端不同，MySQL Shell 可以在执行命令期间提示输入信息）。例如，要作为连接到
 
-MySQL JS> •连接myuser@localhost
+```
+MySQL JS> \connect myuser@localhost
+Creating a session to 'myuser@localhost'
+Please provide the password for 'myuser@localhost': *******
+```
 
-创建会话以"myuser@localhost"
 
-请提供"myuser@localhost"的密码：
 
 已多次提及语言模式。下一小节将研究您如何使用它。
 
 ### 语言模式
 
-MySQL Shell 的最大功能之一是您不限于执行 SQL 语句。您拥有 JavaScript 和 Python 的全部功能，当然还有 SQL 语句。这使得 MySQL 外壳在自动化任务方面非常强大。
+MySQL Shell 的最大功能之一是您不限于执行 SQL 语句。您拥有 JavaScript 和 Python 的全部功能，当然还有 SQL 语句。这使得 MySQL  Shell在自动化任务方面非常强大。
 
 一次使用模式工作，但可以在 JavaScript 和 Python 中通过 API 执行查询。表总结了如何从命令行和 MySQL 命令行中选择要使用的语言模式。
 
-| 模式       | 命令行  | MySQL 外壳 |
-| :--------- | :------ | :--------- |
-| Javascript | - - js  | \js        |
-| Python     | - - 皮  | \py        |
-| Sql        | - - sql | \sql       |
+| 模式       | 命令行  | MySQL Shell |
+| :--------- | :------ | :---------- |
+| Javascript | - - js  | \js         |
+| Python     | - - py  | \py         |
+| Sql        | - - sql | \sql        |
 
 默认模式为 JavaScript。提示反映您模式，因此您始终知道您使用的模式。
 
@@ -129,55 +128,49 @@ MySQL Shell 的最大功能之一是您不限于执行 SQL 语句。您拥有 Ja
 
 第二级帮助用于命令和全局对象。您可以使用其中一个帮助命令指定全局对象命令的名称，以了解有关命令或对象的信息。例如：
 
-mysql - js > \h \ 连接
-
-名字
-
-•连接 - 将外壳连接到 MySQL 服务器并分配全局会话。
-
-语法
-
-[连接[<TYPE>] <URI>
-
-\c\<TYPE\gt;\ <URI\gt;
-
-描述
-
+```
+mysql-js> \h \connect
+NAME
+ \connect - Connects the shell to a MySQL server and assigns the global
+session.
+SYNTAX
+ \connect [<TYPE>] <URI>
+ \c [<TYPE>] <URI>
+DESCRIPTION
 ...
+```
+
+
 
 最终的帮助级别是全局对象的功能。全局对象的全局对象和模块都有一个方法，该方法为对象或模块提供帮助。方法还可以将模块或对象的方法的名称作为字符串，该字符串将返回该方法的帮助。一些示例是（输出省略，因为它相当详细 - 建议自己尝试命令以查看返回的帮助文本）：
 
-MySQL JS> \h 外壳
+```
+MySQL JS> \h shell
+MySQL JS> shell.help()
+MySQL JS> shell.help('reconnect')
+MySQL JS> shell.reports.help()
+MySQL JS> shell.reports.help('query')
+```
 
-MySQL JS> shell. help （）
 
-MySQL JS> shell.help（"重新连接"）
-
-MySQL JS> shell. reports. help （）
-
-MySQL JS> shell. reports. help （"查询"）
 
 前两个命令检索相同的帮助文本。值得熟悉帮助功能，因为它可以大大提高您使用 MySQL Shell 的效率。
 
-帮助的上下文感知比检测全局对象是否存在以及方法名称是否遵循 JavaScript 或 Python 约定更进一步。考虑有关"选择"的帮助请求。你的意思有几种可能性。它可以是 X DevAPI 中的方法之一，或者您可能想到 SELECT 语句。如果在 SQL 模式下请求帮助，MySQL 外壳假定您指的是 SQL 语句。但是，在 Python 和 JavaScript 模式下，系统会询问您指的是哪一种：
+帮助的上下文感知比检测全局对象是否存在以及方法名称是否遵循 JavaScript 或 Python 约定更进一步。考虑有关"选择"的帮助请求。你的意思有几种可能性。它可以是 X DevAPI 中的方法之一，或者您可能想到 SELECT 语句。如果在 SQL 模式下请求帮助，MySQL  Shell假定您指的是 SQL 语句。但是，在 Python 和 JavaScript 模式下，系统会询问您指的是哪一种：
 
-MySQL Py> \h 选择
+```
+MySQL Py> \h select
+Found several entries matching select
+The following topics were found at the SQL Syntax category:
+- SQL Syntax/SELECT
+The following topics were found at the X DevAPI category:
+- mysqlx.Table.select
+- mysqlx.TableSelect.select
+For help on a specific topic use: \? <topic>
+e.g.: \? SQL Syntax/SELECT
+```
 
-找到多个匹配选择条目
 
-在 SQL 语法类别中找到了以下主题：
-
-\- SQL 语法/选择
-
-以下主题位于 X DevAPI 类别：
-
--mysqlx表.选择
-
--mysqlx表选择.选择
-
-有关特定主题的使用的帮助：|？<主题>
-
-例如：\？SQL 语法/选择
 
 MySQL Shell 可以在 SQL 模式下为 SELECT 提供帮助，而不考虑 X DevAPI 的原因是 X DevAPI 方法只能从 Python 和 JavaScript 访问。另一方面，"选择"的所有三个含义在 Python 和 JavaScript 模式下都有意义。
 
@@ -197,7 +190,7 @@ MySQL 命令行对要素进行分组。使 MySQL 命令行管理器如此强大�
 - 各种通用方法和属性。
 - 各种实用程序，如升级检查器、导入 JSON 数据以及将 CSV 文件中的数据导入关系表。
 
-MySQL 壳类的概述到此结束。接下来，您将了解有关提示以及如何自定义它进行操作的详细了解。
+MySQL Shell的概述到此结束。接下来，您将了解有关提示以及如何自定义它进行操作的详细了解。
 
 ## 提示
 
@@ -237,21 +230,36 @@ MySQL 附带了多个预定义的提示模板，您可以选择这些模板。�
 
 指定提示定义位置的另一种方式是设置环境变量，例如，使用命令提示符在 Microsoft Windows 上：
 
-C：\>设置MYSQLSH_PROMPT_THEME\C：\程序文件\MySQL\MySQL外壳8.0\共享\mysqlsh\提示\prompt_256inv.json
+```
+C:\> set MYSQLSH_PROMPT_THEME=C:\Program Files\MySQL\MySQL Shell 8.0\share\
+mysqlsh\prompt\prompt_256inv.json
+```
+
+
 
 在 PowerShell 中，语法略有不同：
 
-PS> $env：MYSQLSH_PROMPT_THEME = "C：\程序文件\MySQL\MySQL 外壳 8.0\ 共享\ mysqlsh\ 提示\ prompt_256inv. json";
+```
+PS> $env:MYSQLSH_PROMPT_THEME = "C:\Program Files\MySQL\MySQL Shell 8.0\
+share\mysqlsh\prompt\prompt_256inv.json";
+```
+
+
 
 在 Linux 和 Unix 上：
 
-shell$ 导出MYSQLSH_PROMPT_THEME\/usr/股票/mysqlsh/提示/prompt_256inv.json
+```
+shell$ export MYSQLSH_PROMPT_THEME=/usr/share/mysqlsh/prompt/prompt_256inv.
+json
+```
+
+
 
 如果您暂时想要使用与通常提示不同的提示，这非常有用。
 
 正如已经暗示的，大多数提示定义有几个部分。最简单的方法是查看提示的示例，如图提示。
 
-![../images/484666_1_En_12_Chapter/484666_1_En_12_Fig1_HTML.jpg](../images/484666_1_En_12_Chapter/484666_1_En_12_Fig1_HTML.jpg)
+![](../附图/Figure 12-1.png)
 
 提示有几个部分。首先，它红色背景上生产，这是警告您已连接到生产实例。是否将实例视为生产实例取决于您连接到的主机名是否包含在。第二个元素是字符串，它没有任何特殊含义。
 
@@ -269,99 +277,64 @@ shell$ 导出MYSQLSH_PROMPT_THEME\/usr/股票/mysqlsh/提示/prompt_256inv.json
 
 与其详细浏览规范，而是更容易查看模板并讨论该模板的某些部分。清单显示了文件的末尾是定义提示元素的位置。
 
-"段"： |
-
-  {
-
-"类"：["断开连接%主机%"，"%is_production%"]
-
-},
-
-  {
-
-"文本"："我的"，
-
-"bg"： 254，
-
-"fg"： 23
-
-},
-
-  {
-
-"分离器"：""，
-
-"文本"："SQL"，
-
-"bg"： 254，
-
-"fg"： 166
-
-},
-
-  {
-
-   **"类"：["断开连接%主机%"，"%ssl%主机%会话%"]，**
-
-   **"收缩"："truncate_on_dot"，**
-
-"bg"： 237，
-
-"fg"： 15，
-
-"重量"： 10，
-
-"填充" ： 1
-
-},
-
-  {
-
-"类"："noschema%架构%"，"架构"\，
-
-"bg"： 242，
-
-"fg"： 15，
-
-   **"收缩"："椭圆大小"，**
-
-"重量"： -1，
-
-"填充" ： 1
-
-},
-
-  {
-
-"类"：["%模式%]，"
-
-"文本"："%模式%"，
-
-"填充" ： 1
-
-  }
-
+```
+Listing 12-1. The definition of the elements of the prompt
+ "segments": [
+ {
+ "classes": ["disconnected%host%", "%is_production%"]
+ },
+ {
+ "text": " My",
+ "bg": 254,
+ "fg": 23
+ },
+ {
+ "separator": "",
+ "text": "SQL ",
+ "bg": 254,
+ "fg": 166
+ },
+ {
+ "classes": ["disconnected%host%", "%ssl%host%session%"],
+ "shrink": "truncate_on_dot",
+ "bg": 237,
+ "fg": 15,
+ "weight": 10,
+ "padding" : 1
+ },
+ {
+ "classes": ["noschema%schema%", "schema"],
+ "bg": 242,
+ "fg": 15,
+ "shrink": "ellipsize",
+ "weight": -1,
+ "padding" : 1
+ },
+ {
+ "classes": ["%Mode%"],
+ "text": "%Mode%",
+ "padding" : 1
+ }
  ]
+```
+
+
 
 这里有一些有趣的。首先，请注意，有一个对象与类断开连接 。百分比符号中的名称是在同一文件中定义的变量，或者来自 MySQL Shell 本身的变量（它有变量，如主机和端口）。例如定义为
 
-"变量" ： |
+```
+"variables" : {
+ "is_production": {
+ "match" : {
+ "pattern": "*;%host%;*",
+ "value": ";%env:PRODUCTION_SERVERS%;"
+ },
+ "if_true" : "production",
+ "if_false" : ""
+ },
+```
 
-"is_production"：
 
-"匹配" ： |
-
-"模式"：*;%主机;*，
-
-"值"： ";%env：PRODUCTION_SERVERS;"
-
-},
-
-"if_true"："生产"，
-
-"if_false"： ""
-
-},
 
 因此，如果主机包含在环境变量中，则主机被视为生产
 
@@ -383,17 +356,16 @@ shell$ 导出MYSQLSH_PROMPT_THEME\/usr/股票/mysqlsh/提示/prompt_256inv.json
 
 例如，如果您想要在提示中包括您连接到的实例的 MySQL 版本，可以添加一个元素，如
 
-  {
+  ```
+{
+ "separator": "",
+ "text": "%sysvar:version%",
+ "bg": 250,
+ "fg": 166
+ },
+  ```
 
-"分离器"：""，
 
-"文本"：" %sysvar：版本%"，
-
-   "bg": 250,
-
-"fg"： 166
-
-},
 
 我们鼓励您使用定义，直到获得最适合你的配色方案和元素。改进 Linux 提示的替代方法是安装 Powerline 和真棒字体。
 
@@ -405,157 +377,129 @@ shell$ 导出MYSQLSH_PROMPT_THEME\/usr/股票/mysqlsh/提示/prompt_256inv.json
 
 通过克隆存储库并更改为修补策略分支，可以安装真棒字体。然后是将所需的文件复制到主目录下并重建字体信息缓存文件的问题。这些步骤列在清单。输出在本书中也有可用，以便于复制命令。
 
-壳 $
+```
+Listing 12-2. Installing the Awesome fonts
+shell$ git clone https://github.com/gabrielelana/awesome-terminal-fonts.git
+Cloning into 'awesome-terminal-fonts'...
+remote: Enumerating objects: 329, done.
+remote: Total 329 (delta 0), reused 0 (delta 0), pack-reused 329
+Receiving objects: 100% (329/329), 2.77 MiB | 941.00 KiB/s, done.
+Resolving deltas: 100% (186/186), done.
+shell$ cd awesome-terminal-fonts
+shell$ git checkout patching-strategy
+Branch patching-strategy set up to track remote branch patching-strategy
+from origin.
+Switched to a new branch 'patching-strategy'
+shell$ mkdir -p ~/.local/share/fonts/
+shell$ cp patched/SourceCodePro+Powerline+Awesome+Regular.* ~/.local/share/
+fonts/
+shell$ fc-cache -fv ~/.local/share/fonts/
+/home/myuser/.local/share/fonts: caching, new cache contents: 1 fonts,
+0 dirs
+/usr/lib/fontconfig/cache: not cleaning unwritable cache directory
+/home/myuser/.cache/fontconfig: cleaning cache directory
+/home/myuser/.fontconfig: not cleaning non-existent cache directory
+/usr/bin/fc-cache-64: succeeded
+```
 
-克隆成 "真棒终端字体"...
 
-远程：枚举对象：329，完成。
-
-远程：总计 329（delta 0），重用 0（delta 0），包重用 329
-
-接收对象：100% （329/329），2.77 MiB |941.00 KiB/s，完成。
-
-解析增量：100%（186/186），完成。
-
-壳 $
-
-壳
-
-为从源跟踪远程分支修补策略而设置的分支修补策略。
-
-切换到新的分支"修补策略"
-
-壳$
-
-shell$
-
-shell$
-
-/home/myuser/.local/共享/字体：缓存，新缓存内容：1 种字体，0 个 dirs
-
-/usr/lib/fontconfig/缓存：不清理不可重写的缓存目录
-
-/home/myuser/.缓存/字体配置：清理缓存目录
-
-/home/myuser/.fontconfig：不清理不存在的缓存目录
-
-/usr/bin/fc-缓存-64：成功
 
 这需要安装下一部分是安装列名。输出在本书中也可用，以便于复制命令。
 
-shell$
-
+```
+Listing 12-3. Installing the Powerline font
+shell$ wget --directory-prefix="${HOME}/.local/share/fonts" https://github.
+com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
 ...
-
-2019-08-25 14：38：41 （5.48 MB/s） - '/home/myuser/.local/共享/字体/Powerlinesmbols.otf" 保存 [2264/2264]
-
-外壳$
-
-/home/myuser/.local/共享/字体：缓存，新缓存内容：2 种字体，0 个 dirs
-
-/usr/lib/fontconfig/缓存：不清理不可重写的缓存目录
-
-/home/myuser/.缓存/字体配置：清理缓存目录
-
-/home/myuser/.fontconfig：不清理不存在的缓存目录
-
-/usr/bin/fc-缓存-64：成功
-
-shell$
-
+2019-08-25 14:38:41 (5.48 MB/s) - '/home/myuser/.local/share/fonts/
+PowerlineSymbols.otf' saved [2264/2264]
+shell$ fc-cache -vf ~/.local/share/fonts/
+/home/myuser/.local/share/fonts: caching, new cache contents: 2 fonts,
+0 dirs
+/usr/lib/fontconfig/cache: not cleaning unwritable cache directory
+/home/myuser/.cache/fontconfig: cleaning cache directory
+/home/myuser/.fontconfig: not cleaning non-existent cache directory
+/usr/bin/fc-cache-64: succeeded
+shell$ wget --directory-prefix="${HOME}/.config/fontconfig/conf.d" https://
+github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
 ...
+2019-08-25 14:39:11 (3.61 MB/s) - '/home/myuser/.config/fontconfig/
+conf.d/10-powerline-symbols.conf' saved [2713/2713]
+```
 
-2019-08-25 14：39：11 （3.61 MB/s） - '/home/myuser/.config/fontconfig/conf.d/10-Powerline 符号.conf' 保存 [2713/2713]
+
 
 这不能完全安装 Powerline 字体，但如果只想将 Powerline 字体与 MySQL Shell 一起使用，则只需全部安装。两 命令下载字体和配置文件重建字体信息缓存文件。您需要重新启动 Linux 才能使更改生效。
 
 重新启动完成后，您可以复制其中一模板，成为新的提示，例如：
 
-壳$ cp / usr / 共享 / mysqlsh / 提示 / prompt_dbl_256pl\ aw. json\ /. mysqlsh / 提示. json
+```
+shell$ cp /usr/share/mysqlsh/prompt/prompt_dbl_256pl+aw.json ~/.mysqlsh/
+prompt.json
+```
+
+
 
 结果提示见图。
 
-![../images/484666_1_En_12_Chapter/484666_1_En_12_Fig2_HTML.jpg](../images/484666_1_En_12_Chapter/484666_1_En_12_Fig2_HTML.jpg)
+![](../附图/Figure 12-2.png)
 
 此示例还显示在更改语言模式和设置默认架构时提示如何更改。关于对多个模块的支持，这就是 MySQL 雪具是一个如此强大的工具的原因，因此下一节将介绍如何使用 MySQL Shell 中的外部模块。
 
 ## 使用外部模块
 
-对 JavaScript 和 Python 的支持使得在 MySQL 外壳中执行任务变得容易。您不仅限于核心功能，还可以同时导入标准您自己的自定义模块。本节将从使用外部模块的基础知识开始（与内置的 MySQL 外壳模块相反）。下一节将进入报告基础结构，之后将介绍插件。
+对 JavaScript 和 Python 的支持使得在 MySQL  Shell中执行任务变得容易。您不仅限于核心功能，还可以同时导入标准您自己的自定义模块。本节将从使用外部模块的基础知识开始（与内置的 MySQL  Shell模块相反）。下一节将进入报告基础结构，之后将介绍插件。
 
 在 MySQL Shell 中使用 Python 模块的方式与使用交互式 Python 解释器时相同，例如：
 
-mysql - py > 导入系统
+```
+mysql-py> import sys
+mysql-py> print(sys.version)
+3.7.4 (default, Sep 13 2019, 06:53:53) [MSC v.1900 64 bit (AMD64)]
+mysql-py> import uuid
+mysql-py> print(uuid.uuid1())
+fd37319e-c70d-11e9-a265-b0359feab2bb
+```
 
-mysql-py> 打印（系统版）
 
-3.7.4 （默认， 2019年9月13日， 06：53：53） [MSC v.1900 64 位 （AMD64）]
-
-mysql - py > 导入 uuid
-
-mysql - py > 打印 （uuid. uuid1 （））
-
-fd37319e - c70d - 11e9 - a265 - b0359feab2bb
 
 确切的输出取决于 MySQL 命令行管理程序的版本以及您使用它的平台。
 
-MySQL 外壳解释器允许您导入 Python 中包含的所有常用模块。如果要导入自己的模块，则需要调整搜索路径。您可以直接在交互式会话中这样做，例如：
+MySQL  Shell解释器允许您导入 Python 中包含的所有常用模块。如果要导入自己的模块，则需要调整搜索路径。您可以直接在交互式会话中这样做，例如：
 
-mysql - py > sys. path. append （'C：\ Mysql\ Shell\ Python'）
+```
+mysql-py> sys.path.append('C:\MySQL\Shell\Python')
+```
+
+
 
 这样修改路径对于一次性使用模块来说没问题;但是，如果您创建了一个使用的模块，则不方便。
 
-当 MySQL 外壳启动时，它读取两个配置文件，一个用于 Python，一个用于 JavaScript。对于 Python，该文件是 JavaScript MySQL 命令行程序在四个位置搜索这些文件。在 Microsoft Windows 上，路径按搜索顺序排列：
+当 MySQL  Shell启动时，它读取两个配置文件，一个用于 Python，一个用于 JavaScript。对于 Python，该文件是 JavaScript MySQL 命令行程序在四个位置搜索这些文件。在 Microsoft Windows 上，路径按搜索顺序排列：
 
-1. 1.
+```
+1. %PROGRAMDATA%\MySQL\mysqlsh\
+2. %MYSQLSH_HOME%\shared\mysqlsh\
+3. <mysqlsh binary path>\
+4. %APPDATA%\MySQL\mysqlsh\
+```
 
-   %程序数据%[MySQL[mysqlsh]
 
-    
 
-2. 2.
-
-   %MYSQLSH_HOME%[共享]mysqlsh]
-
-    
-
-3. 3.
-
-   <mysqlsh 二进制路径>|
-
-    
-
-4. 4.
-
-   %APPDATA%[MySQL[mysqlsh]
-
-    
+ 
 
 在 Linux 和 Unix 上：
 
-1. 1.
+```
+1. /etc/mysql/mysqlsh/
+2. $MYSQLSH_HOME/shared/mysqlsh/
+3. <mysqlsh binary path>/
+4. $HOME/.mysqlsh/
+```
 
-   /etc/mysql/mysqlsh/
 
-    
 
-2. 2.
-
-   $MYSQLSH_HOME/共享/mysqlsh/
-
-    
-
-3. 3.
-
-   <mysqlsh 二进制路径>/
-
-    
-
-4. 4.
-
-   $HOME/.mysqlsh/
-
-    
+ 
 
 始终搜索所有四个路径，如果文件在多个位置找到，则将执行每个文件。这意味着，如果文件影响相同的变量，则最后找到的文件优先。如果您进行个人更改，则进行更改的最佳位置是第四个位置。可以使用第 4 步中的路径。
 
@@ -563,31 +507,36 @@ mysql - py > sys. path. append （'C：\ Mysql\ Shell\ Python'）
 
 作为一个简单的例子，考虑一个非常简单的模块，它有一个函数来掷虚拟骰子，并返回一个和六之间的值：
 
-导入随机
+```
+import random
+def dice():
+    return random.randint(1, 6)
+```
 
-def 骰子 （）：
 
-返回随机.兰丁特（1，6）
 
 该示例也可以本书中的文件配置文件中获取。如果将文件保存文件中（根据保存文件的位置调整行中的路径）：
 
-导入系统
+```
+import sys
+sys.path.append('C:\MySQL\Shell\Python')
+```
 
-sys. path. append （'C：\MySQL\ Shell\ Python'）
+
 
 下次启动 MySQL Shell 时，您可以使用该模块，例如（因为函数返回一个随机值，因此您的输出会有所不同）：
 
-mysql-py> 导入示例
-
-mysql - py > 示例. dice （）
-
+```
+mysql-py> import example
+mysql-py> example.dice()
 5
-
-mysql - py > 示例. dice （）
-
+mysql-py> example.dice()
 3
+```
 
-这是扩展 MySQL 外壳的最简单方法。另一种方法就是将报表添加到报表基础结构中。
+
+
+这是扩展 MySQL  Shell的最简单方法。另一种方法就是将报表添加到报表基础结构中。
 
 ## 报告基础架构
 
@@ -599,35 +548,26 @@ mysql - py > 示例. dice （）
 
 MySQL 命令行程序的内置帮助也扩展到报表，因此您可以轻松地获取有关如何使用报表的帮助。您可以开始使用无需任何参数即可获取可用报表的列表。如果将报表名称添加为参数以及，则获得该报表的详细帮助。清单显示了两种用途的示例。
 
-mysql - py
+```
+Listing 12-4. Obtaining a list of reports and help for the query report
+mysql-py> \show
+Available reports: query, thread, threads.
+mysql-py> \show query --help
+NAME
+ query - Executes the SQL statement given as arguments.
+SYNTAX
+ \show query [OPTIONS] [ARGS]
+ \watch query [OPTIONS] [ARGS]
+DESCRIPTION
+ Options:
+ --help, -h Display this help and exit.
+ --vertical, -E
+ Display records vertically.
+ Arguments:
+ This report accepts 1-* arguments.
+```
 
-可用报告：查询、线程、线程。
 
-mysql - py >
-
-名字
-
-查询 - 执行作为参数给出的 SQL 语句。
-
-语法
-
-[显示查询 [选项] [ARGS]
-
-[观看查询 [选项] [Args]
-
-描述
-
-选项：
-
-\- - 帮助， - h 显示此帮助并退出。
-
-\- - 垂直， - e
-
-垂直显示记录。
-
-参数：
-
-此报告接受 1-* 参数。
 
 显示有三个报表可用。这些是版本 8.0.18 的内置报表。第二个命令返回查询报表，该报表显示它需要一个或多个参数，并且有返回帮助以垂直格式返回查询结果。
 
@@ -639,9 +579,12 @@ mysql - py >
 
 在帮助输出中，您应该注意的另一件事是，它列出了两种执行报表的方法。您可以使用也用于生成帮助的命令，也可以使用命令。您可以使用通常的内置帮助获得有关每个命令的更多帮助：
 
-mysql - py > \h \ show
+```
+mysql-py> \h \show
+mysql-py> \h \watch
+```
 
-mysql - py > \h\ 手表
+
 
 帮助输出相当详细，因此此处省略了该输出。相反，下一小节将讨论如何使用这两个命令。
 
@@ -663,51 +606,38 @@ mysql - py > \h\ 手表
 
 作为执行，请考虑您为查询提供要执行的查询。如果希望以垂直格式返回结果，可以使用 --。清单显示了首先执行报表的结果示例，该报表使用命令从视图提取活动查询，然后5 秒刷新一次，而不清除屏幕。例如，为了确保返回一些数据，可以在第二个连接中执行
 
-mysql - sql > [显示查询 - 垂直选择 conn_id， current_statement as stmt， statement_latency 作为延迟从 sys. session 在哪里命令 = "查询" 和 conn_id <> CONNECTION_ID（）
-
-1.行***************************************************************************************************
-
-conn_id： 34979
-
-stmt： 选择睡眠 （60）
-
-延迟： 32.62 s
-
-mysql - sql> [观看查询 - 间隔 = 5 - nocls - 垂直选择 conn_id， current_statement as stmt， statement_latency 从 sys. session 的延迟在哪里命令 = "查询" 和 conn_id <> CONNECTION_ID（）
-
-1.行***************************************************************************************************
-
-conn_id： 34979
-
-stmt： 选择睡眠 （60）
-
-延迟： 43.02 s
-
-1.行***************************************************************************************************
-
-conn_id： 34979
-
-stmt： 选择睡眠 （60）
-
-延迟： 48.09 s
-
-1.行***************************************************************************************************
-
-conn_id： 34979
-
-stmt： 选择睡眠 （60）
-
-延迟： 53.15 s
-
-1.行***************************************************************************************************
-
-conn_id： 34979
-
-stmt： 选择睡眠 （60）
-
+```
+Listing 12-5. Using the query report
+mysql-sql> \show query --vertical SELECT conn_id, current_statement AS
+stmt, statement_latency AS latency FROM sys.session WHERE command = 'Query'
+AND conn_id <> CONNECTION_ID()
+*************************** 1. row ***************************
+conn_id: 34979
+ stmt: SELECT SLEEP(60)
+latency: 32.62 s
+mysql-sql> \watch query --interval=5 --nocls --vertical SELECT conn_id,
+current_statement AS stmt, statement_latency AS latency FROM sys.session
+WHERE command = 'Query' AND conn_id <> CONNECTION_ID()
+*************************** 1. row ***************************
+conn_id: 34979
+ stmt: SELECT SLEEP(60)
+latency: 43.02 s
+*************************** 1. row ***************************
+conn_id: 34979
+ stmt: SELECT SLEEP(60)
+latency: 48.09 s
+*************************** 1. row ***************************
+conn_id: 34979
+ stmt: SELECT SLEEP(60)
+latency: 53.15 s
+*************************** 1. row ***************************
+conn_id: 34979
+ stmt: SELECT SLEEP(60)
 latency: 58.22 s
+Report returned no data.
+```
 
-报表未返回任何数据。
+
 
 如果执行相同的命令，则输出将取决于运行报表时在其他线程中执行的语句。用于报表的查询添加了一个条件，条件是连接 ID 必须与生成报表的连接的查询 ID 不同。带查询报表的命令本身几乎没有价值，因为您可以执行查询。它对于其他报表更有用，在将查询与 \watch 命令一起使用查询。
 
@@ -721,103 +651,60 @@ latency: 58.22 s
 
 讨论如何创建自己的报表的一个好方法就是创建一个简单的报表并讨论组成报表的各个部分。清单显示了创建查询代码。在本书的 GitHub 存储库中中的文件文件也提供该代码。稍后将讨论将代码保存到哪里，以便它作为 MySQL 命令行程序中的报表可用。
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-用于活动查询。支持指定要按顺序订购
-
-以及要包括的最大行数。
-
-结果。
-
-SORT_ALLOWED ]
-
-"线程"："thd_id"，
-
-"连接"："conn_id"，
-
-"用户"："用户"，
-
-"db"： "db"，
-
-"延迟"："statement_latency"，
-
-"记忆"："current_memory"，
-
+```
+Listing 12-6. Report querying the sys.session view
+'''Defines the report "sessions" that queries the sys.x$session view
+for active queries. There is support for specifying what to order by
+and in which direction, and the maximum number of rows to include in
+the result.'''
+SORT_ALLOWED = {
+ 'thread': 'thd_id',
+ 'connection': 'conn_id',
+ 'user': 'user',
+ 'db': 'db',
+ 'latency': 'statement_latency',
+ 'memory': 'current_memory',
 }
+def sessions(session, args, options):
+ '''Defines the report itself. The session argument is the MySQL
+ Shell session object, args are unnamed arguments, and options
+ are the named options.'''
+ sys = session.get_schema('sys')
+ session_view = sys.get_table('x$session')
+ query = session_view.select(
+ 'thd_id', 'conn_id', 'user', 'db',
+ 'sys.format_statement(current_statement) AS statement',
+ 'sys.format_time(statement_latency) AS latency',
+ 'format_bytes(current_memory) AS memory')
+ # Set what to sort the rows by (--sort)
+ try:
+ order_by = options['sort']
+ except KeyError:
+ order_by = 'latency'
+ if order_by in ('latency', 'memory'):
+ direction = 'DESC'
+ else:
+ direction = 'ASC'
+ query.order_by('{0} {1}'.format(SORT_ALLOWED[order_by], direction))
+ # If ordering by latency, ignore those statements with a NULL latency
+ # (they are not active)
+ if order_by == 'latency':
+ query.where('statement_latency IS NOT NULL')
+ # Set the maximum number of rows to retrieve is --limit is set.
+ try:
+ limit = options['limit']
+ except KeyError:
+ limit = 0
+ if limit > 0:
+ query.limit(limit)
+ result = query.execute()
+ report = [result.get_column_names()]
+ for row in result.fetch_all():
+ report.append(list(row))
+ return {'report': report}
+```
 
-def 会话（会话、参数、选项）：
 
-''''''''''''''''''''''''''会话参数是 MySQL
-
-外壳会话对象、arg 是未命名的参数和选项
-
-是命名的选项。
-
-系统 = session.get_schema （"系统"）
-
-session_view = sys.get_table（"x$会话"）
-
-查询 = session_view. 选择 （
-
-"thd_id"，"conn_id"，"用户"，"db"，
-
-"sys.format_statement（current_statement）AS 声明"，
-
-"sys.format_time（statement_latency）作为延迟"，
-
-"format_bytes（current_memory）作为内存"）
-
-\# 设置按排序行的排序数（-排序）
-
-尝试：
-
-order_by [选项] "排序"
-
-除了键。
-
-order_by = "延迟"
-
-如果order_by （"延迟"， "内存"）：
-
-方向 = "Desc"
-
-还：
-
-方向 = "Asc"
-
-query.order_by（{0} {1}格式（SORT_ALLOWED[order_by]，方向）
-
-\# 如果按延迟排序，则忽略具有 NULL 延迟的这些语句
-
-\# （它们不处于活动状态）
-
-如果order_by = "延迟"：
-
-查询. where （statement_latency不是 null'）
-
-\# 设置要检索的最大行数为 --设置限制。
-
-尝试：
-
-限制 = 选项 ="限制"}
-
-除了键。
-
-限制 = 0
-
-如果限制 > 0：
-
-查询.限制（限制）
-
-结果 = 查询.执行（）
-
-报告 [result.get_column_names（）]
-
-用于行（result.fetch_all）：
-
-报告.附录（列表（行））
-
-返回 ['报告'： 报告]
 
 代码首先定义一个包含用于对结果进行排序的受支持的值的字典。稍后将在会话（） 函数中的代码注册报表时使用。函数是创建报表的地方。函数采用三个参数：
 
@@ -841,59 +728,38 @@ query.order_by（{0} {1}格式（SORT_ALLOWED[order_by]，方向）
 
 剩下的就是登记报告。这是使用 shell 方法完成的，如清单所示（这也包含在文件）。
 
-\# 使报告在 Mysql 命令行程序中可用。
-
-shell.register_report （
-
-"会话"，
-
-"列表"，
-
-会话
-
-  {
-
-"简短"："显示存在哪些会话。
-
-"详细信息"： [您需要在 sys. session 视图上选择权限]
-
-"它使用的基础表和函数。
-
-"选项"： |
-
-​      {
-
-"名称"："限制"，
-
-"简短"："要返回的最大行数。
-
-"快捷方式"："l"，
-
-"类型"："整数"
-
-},
-
-​      {
-
-"名称"："排序"，
-
-"简要"：" 要排序的字段"
-
-"快捷方式"： "s"，
-
-"类型"："字符串"，
-
-"值"：列表（SORT_ALLOWED.键（））
-
-​      }
-
-],
-
-"argc"： "0"
-
-  }
-
+```
+Listing 12-7. Registering the sessions report
+# Make the report available in MySQL Shell.
+shell.register_report(
+ 'sessions',
+ 'list',
+ sessions,
+ {
+ 'brief': 'Shows which sessions exist.',
+ 'details': ['You need the SELECT privilege on sys.session view and ' +
+ 'the underlying tables and functions used by it.'],
+ 'options': [
+ {
+ 'name': 'limit',
+ 'brief': 'The maximum number of rows to return.',
+ 'shortcut': 'l',
+ 'type': 'integer'
+ },
+ {
+ 'name': 'sort',
+ 'brief': 'The field to sort by.',
+ 'shortcut': 's',
+ 'type': 'string',
+ 'values': list(SORT_ALLOWED.keys())
+ }
+ ],
+ 'argc': '0'
+ }
 )
+```
+
+
 
 方法采用定义报表的四个参数，并提供 MySQL 命令行管理程序的内置帮助功能返回的帮助信息。参数为
 
@@ -925,107 +791,61 @@ shell.register_report （
 
 如果将文件复制到此目录中并重新启动 MySQL Shell（请确保使用 MySQL X 端口进行连接 – 默认情况下端口 33060），可以使用会话报告，如清单。报表的结果会有所不同，因此，如果执行报表，则不会看到相同的结果。
 
-**mysql - py >**
+```
+mysql-py> \show
+Available reports: query, sessions, thread, threads.
+mysql-py> \show sessions --help
+NAME
+ sessions - Shows which sessions exist.
+SYNTAX
+ \show sessions [OPTIONS]
+ \watch sessions [OPTIONS]
+DESCRIPTION
+ You need the SELECT privilege on sys.session view and the underlying
+ tables and functions used by it.
+ Options:
+ --help, -h Display this help and exit.
+ --vertical, -E
+ Display records vertically.
+ --limit=integer, -l
+ The maximum number of rows to return.
+ --sort=string, -s
+ The field to sort by. Allowed values: thread, connection,
+ user, db, latency, memory.
+mysql-py> \show sessions --vertical
+*************************** 1. row ***************************
+ thd_id: 81
+ conn_id: 36
+ user: mysqlx/worker
+ db: NULL
+statement: SELECT `thd_id`,`conn_id`,`use ... ER BY `statement_latency` DESC
+ latency: 40.81 ms
+ memory: 1.02 MiB
+mysql-py> \js
+Switching to JavaScript mode...
+mysql-js> \show sessions --vertical
+*************************** 1. row ***************************
+ thd_id: 81
+ conn_id: 36
+ user: mysqlx/worker
+ db: NULL
+statement: SELECT `thd_id`,`conn_id`,`use ... ER BY `statement_latency` DESC
+ latency: 71.40 ms
+ memory: 1.02 MiB
+mysql-js> \sql
+Switching to SQL mode... Commands end with ;
+mysql-sql> \show sessions --vertical
+*************************** 1. row ***************************
+ thd_id: 81
+ conn_id: 36
+ user: mysqlx/worker
+ db: NULL
+statement: SELECT `thd_id`,`conn_id`,`use ... ER BY `statement_latency` DESC
+ latency: 44.80 ms
+ memory: 1.02 MiB
+```
 
-可用报告：查询、会话、线程、线程。
 
-**mysql - py > [显示会话 - 帮助**
-
-名字
-
-会话 - 显示存在哪些会话。
-
-语法
-
-[显示会话 [选项]
-
-[观看会话 [选项]
-
-描述
-
-您需要在 sys.session 视图和基础上选择权限
-
-表和函数。
-
-选项：
-
-\- - 帮助， - h 显示此帮助并退出。
-
-\- - 垂直， - e
-
-垂直显示记录。
-
--- 限制 = 整数， -l
-
-要返回的最大行数。
-
-\- - 排序 = 字符串， - s
-
-要排序的字段。允许的值：线程、连接、
-
-用户、db、延迟、内存。
-
-**mysql -py> =显示会话 -- 垂直**
-
-1.行***************************************************************************************************
-
-thd_id： 81
-
-conn_id： 36
-
-用户： mysqlx / 工人
-
-db： 空
-
-声明： 选择 "thd_id"， "conn_id"， "使用...Er 由 "statement_latency" Desc
-
-延迟： 40.81 ms
-
-内存： 1.02 米布
-
-mysql - py > \js
-
-正在切换到 JavaScript 模式...
-
-**mysql - js > [显示会话 - 垂直**
-
-1.行***************************************************************************************************
-
-thd_id： 81
-
-conn_id： 36
-
-用户： mysqlx / 工人
-
-db： 空
-
-声明： 选择 "thd_id"， "conn_id"， "使用...Er 由 "statement_latency" Desc
-
-延迟： 71.40 ms
-
-内存： 1.02 米布
-
-mysql - js > \sql
-
-正在切换到 SQL 模式...命令以 结束 于 ;
-
-**mysql - sql > •显示会话 - 垂直**
-
-1.行***************************************************************************************************
-
-thd_id： 81
-
-conn_id： 36
-
-用户： mysqlx / 工人
-
-db： 空
-
-声明： 选择 "thd_id"， "conn_id"， "使用...Er 由 "statement_latency" Desc
-
-延迟： 44.80 ms
-
-内存： 1.02 米布
 
 新的报表的显示方式与内置报表相同，并且具有与内置报表相同的功能，例如，支持在垂直输出中显示结果。支持垂直输出的原因是因为报表将结果作为列表返回，因此 MySQL 命令行管理程序处理格式。另请注意，即使报表是用 Python 编写的，也可以在所有三种语言模式下使用报表。
 
@@ -1033,13 +853,13 @@ db： 空
 
 ## 插件
 
-MySQL 雪壳在 8.0.17 版中增加了对插件的支持。插件由一个或多个代码模块，这些模块可以包括报表、实用程序或其他任何可能用于您且可作为 Python 或 JavaScript 代码执行的代码。这是扩展 MySQL 外壳的最有力方式。代价是，它也相对复杂，但好处是更容易共享和导入一组功能。插件的另一个好处是，不仅可以从任何语言模式执行报告;您的代码的其余部分也可以从 Python 和 JavaScript 使用。
+MySQL Shell在 8.0.17 版中增加了对插件的支持。插件由一个或多个代码模块，这些模块可以包括报表、实用程序或其他任何可能用于您且可作为 Python 或 JavaScript 代码执行的代码。这是扩展 MySQL  Shell的最有力方式。代价是，它也相对复杂，但好处是更容易共享和导入一组功能。插件的另一个好处是，不仅可以从任何语言模式执行报告;您的代码的其余部分也可以从 Python 和 JavaScript 使用。
 
 通过将插件名称添加到用户配置路径下的插件来创建插件，该目录默认为 Microsoft Windows 上的Linux 和 Unix与搜索配置文件的第四个路径相同）。该插件可以包含任何数量的文件和目录，但所有文件必须使用相同的编程语言。
 
 在本书的 GitHub 存储库中称为的示例插件包含在目录/myext中。它包括图。带圆角的浅色（黄色）矩形表示目录，较深（红色）文档形状是目录中的文件列表。
 
-![../images/484666_1_En_12_Chapter/484666_1_En_12_Fig3_HTML.png](../images/484666_1_En_12_Chapter/484666_1_En_12_Fig3_HTML.png)
+![](../附图/Figure 12-3.png)
 
 您可以查看插件的结构，如 Python 包和模块。需要注意的两个重要事情是，每个目录中必须有文件，导入执行 init.py 文件（JavaScript 模块的这意味着您必须包括必要的代码，以注册插件的公共部分。在此示例插件中，所有文件都为空。
 
@@ -1047,47 +867,32 @@ MySQL 雪壳在 8.0.17 版中增加了对插件的支持。插件由一个或多
 
 包括一个模块函数，该模块由 。在函数也注册清单显示了函数。
 
-'''''''''''''''''''''''''''''''''''''''''
+```
+Listing 12-9. The get_columns() function from utils/util.py
+'''Define utility functions for the plugin.'''
+def get_columns(table):
+ '''Create query against information_schema.COLUMNS to obtain
+ meta data for the columns.'''
+ session = table.get_session()
+ i_s = session.get_schema("information_schema")
+ i_s_columns = i_s.get_table("COLUMNS")
+ query = i_s_columns.select(
+ "COLUMN_NAME AS Field",
+ "COLUMN_TYPE AS Type",
+ "IS_NULLABLE AS `Null`",
+ "COLUMN_KEY AS Key",
+ "COLUMN_DEFAULT AS Default",
+ "EXTRA AS Extra"
+ )
+ query = query.where("TABLE_SCHEMA = :schema AND TABLE_NAME = :table")
+ query = query.order_by("ORDINAL_POSITION")
+ query = query.bind("schema", table.schema.name)
+ query = query.bind("table", table.name)
+ result = query.execute()
+ return result
+```
 
-def get_columns （表）：
 
-''''''''''information_schema''''''''''''''''''''''要获取的列
-
-列的元数据。
-
-会话 = table.get_session（）
-
-i_s = session.get_schema （"information_schema"）
-
-i_s_columns = i_s. get_table （"列"）
-
-查询 = i_s_columns. 选择（
-
-"COLUMN_NAME AS 字段"，
-
-"COLUMN_TYPE AS 类型"，
-
-"IS_NULLABLE为'空'"，
-
-"COLUMN_KEY键"，
-
-"COLUMN_DEFAULT为默认值"，
-
-"额外作为额外"
-
-  )
-
-查询 = 查询. where （"TABLE_SCHEMA = ：架构和TABLE_NAME = ：表"）
-
-查询 = query.order_by（"ORDINAL_POSITION"）
-
-查询 = 查询.bind（"架构"，table.schema.name）
-
-查询 = 查询.bind（"表"，table.name）
-
-结果 = 查询.执行（）
-
-返回结果
 
 的函数
 
@@ -1095,105 +900,61 @@ i_s_columns = i_s. get_table （"列"）
 
 清单显示了如何函数，因此它在 提供。注册发生在。
 
-**'''''''''''''''''''''''''''''''''''''''''**
-
-**导入 mysqlsh**
-
-**从 myext. utils 导入实用程序**
-
-外壳 = mysqlsh. globals. shell
-
-\# 获取全局对象（myext 插件）
-
-尝试：
-
-\# 查看 myext 是否已注册
-
-global_obj _ mysqlsh. globals. myext
-
-除了属性者：
-
-\# 注册 myext
-
-  **global_obj = shell.create_extension_object （）**
-
-描述 [ ]
-
-"简介"："各种 MySQL 壳牌扩展。
-
-"详细信息"： |
-
-"更详细的帮助。稍后要添加。
-
-​    ]
-
-  }
-
-  **shell.register_global（"myext"，global_obj，描述）**
-
-\# 获取实用程序扩展
-
-尝试：
-
-plugin_obj = global_obj.实用程序
-
-除了索引者：
-
-\# 实用程序扩展尚不存在，因此请注册它
-
-  **plugin_obj = shell.create_extension_object（）**
-
-描述 [ ]
-
-"简短"："公用事业"，
-
-"详细信息"： ["各种实用程序"。
-
-  }
-
-  **shell.add_extension_object_member（global_obj"，"实用"，plugin_obj，**
-
-​                   **描述）**
-
-定义
-
-"简短"："描述一张桌子"
-
-"详细信息"："显示有关表列的信息。
-
-"参数"： |
-
-​    {
-
-"名称"："表"，
-
-"类型"："对象"，
-
-"类"："表"，
-
-"必需"：真实，
-
-"简短"："要获取列的表"
-
-"详细信息"： {"表的表对象。"
-
-​    }
-
-  ]
-
+```
+Listing 12-10. Registering the get_columns() function as util.get_columns()
+'''Import the utilities into the plugin.'''
+import mysqlsh
+from myext.utils import util
+shell = mysqlsh.globals.shell
+# Get the global object (the myext plugin)
+try:
+ # See if myext has already been registered
+ global_obj = mysqlsh.globals.myext
+except AttributeError:
+ # Register myext
+ global_obj = shell.create_extension_object()
+ description = {
+ 'brief': 'Various MySQL Shell extensions.',
+ 'details': [
+ 'More detailed help. To be added later.'
+ ]
+ }
+ shell.register_global('myext', global_obj, description)
+# Get the utils extension
+try:
+ plugin_obj = global_obj.utils
+except IndexError:
+ # The utils extension does not exist yet, so register it
+ plugin_obj = shell.create_extension_object()
+ description = {
+ 'brief': 'Utilities.',
+ 'details': ['Various utilities.']
+ }
+ shell.add_extension_object_member(global_obj, "util", plugin_obj,
+ description)
+definition = {
+ 'brief': 'Describe a table.',
+ 'details': ['Show information about the columns of a table.'],
+ 'parameters': [
+ {
+ 'name': 'table',
+ 'type': 'object',
+ 'class': 'Table',
+ 'required': True,
+ 'brief': 'The table to get the columns for.',
+ 'details': ['A table object for the table.']
+ }
+ ]
 }
+try:
+ shell.add_extension_object_member(plugin_obj, 'get_columns',
+ util.get_columns, definition)
+except SystemError as e:
+ shell.log("ERROR", "Failed to register myext util.get_columns ({0})."
+ .format(str(e).rstrip()))
+```
 
-尝试：
 
-  **shell.add_extension_object_member（plugin_obj，'get_columns'，**
-
-​                   **util.get_columns，定义）**
-
-除了系统例如 e：
-
-shell.log（"ERROR"，"无法注册我的util.get_columns（{0}）。
-
-.格式（str（e））））））））
 
 第一个重要观察是模块。shell都可以通过获取，因此在使用 MySQL Shell 中的扩展时，这是一个重要的模块。另请注意如何模块。始终需要使用从插件名称开始的完整路径来导入插件模块。
 
@@ -1207,201 +968,133 @@ shell.log（"ERROR"，"无法注册我的util.get_columns（{0}）。
 
 工具添加了两个都注册的函数。有来自骰子（）函数，以及获取列信息的描述函数。清单中显示了与描述函数相关的代码部分。
 
-导入 mysqlsh
+```
+Listing 12-11. The describe() function in tools/example.py
+import mysqlsh
+from myext.utils import util
+def describe(schema_name, table_name):
+ shell = mysqlsh.globals.shell
+ session = shell.get_session()
+ schema = session.get_schema(schema_name)
+ table = schema.get_table(table_name)
+ columns = util.get_columns(table)
+ shell.dump_rows(columns)
+```
 
-从 myext. utils 导入实用程序
 
-def 描述 （schema_name， table_name）：
-
-外壳 = mysqlsh. globals. shell
-
-会话 = shell.get_session（）
-
-架构 = session.get_schema（schema_name）
-
-表 = schema.get_table（table_name）
-
-列 = util.get_columns（表）
-
-shell.dump_rows（列）
 
 需要注意的最重要的事情是对象作为和表对象。方法用于生成结果的输出。该方法采用结果对象，并采用格式（默认为表格式）。在输出结果的过程中，将消耗结果对象。
 
 您现在已准备好尝试该插件。您需要将整个插件目录中MySQL 命令行管理程序。清单显示了帮助内容中的全局对象。
 
-mysql - py > \h
-
+```
+Listing 12-12. The global objects in the help content
+mysql-py> \h
 ...
+GLOBAL OBJECTS
+The following modules and objects are ready for use when the shell starts:
+- dba Used for InnoDB cluster administration.
+- myext Various MySQL Shell extensions.
+- mysql Support for connecting to MySQL servers using the classic MySQL
+ protocol.
+- mysqlx Used to work with X Protocol sessions using the MySQL X DevAPI.
+- session Represents the currently open MySQL session.
+- shell Gives access to general purpose functions and properties.
+- util Global object that groups miscellaneous tools like upgrade checker
+ and JSON import.
+For additional information on these global objects use: <object>.help()
+```
 
-全局对象
 
-当 shell 启动时，以下模块和对象可供使用：
-
-\- dba 用于 InnoDB 群集管理。
-
- **- myext 各种 MySQL 外壳扩展。**
-
-\- mysql 支持使用经典 MySQL 连接到 MySQL 服务器
-
-协议。
-
-\- mysqlx 用于使用 MySQL X DevAPI 处理 X 协议会话。
-
-\- 会话表示当前打开的 MySQL 会话。
-
-\- shell 提供对通用函数和属性的访问。
-
-\- 实用程序全局对象，用于对各种工具（如升级检查器）进行组分
-
-和 Json 导入。
-
-有关这些全局对象的其他信息，请使用：<对象>.help（）
 
 请注意插件如何作为全局对象显示。您可以使用插件，就像任何内置的全局对象一样。这包括获取插件子部分的帮助，如清单的。
 
-mysql - py > myext. tools. help （）
+```
+Listing 12-13. Obtaining help for myext.tools
+mysql-py> myext.tools.help()
+NAME
+ tools - Tools.
+SYNTAX
+ myext.tools
+DESCRIPTION
+ Various tools including describe() and dice().
+FUNCTIONS
+ describe(schema_name, table_name)
+ Describe a table.
+ dice()
+ Roll a dice
+ help([member])
+ Provides help about this object and it's members
+```
 
-名字
 
-工具 - 工具。
-
-语法
-
-myext. 工具
-
-描述
-
-各种工具，包括描述（）和骰子（）。
-
-功能
-
-描述（schema_name，table_name）
-
-描述表。
-
-骰子（）
-
-掷骰子
-
-帮助（[成员]）
-
-提供有关此对象及其成员的帮助
 
 作为最后一个示例，请考虑 方法。清单在这两种方法。
 
-**mysql - py > myext. tools. 描述 （'世界'， '城市'）**
-
+```
+Listing 12-14. Using the describe() and get_columns() methods in Python
+mysql-py> myext.tools.describe('world', 'city')
 +-------------+----------+------+-----+---------+----------------+
-
-|字段 |类型 |空 |钥匙 |默认值 |额外 |
-
+| Field       | Type     | Null | Key | Default | Extra          |
 +-------------+----------+------+-----+---------+----------------+
-
-|IDint（11） |否 |普里 |空 |auto_increment |
-
-|名称 |字符（35） |否
-
-|国家代码 |字符（3） |否 |穆
-
-|地区 |字符（20） |否
-
-|人口 |int（11） |否0 |
-
+| ID          | int(11)  | NO   | PRI | NULL    | auto_increment |
+| Name        | char(35) | NO   |     |         |                |
+| CountryCode | char(3)  | NO   | MUL |         |                |
+| District    | char(20) | NO   |     |         |                |
+| Population  | int(11)  | NO   |     | 0       |                |
 +-------------+----------+------+-----+---------+----------------+
-
-**mysql -py>**
-
-默认架构"世界"可通过 db 访问。
-
-**mysql-py> 结果 = myext.util.get_columns（db.city）**
-
-**mysql-py> shell.dump_rows（结果， 'json/漂亮'）**
-
+mysql-py> \use world
+Default schema `world` accessible through db.
+mysql-py> result = myext.util.get_columns(db.city)
+mysql-py> shell.dump_rows(result, 'json/pretty')
 {
-
-"字段"："ID"，
-
-"类型"："int（11）"，
-
-"空"："不"，
-
-"关键"："PRI"，
-
-"默认"：空，
-
-"额外"："auto_increment"
-
+ "Field": "ID",
+ "Type": "int(11)",
+ "Null": "NO",
+ "Key": "PRI",
+ "Default": null,
+ "Extra": "auto_increment"
 }
-
 {
-
-"字段"："名称"，
-
-"类型"："字符（35）"，
-
-"空"："不"，
-
-"关键"：""
-
-"默认"：""
-
-"额外"："
-
+ "Field": "Name",
+ "Type": "char(35)",
+ "Null": "NO",
+ "Key": "",
+ "Default": "",
+ "Extra": ""
 }
-
 {
-
-"字段"："国家代码"，
-
-"类型"："字符（3）"，
-
-"空"："不"，
-
-"关键"："MUL"，
-
-"默认"：""
-
-"额外"："
-
+ "Field": "CountryCode",
+ "Type": "char(3)",
+ "Null": "NO",
+ "Key": "MUL",
+ "Default": "",
+ "Extra": ""
 }
-
 {
-
-"字段"："地区"，
-
-"类型"："字符（20）"，
-
-"空"："不"，
-
-"关键"：""
-
-"默认"：""
-
-"额外"："
-
+ "Field": "District",
+ "Type": "char(20)",
+ "Null": "NO",
+ "Key": "",
+ "Default": "",
+ "Extra": ""
 }
-
 {
-
-"领域"："人口"，
-
-"类型"："int（11）"，
-
-"空"："不"，
-
-"关键"：""
-
-"默认"："0"，
-
-"额外"："
-
+ "Field": "Population",
+ "Type": "int(11)",
+ "Null": "NO",
+ "Key": "",
+ "Default": "0",
+ "Extra": ""
 }
-
 5
+```
+
+
 
 首先，方法。架构和表使用其名称作为字符串提供，结果作为表打印。然后，将当前架构设置为架构，允许您访问表作为 db 对象。然后方法将结果打印为漂亮的打印 JSON。
 
-MySQL 壳类的讨论到今天结束。如果您尚未利用它提供的功能，建议您开始使用它。
+到此为止，MySQL Shell的讨论结束了。如果您尚未利用它提供的功能，建议您开始使用它。
 
 ## 总结
 
@@ -1414,17 +1107,5 @@ MySQL 命令行管理器的力量来自内置的复杂功能及其对创建复�
 除非另有说明，否则在本书剩余部分使用命令行接口的所有示例都使用 MySQL 命令程序创建。为了最大限度地减少使用的空间，提示已被替换为除非语言模式很重要，在这种情况下，语言模式包括，例如 Python 模式。
 
 关于性能转向工具的讨论到今天结束。第四部分介绍架构注意事项和查询优化器，下一章将讨论数据类型。
-
-脚注
-
-[1](#Fn1_source)
-
-https://powerline.readthedocs.io/en/latest/index.html
-
- 
-
-[2](#Fn2_source)
-
-https://github.com/gabrielelana/awesome-terminal-fonts/tree/patching-strategy
 
  

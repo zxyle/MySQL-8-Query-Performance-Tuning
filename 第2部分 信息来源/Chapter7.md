@@ -84,11 +84,11 @@ mysql> SELECT TABLE_SCHEMA, TABLE_NAME
  WHERE REFERENCED_TABLE_SCHEMA = 'sakila'
  AND REFERENCED_TABLE_NAME = 'film';
 +--------------+---------------+
-| TABLE_SCHEMA | TABLE_NAME |
+| TABLE_SCHEMA | TABLE_NAME    |
 +--------------+---------------+
-| sakila | film_actor |
-| sakila | film_category |
-| sakila | inventory |
+| sakila       | film_actor    |
+| sakila       | film_category |
+| sakila       | inventory     |
 +--------------+---------------+
 3 rows in set (0.0078 sec)
 ```
@@ -132,12 +132,12 @@ Query OK, 0 rows affected (0.0685 sec)
 mysql> SELECT *
  FROM information_schema.INNODB_FT_CONFIG;
 +---------------------------+-------+
-| KEY | VALUE |
+| KEY                       | VALUE |
 +---------------------------+-------+
-| optimize_checkpoint_limit | 180 |
-| synced_doc_id | 1002 |
-| stopword_table_name | |
-| use_stopword | 1 |
+| optimize_checkpoint_limit | 180   |
+| synced_doc_id             | 1002  |
+| stopword_table_name       |       |
+| use_stopword              | 1     |
 +---------------------------+-------+
 4 rows in set (0.0009 sec)
 ```

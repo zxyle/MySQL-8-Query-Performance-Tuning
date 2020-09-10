@@ -248,147 +248,91 @@ SUM_CREATED_TMP_DISK_TABLES: 0
 
 在"列表"表中这些列可以在表中的清单中看到。
 
-mysql> 选择 |
-
-从performance_schema.table_io_waits_summary_by_表
-
-在哪里OBJECT_SCHEMA "
-
-和OBJECT_NAME = "城市" = g
-
-1.行 |
-
-OBJECT_TYPE： 表
-
-OBJECT_SCHEMA： 世界
-
-OBJECT_NAME： 城市
-
-   COUNT_STAR: 418058733
-
+```
+Listing 19-4. Example of using the table_io_waits_summary_by_table table
+mysql> SELECT ∗
+ FROM performance_schema.table_io_waits_summary_by_table
+ WHERE OBJECT_SCHEMA = 'world'
+ AND OBJECT_NAME = 'city'\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ OBJECT_TYPE: TABLE
+ OBJECT_SCHEMA: world
+ OBJECT_NAME: city
+ COUNT_STAR: 418058733
  SUM_TIMER_WAIT: 125987200409940
-
  MIN_TIMER_WAIT: 1082952
-
  AVG_TIMER_WAIT: 301176
-
  MAX_TIMER_WAIT: 43045491156
-
-COUNT_READ： 417770654
-
-SUM_TIMER_READ： 122703207563448
-
-MIN_TIMER_READ： 1082952
-
-AVG_TIMER_READ： 293700
-
-MAX_TIMER_READ： 19644079288
-
-COUNT_WRITE： 288079
-
-SUM_TIMER_WRITE： 3283992846492
-
-MIN_TIMER_WRITE： 1937352
-
-AVG_TIMER_WRITE： 11399476
-
-MAX_TIMER_WRITE： 43045491156
-
-COUNT_FETCH： 417770654
-
-SUM_TIMER_FETCH： 122703207563448
-
-MIN_TIMER_FETCH： 1082952
-
-AVG_TIMER_FETCH： 293700
-
-MAX_TIMER_FETCH： 19644079288
-
-COUNT_INSERT： 4079
-
-SUM_TIMER_INSERT： 209027413892
-
-MIN_TIMER_INSERT： 10467468
-
-AVG_TIMER_INSERT： 51244420
-
-MAX_TIMER_INSERT： 31759300408
-
-COUNT_UPDATE： 284000
-
-SUM_TIMER_UPDATE： 3074965432600
-
-MIN_TIMER_UPDATE： 1937352
-
-AVG_TIMER_UPDATE： 10827028
-
-MAX_TIMER_UPDATE： 43045491156
-
-COUNT_DELETE： 0
-
-SUM_TIMER_DELETE： 0
-
-MIN_TIMER_DELETE： 0
-
-AVG_TIMER_DELETE： 0
-
-MAX_TIMER_DELETE： 0
-
+ COUNT_READ: 417770654
+ SUM_TIMER_READ: 122703207563448
+ MIN_TIMER_READ: 1082952
+ AVG_TIMER_READ: 293700
+ MAX_TIMER_READ: 19644079288
+ COUNT_WRITE: 288079
+ SUM_TIMER_WRITE: 3283992846492
+ MIN_TIMER_WRITE: 1937352
+ AVG_TIMER_WRITE: 11399476
+ MAX_TIMER_WRITE: 43045491156
+ COUNT_FETCH: 417770654
+ SUM_TIMER_FETCH: 122703207563448
+ MIN_TIMER_FETCH: 1082952
+ AVG_TIMER_FETCH: 293700
+ MAX_TIMER_FETCH: 19644079288
+ COUNT_INSERT: 4079
+SUM_TIMER_INSERT: 209027413892
+MIN_TIMER_INSERT: 10467468
+AVG_TIMER_INSERT: 51244420
+MAX_TIMER_INSERT: 31759300408
+ COUNT_UPDATE: 284000
+SUM_TIMER_UPDATE: 3074965432600
+MIN_TIMER_UPDATE: 1937352
+AVG_TIMER_UPDATE: 10827028
+MAX_TIMER_UPDATE: 43045491156
+ COUNT_DELETE: 0
+SUM_TIMER_DELETE: 0
+MIN_TIMER_DELETE: 0
+AVG_TIMER_DELETE: 0
+MAX_TIMER_DELETE: 0
 1 row in set (0.0015 sec)
+```
+
+
 
 在此输出中，除了尚未删除行外，表有广泛的用法。也可以看到，大部分时间都花在读取数据上（12270320756348 picosec 在总共 125987200409940 picosecs 中为 97%）。
 
 清单显示了同一表的输出，但使用表。使用列与表的用并且在示例中大多省略，以专注于两个表之间的差异。如果您有前面示例中的任何额外索引，则将返回更多行。
 
-mysql> 选择OBJECT_TYPE， OBJECT_SCHEMA，
+```
+Listing 19-5. Example of using the table_io_waits_summary_by_index_usage
+table
+mysql> SELECT OBJECT_TYPE, OBJECT_SCHEMA,
+ OBJECT_NAME, INDEX_NAME,
+ COUNT_STAR
+ FROM performance_schema.table_io_waits_summary_by_index_usage
+ WHERE OBJECT_SCHEMA = 'world'
+ AND OBJECT_NAME = 'city'\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ OBJECT_TYPE: TABLE
+OBJECT_SCHEMA: world
+ OBJECT_NAME: city
+ INDEX_NAME: PRIMARY
+ COUNT_STAR: 20004
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 2. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ OBJECT_TYPE: TABLE
+OBJECT_SCHEMA: world
+ OBJECT_NAME: city
+ INDEX_NAME: CountryCode
+ COUNT_STAR: 549000
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 3. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ OBJECT_TYPE: TABLE
+OBJECT_SCHEMA: world
+ OBJECT_NAME: city
+ INDEX_NAME: NULL
+ COUNT_STAR: 417489729
+3 rows in set (0.0017 sec)
+```
 
-OBJECT_NAME， INDEX_NAME，
 
-COUNT_STAR
-
-从performance_schema.table_io_waits_summary_by_index_usage
-
-在哪里OBJECT_SCHEMA "
-
-和OBJECT_NAME = "城市" = g
-
-1.行 |
-
-OBJECT_TYPE： 表
-
-OBJECT_SCHEMA： 世界
-
-OBJECT_NAME： 城市
-
-INDEX_NAME： 初级
-
-  COUNT_STAR: 20004
-
-2.行 |
-
-OBJECT_TYPE： 表
-
-OBJECT_SCHEMA： 世界
-
-OBJECT_NAME： 城市
-
-INDEX_NAME：国家代码
-
-  COUNT_STAR: 549000
-
-3.行 |
-
-OBJECT_TYPE： 表
-
-OBJECT_SCHEMA： 世界
-
-OBJECT_NAME： 城市
-
-INDEX_NAME： 空
-
-  COUNT_STAR: 417489729
-
-设置 3 行（0.0017 秒）
 
 考虑三如果求和这些，20004 = 549000 = 417489729 = 418058733，表中值。此示例显示相同的数据，但在城市表上的两索引以及 NULL 索引，这意味着未使用索引。这使得非常有用，可以估计索引的有用性，以及是否为表执行表扫描。
 
@@ -441,31 +385,24 @@ file_summary_by_event_name将事件拆分为读取、写入和杂项。读取和
 
 清单显示了一个数据。查询查找在 I/O 上花费最多的总时间的事件。
 
-mysql> 选择 |
-
-从performance_schema.events_waits_summary_global_by_event_name
-
-在哪里EVENT_NAME等待/io/文件/%'
-
-按 desc SUM_TIMER_WAIT
-
-限制 1\G
-
-1.行 |
-
-EVENT_NAME：等待/io/文件/innodb/innodb_log_file
-
-  COUNT_STAR: 58175
-
-SUM_TIMER_WAIT： 20199487047180
-
-MIN_TIMER_WAIT： 5341780
-
-AVG_TIMER_WAIT： 347219260
-
-MAX_TIMER_WAIT： 18754862132
-
+```
+Listing 19-6. The file I/O event spending the most time overall
+mysql> SELECT ∗
+ FROM performance_schema.events_waits_summary_global_by_event_name
+ WHERE EVENT_NAME LIKE 'wait/io/file/%'
+ ORDER BY SUM_TIMER_WAIT DESC
+ LIMIT 1\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ EVENT_NAME: wait/io/file/innodb/innodb_log_file
+ COUNT_STAR: 58175
+SUM_TIMER_WAIT: 20199487047180
+MIN_TIMER_WAIT: 5341780
+AVG_TIMER_WAIT: 347219260
+MAX_TIMER_WAIT: 18754862132
 1 row in set (0.0031 sec)
+```
+
+
 
 这表明，对于此实例，最活跃的事件是 InnoDB 重做日志文件。这是一个相当典型的结果。每个事件都有相应的工具。默认情况下，所有文件等待 I/O 事件都已启用。一个特别有趣的事件这是为I/O在NonoDB表空间文件。
 
@@ -473,127 +410,81 @@ MAX_TIMER_WAIT： 18754862132
 
 清单显示了 InnoDB 重日志 I/O 事件的一个列表示例，该示例位于上一示例中。
 
-mysql> 选择 |
-
-从performance_schema.file_摘要_by_event_name
-
-EVENT_NAME在哪里
-
-"等待/io/文件/innodb/innodb_log_file"\G
-
-1.行 |
-
-EVENT_NAME：等待/io/文件/innodb/innodb_log_file
-
-​        COUNT_STAR: 58175
-
-​      SUM_TIMER_WAIT: 20199487047180
-
-​      MIN_TIMER_WAIT: 5341780
-
-​      AVG_TIMER_WAIT: 347219260
-
-​      MAX_TIMER_WAIT: 18754862132
-
-​        COUNT_READ: 8
-
-​      SUM_TIMER_READ: 778174704
-
-​      MIN_TIMER_READ: 5341780
-
-​      AVG_TIMER_READ: 97271660
-
-​      MAX_TIMER_READ: 409998080
-
-SUM_NUMBER_OF_BYTES_READ： 70656
-
-​       COUNT_WRITE: 33672
-
-​     SUM_TIMER_WRITE: 870804229376
-
-​     MIN_TIMER_WRITE: 7867956
-
-​     AVG_TIMER_WRITE: 25861264
-
-​     MAX_TIMER_WRITE: 14021439496
-
-SUM_NUMBER_OF_BYTES_WRITE： 61617664
-
-COUNT_MISC： 24495
-
-SUM_TIMER_MISC： 19327904643100
-
-MIN_TIMER_MISC： 12479224
-
-AVG_TIMER_MISC： 789054776
-
-MAX_TIMER_MISC： 18754862132
-
+```
+Listing 19-7. The I/O statistics for the InnoDB redo log
+mysql> SELECT ∗
+ FROM performance_schema.file_summary_by_event_name
+ WHERE EVENT_NAME =
+ 'wait/io/file/innodb/innodb_log_file'\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ EVENT_NAME: wait/io/file/innodb/innodb_log_file
+ COUNT_STAR: 58175
+ SUM_TIMER_WAIT: 20199487047180
+ MIN_TIMER_WAIT: 5341780
+ AVG_TIMER_WAIT: 347219260
+ MAX_TIMER_WAIT: 18754862132
+ COUNT_READ: 8
+ SUM_TIMER_READ: 778174704
+ MIN_TIMER_READ: 5341780
+ AVG_TIMER_READ: 97271660
+ MAX_TIMER_READ: 409998080
+ SUM_NUMBER_OF_BYTES_READ: 70656
+ COUNT_WRITE: 33672
+ SUM_TIMER_WRITE: 870804229376
+ MIN_TIMER_WRITE: 7867956
+ AVG_TIMER_WRITE: 25861264
+ MAX_TIMER_WRITE: 14021439496
+SUM_NUMBER_OF_BYTES_WRITE: 61617664
+ COUNT_MISC: 24495
+ SUM_TIMER_MISC: 19327904643100
+ MIN_TIMER_MISC: 12479224
+ AVG_TIMER_MISC: 789054776
+ MAX_TIMER_MISC: 18754862132
 1 row in set (0.0005 sec)
+```
+
+
 
 请注意聚合的列和其他列的值与查询表。（由于 I/O 通常在后台发生，因此即使您在比较两个表之间不执行查询，情况也并非总是如此。通过将 I/O 拆分为读取、写入和杂项，您可以更好地了解实例上的 I/O 工作负载。
 
 如果需要单个文件的统计信息，则需要使用 清单显示了微软Windows上世界空间文件的示例。请注意，路径中有四个反斜杠表示一个反斜杠。
 
-mysql> 选择 |
-
-从performance_schema.file_摘要_按_实例
-
-在那里FILE_NAME喜欢 '% = 世界 = 城市. ibd ' = G
-
-1.行 |
-
-FILE_NAME： C： [程序数据] MySQL 服务器 8.0 [数据] 世界 [城市. ibd
-
-EVENT_NAME：等待/io/文件/innodb/innodb_data_file
-
-  OBJECT_INSTANCE_BEGIN: 1999746796608
-
-​        COUNT_STAR: 380
-
-​      SUM_TIMER_WAIT: 325377148780
-
-​      MIN_TIMER_WAIT: 12277372
-
-​      AVG_TIMER_WAIT: 856255472
-
-​      MAX_TIMER_WAIT: 10778110040
-
-​        COUNT_READ: 147
-
-​      SUM_TIMER_READ: 144057058960
-
-​      MIN_TIMER_READ: 85527220
-
-​      AVG_TIMER_READ: 979979712
-
-​      MAX_TIMER_READ: 7624205292
-
+```
+Listing 19-8. The file I/O for the world.city tablespace file
+mysql> SELECT ∗
+ FROM performance_schema.file_summary_by_instance
+ WHERE FILE_NAME LIKE '%\\\\world\\\\city.ibd'\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ FILE_NAME: C:\ProgramData\MySQL\MySQL Server 8.0\Data\
+world\city.ibd
+ EVENT_NAME: wait/io/file/innodb/innodb_data_file
+ OBJECT_INSTANCE_BEGIN: 1999746796608
+ COUNT_STAR: 380
+ SUM_TIMER_WAIT: 325377148780
+ MIN_TIMER_WAIT: 12277372
+ AVG_TIMER_WAIT: 856255472
+ MAX_TIMER_WAIT: 10778110040
+ COUNT_READ: 147
+ SUM_TIMER_READ: 144057058960
+ MIN_TIMER_READ: 85527220
+ AVG_TIMER_READ: 979979712
+ MAX_TIMER_READ: 7624205292
  SUM_NUMBER_OF_BYTES_READ: 2408448
-
-​       COUNT_WRITE: 125
-
-​     SUM_TIMER_WRITE: 21938183516
-
-​     MIN_TIMER_WRITE: 12277372
-
-​     AVG_TIMER_WRITE: 175505152
-
-​     MAX_TIMER_WRITE: 5113313440
-
+ COUNT_WRITE: 125
+ SUM_TIMER_WRITE: 21938183516
+ MIN_TIMER_WRITE: 12277372
+ AVG_TIMER_WRITE: 175505152
+ MAX_TIMER_WRITE: 5113313440
 SUM_NUMBER_OF_BYTES_WRITE: 2146304
-
-​        COUNT_MISC: 108
-
-​      SUM_TIMER_MISC: 159381906304
-
-​      MIN_TIMER_MISC: 160612960
-
-​      AVG_TIMER_MISC: 1475758128
-
-​      MAX_TIMER_MISC: 10778110040
-
+ COUNT_MISC: 108
+ SUM_TIMER_MISC: 159381906304
+ MIN_TIMER_MISC: 160612960
+ AVG_TIMER_MISC: 1475758128
+ MAX_TIMER_MISC: 10778110040
 1 row in set (0.0007 sec)
+```
+
+
 
 您可以看到事件名称指示它是 InnoDB 表空间文件，并且 I/O 被拆分为读取、写入和杂项。对于读取和写入，还包括总字节数。
 
@@ -613,53 +504,34 @@ SUM_NUMBER_OF_BYTES_WRITE: 2146304
 
 表名不言自明。您可以使用这些表确定谁正在执行触发错误的查询，并将它与以获取触发错误的用户和错误所用的语句的图片。清单显示了一个查询按帐户分组发生的死锁发生数次的示例。
 
-mysql> 选择 |
-
-从performance_schema.events_error_摘要_by_account_by_错误
-
-在哪里ERROR_NAME = "ER_LOCK_DEADLOCK"\ G
-
-1.行 |
-
-用户： 空
-
-主机：空
-
-ERROR_NUMBER： 1213
-
-ERROR_NAME： ER_LOCK_DEADLOCK
-
-SQL_STATE： 40001
-
-SUM_ERROR_RAISED： 0
-
-SUM_ERROR_HANDLED： 0
-
-FIRST_SEEN： 空
-
-LAST_SEEN： 空
-
-2.行 |
-
-用户：根
-
-主机：本地主机
-
-ERROR_NUMBER： 1213
-
-ERROR_NAME： ER_LOCK_DEADLOCK
-
-SQL_STATE： 40001
-
-SUM_ERROR_RAISED： 2
-
-SUM_ERROR_HANDLED： 0
-
-FIRST_SEEN： 2019-06-16 10：58：05
-
-LAST_SEEN： 2019-06-16 11：07：29
-
+```
+mysql> SELECT ∗
+ FROM performance_schema.events_errors_summary_by_account_by_error
+ WHERE ERROR_NAME = 'ER_LOCK_DEADLOCK'\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ USER: NULL
+ HOST: NULL
+ ERROR_NUMBER: 1213
+ ERROR_NAME: ER_LOCK_DEADLOCK
+ SQL_STATE: 40001
+ SUM_ERROR_RAISED: 0
+SUM_ERROR_HANDLED: 0
+ FIRST_SEEN: NULL
+ LAST_SEEN: NULL
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 2. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ USER: root
+ HOST: localhost
+ ERROR_NUMBER: 1213
+ ERROR_NAME: ER_LOCK_DEADLOCK
+ SQL_STATE: 40001
+ SUM_ERROR_RAISED: 2
+SUM_ERROR_HANDLED: 0
+ FIRST_SEEN: 2019-06-16 10:58:05
+ LAST_SEEN: 2019-06-16 11:07:29
 2 rows in set (0.0105 sec)
+```
+
+
 
 这表明，对于该帐户，已引发两但都没有。用户和主机为 NULL 的第一后台线程。
 
@@ -695,61 +567,41 @@ LAST_SEEN： 2019-06-16 11：07：29
 
 在清单中可以看到视图用于查找自上次重置性能架构表以来使用最多的语句。
 
-mysql> 选择 |
-
-从 sys.statement_analysis
-
-限制 1\G
-
-1.行 |
-
-查询：更新"世界"。"城市" 集 "人口" = ？"ID" 在哪里？
-
-db： 世界
-
-full_scan：
-
-exec_count： 3744
-
-err_count： 3
-
-warn_count： 0
-
-total_latency： 9.70 m
-
-max_latency： 51.53 s
-
-avg_latency： 155.46 ms
-
-lock_latency： 599.31 ms
-
-rows_sent： 0
-
-rows_sent_avg： 0
-
-rows_examined： 3741
-
-rows_examined_avg： 1
-
-rows_affected： 3741
-
-rows_affected_avg： 1
-
-tmp_tables： 0
-
-tmp_disk_tables： 0
-
-rows_sorted： 0
-
-sort_merge_passes： 0
-
-摘要： 8f3799ba6b1f47fc2d76f018eaafb6ef8a9d743a7dbe5e558e37371408a1ad5e
-
-first_seen： 2019-06-15 17：30：13.674383
-
-last_seen： 2019-06-15 17：52：42.881701
-
+```
+Listing 19-10. Finding the query using the most time executing
+mysql> SELECT ∗
+ FROM sys.statement_analysis
+ LIMIT 1\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ query: UPDATE `world` . `city` SET `Population` = ?
+WHERE `ID` = ?
+ db: world
+ full_scan:
+ exec_count: 3744
+ err_count: 3
+ warn_count: 0
+ total_latency: 9.70 m
+ max_latency: 51.53 s
+ avg_latency: 155.46 ms
+ lock_latency: 599.31 ms
+ rows_sent: 0
+ rows_sent_avg: 0
+ rows_examined: 3741
+rows_examined_avg: 1
+ rows_affected: 3741
+rows_affected_avg: 1
+ tmp_tables: 0
+ tmp_disk_tables: 0
+ rows_sorted: 0
+sort_merge_passes: 0
+ digest: 8f3799ba6b1f47fc2d76f018eaafb6ef8a9d743a7dbe5e558
+e37371408a1ad5e
+ first_seen: 2019-06-15 17:30:13.674383
+ last_seen: 2019-06-15 17:52:42.881701
 1 row in set (0.0028 sec)
+```
+
+
 
 视图已按降序的总延迟排序，因此不需要向查询添加任何排序。如果记得性能架构表的示例，则返回的信息类似，但延迟更易于读取，因为 picosec 中的值已转换为具有单元的 0 到 1000 之间的值。摘要也包括在内，因此您可以使用它来查找有关语句（如果需要）的信息。
 
@@ -793,81 +645,57 @@ last_seen： 2019-06-15 17：52：42.881701
 
 这些视图使用起来非常简单，但仍值得看几个例子，以显示与它们相关的一些细节。清单显示了和前景线程的视图示例。根据测试系统上可用的线程选择线程 ID。
 
-mysql> 选择 |
-
-从 sys.io_by_thread_by_latency
-
-在THREAD_ID （19， 87543）\G
-
-1.行 |
-
-用户： log_flusher_thread
-
-总： 24489
-
-total_latency： 19.33 s
-
-min_latency： 56.39 我们
-
-avg_latency： 789.23 我们
-
-max_latency： 18.75 ms
-
-thread_id： 19
-
-processlist_id： 空
-
-2.行 |
-
-用户： root@localhost
-
-总： 40683
-
-total_latency： 15.48 s
-
-min_latency： 5.27 我们
-
-avg_latency： 353.57 我们
-
-max_latency： 262.23 ms
-
-thread_id： 87543
-
-processlist_id： 87542
-
+```
+Listing 19-11. Example of using the io_by_thread_by_latency view
+mysql> SELECT ∗
+ FROM sys.io_by_thread_by_latency
+ WHERE THREAD_ID IN (19, 87543)\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ user: log_flusher_thread
+ total: 24489
+ total_latency: 19.33 s
+ min_latency: 56.39 us
+ avg_latency: 789.23 us
+ max_latency: 18.75 ms
+ thread_id: 19
+processlist_id: NULL
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 2. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ user: root@localhost
+ total: 40683
+ total_latency: 15.48 s
+ min_latency: 5.27 us
+ avg_latency: 353.57 us
+ max_latency: 262.23 ms
+ thread_id: 87543
+processlist_id: 87542
 2 rows in set (0.0066 sec)
+```
+
+
 
 在示例中，要注意的主要事情是。在第 1 行中，有一个后台线程的示例，在这种情况下，线程名称的最后一部分（使用 / 作为分隔符）用作用户名。在第 2 行中，它是一个前台线程，用户是帐户的用户名和主机名，它们之间有一个 @。这些行还包括有关性能架构线程 ID 和进程列表 ID（连接 ID）的信息，因此您可以使用这些行查找有关线程的更多信息。
 
 另一个示例显示在清单，视图。
 
-mysql> 选择 |
-
-从 sys.io_global_by_file_by_bytes
-
-限制 1\G
-
-1.行 |
-
-文件： @@datadir\undo_001
-
-count_read： 15889
-
-total_read： 248.31 米布
-
-avg_read： 16.00 KiB
-
-count_write： 15149
-
-total_written： 236.70 米布
-
-avg_write： 16.00 KiB
-
-总计： 485.02 米布
-
-write_pct： 48.80
-
+```
+Listing 19-12. Example of using the io_global_by_file_by_bytes view
+mysql> SELECT ∗
+ FROM sys.io_global_by_file_by_bytes
+ LIMIT 1\G
+∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗ 1. row ∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗
+ file: @@datadir\undo_001
+ count_read: 15889
+ total_read: 248.31 MiB
+ avg_read: 16.00 KiB
+ count_write: 15149
+total_written: 236.70 MiB
+ avg_write: 16.00 KiB
+ total: 485.02 MiB
+ write_pct: 48.80
 1 row in set (0.0028 sec)
+```
+
+
 
 请注意，文件名的路径使用@@datadir。这是 sys 架构使用的一部分，以便于一目了然地了解文件的位置。数据量也会缩放。
 
@@ -943,149 +771,103 @@ write_pct： 48.80
 
 在知道已执行哪些查询的受控环境中尝试该过程可能很有用。这样您就知道生成的输出会发生什么。该示例将使用称为监视器的来存储初始快照：
 
-mysql> 创建 SCHEMA 监视器;
+```
+mysql> CREATE SCHEMA monitor;
+```
+
+
 
 当监视在第二个连接中正在进行时，您需要执行一些查询。我们鼓励您尝试一些自己的查询。如果要重现示例中的输出，可以使用 MySQL Shell 并开始（在开始监视之前）将语言模式更改为 Python，然后将默认架构设置为：
 
+```
 \py
+\use world
+```
 
-•使用世界
+
 
 将为该示例执行 9Python 代码显示在清单。您可以在 MySQL 命令行程序中执行代码。在本书的 GitHub 存储库中中的文件文件也提供该代码。
 
-查询 [ ]
-
-（"选择 * 从 '城市' 在哪里 'ID'=？"， [130， 3805]），
-
-（"选择" 从 '城市' 在哪里 '国家代码'\？"， [澳大利亚'， 'Chn'， 'Ind']），
-
-（"选择* 从 "国家" 中， 其中代码 ="， [deu'， "Gbr"， "布拉"， "美国"），），
-
+```python
+Listing 19-13. Python code for example queries for statement analysis
+queries = [
+ ("SELECT * FROM `city` WHERE `ID` = ?", [130, 3805]),
+ ("SELECT * FROM `city` WHERE `CountryCode` = ?", ['AUS', 'CHN', 'IND']),
+ ("SELECT * FROM `country` WHERE CODE = ?", ['DEU', 'GBR', 'BRA', 'USA']),
 ]
+for query in queries:
+ sql = query[0]
+ parameters = query[1]
+ for param in parameters:
+ result = session.run_sql(sql, (param,))
+```
 
-查询中查询：
 
-sql = 查询 {0}
-
-参数 = 查询{1}
-
-参数中的参数：
-
-结果 = session.run_sql（sql，（参数））
 
 具有占位符的查询定义为元数中要用作该查询的第二个元素的元组列表。这样，如果您想要执行更多查询，可以快速添加更多查询和值。查询和参数上以双循环执行。将代码粘贴到 MySQL 命令行中时，请用两行新行完成代码，告诉 MySQL 命令行多行代码块已完成。
 
 清单显示了在两个快照之间创建大约一分钟的报表的示例。该示例使用报表。由于本书中页面的限制不允许报表很好地显示，因此可以在本文的 GitHub 存储库中找到步骤和报表的完整输出报表中查询的顺序可能不同，因为它取决于执行查询所用的时间，并且统计信息会有所不同。
 
-mysql> sys.ps_setup_disable_thread（CONNECTION_ID））;
-
+```
+Listing 19-14. Using the statement_performance_analyzer() procedure
+mysql> CALL sys.ps_setup_disable_thread(CONNECTION_ID());
 +-------------------+
-
-|摘要 |
-
+| summary           |
 +-------------------+
-
-|禁用 1 线程 |
-
+| Disabled 1 thread |
 +-------------------+
-
 1 row in set (0.0012 sec)
-
 Query OK, 0 rows affected (0.0012 sec)
-
-mysql> sys.statement_performance_analyzer （
-
-"create_tmp"，" "monitor._tmp_ini"， NULL）;
-
+mysql> CALL sys.statement_performance_analyzer(
+ 'create_tmp', 'monitor._tmp_ini', NULL);
 Query OK, 0 rows affected (0.0028 sec)
-
-mysql> sys.statement_performance_analyzer （
-
-"快照"，NULL，NULL）;
-
+mysql> CALL sys.statement_performance_analyzer(
+ 'snapshot', NULL, NULL);
 Query OK, 0 rows affected (0.0065 sec)
-
-mysql> sys.statement_performance_analyzer （
-
-"保存"，"monitor._tmp_ini"，NULL）;
-
+mysql> CALL sys.statement_performance_analyzer(
+ 'save', 'monitor._tmp_ini', NULL);
 Query OK, 0 rows affected (0.0017 sec)
-
--- 执行清单 19-13 中的查询或 Python 代码
-
--- 在睡眠（60）执行时的第二个连接中。
-
-mysql> 做睡眠 （60）;
-
-查询确定，0 行受到影响（1 分钟 0.0064 秒）
-
-mysql> sys.statement_performance_analyzer （
-
-"快照"，NULL，NULL）;
-
+-- Execute your queries or the Python code in Listing 19-13
+-- in a second connection while the SLEEP(60) is executing.
+mysql> DO SLEEP(60);
+Query OK, 0 rows affected (1 min 0.0064 sec)
+mysql> CALL sys.statement_performance_analyzer(
+ 'snapshot', NULL, NULL);
 Query OK, 0 rows affected (0.0041 sec)
-
-mysql> sys.statement_performance_analyzer （
-
-"德尔塔"，"monitor._tmp_ini"，
-
-"分析"）;
-
+mysql> CALL sys.statement_performance_analyzer(
+ 'delta', 'monitor._tmp_ini',
+ 'analysis');
 +------------------------------------------+
-
-|下一个输出 |
-
+| Next Output                              |
 +------------------------------------------+
-
-|按总延迟排序的 100 个查询 |
-
+| Top 100 Queries Ordered by Total Latency |
 +------------------------------------------+
-
 1 row in set (0.0049 sec)
-
 +----------------------------------------------+-------+...
-
-|查询 |db _...
-
+| query                                        | db    |...
 +----------------------------------------------+-------+...
-
-|选择 [从 '城市' 在哪里 '国家代码'？]世界 *...
-
-|选择 * 从 "国家" 中，其中代码 = ？世界 *...
-
-|从"城市"中选择"ID"？|世界 *...
-
+| SELECT * FROM `city` WHERE `CountryCode` = ? | world |...
+| SELECT * FROM `country` WHERE CODE = ?       | world |...
+| SELECT * FROM `city` WHERE `ID` = ?          | world |...
 +----------------------------------------------+-------+...
-
 3 rows in set (0.0049 sec)
-
 Query OK, 0 rows affected (0.0049 sec)
-
-mysql> sys.statement_performance_analyzer （
-
-"清理"，空，空）;
-
+mysql> CALL sys.statement_performance_analyzer(
+ 'cleanup', NULL, NULL);
 Query OK, 0 rows affected (0.0018 sec)
-
-mysql> 删除临时表monitor._tmp_ini;
-
+mysql> DROP TEMPORARY TABLE monitor._tmp_ini;
 Query OK, 0 rows affected (0.0007 sec)
-
-mysql> sys.ps_setup_enable_thread（CONNECTION_ID））;
-
+mysql> CALL sys.ps_setup_enable_thread(CONNECTION_ID());
 +------------------+
-
-|摘要 |
-
+| summary          |
 +------------------+
-
-|已启用 1 个线程 |
-
+| Enabled 1 thread |
 +------------------+
-
 1 row in set (0.0015 sec)
-
 Query OK, 0 rows affected (0.0015 sec)
+```
+
+
 
 在示例和过程的使用是禁用执行分析的线程的性能架构检测，然后在分析完成时启用检测。通过禁用检测，分析执行的查询不包括在报表中。这在繁忙的系统中并不重要，但在只使用几个查询进行测试时非常有用。
 
@@ -1099,13 +881,13 @@ Query OK, 0 rows affected (0.0015 sec)
 
 到目前为止，人们已经假定视图直接通过针对它们显式执行查询来使用。不过，这不是你能使用它们的唯一方法;视图也可通过 MySQL 工作台获得。
 
-## MySQL 工作台
+## MySQL Workbench
 
 如果您更喜欢使用图形用户界面而不是命令行界面，MySQL 工作台很棒。MySQL 工作台不仅允许您执行自己的查询，还允许您执行自己的查询。它还附带了几个功能，可帮助您管理和监视实例。为了本讨论的目的，感兴趣的客户端连接报告。
 
 这两个报表都通过 MySQL 工作台窗口中左侧的导航器进行访问。连接到 MySQL 后，导航器可用。图突出显示了报告。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig1_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig1_HTML.jpg)
+![](../附图/Figure 19-1.png)
 
 本节的其余部分将更详细地讨论这两种类型的报告。
 
@@ -1115,11 +897,11 @@ Query OK, 0 rows affected (0.0015 sec)
 
 通过连接到要调查的实例，从导航器的选择性能报告获取性能报告。您可以访问大多数报告，这些报表也可以直接使用进行。图显示了如何选择感兴趣的报表。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig2_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig2_HTML.jpg)
+![](../附图/Figure 19-2.png)
 
 图显示了报表的示例，其中语句统计信息报告已执行。 这是使用"使用"视图"的报表。在本书的 GitHub 存储库中，可以在文件中看到包含所有列的报表示例。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig3_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig3_HTML.jpg)
+![](../附图/Figure 19-3.png)
 
 性能报告它们使用未格式化的视图定义，因此您可以使用 GUI 更改顺序。通过单击要排序的列的列标题来更改顺序。每次单击列标题时，顺序在升序和降序之间切换。
 
@@ -1133,7 +915,7 @@ Query OK, 0 rows affected (0.0015 sec)
 
 图显示了报表最左侧列的示例。若要查看列的完整列表，请在figure_19_4_client_connections GitHub查看文件。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig4_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig4_HTML.jpg)
+![](../附图/Figure 19-4.png)
 
 如果已打开客户端连接报告或其中一个性能报告，可以重用该连接来获取客户端连接报告。如果所有连接都已使用，并且您需要获取连接正在执行哪些功能的报告，这非常有用。客户端连接报告还允许您通过选择查询并使用报表右下部一个终止按钮来终止查询或连接。
 
@@ -1151,7 +933,7 @@ Query OK, 0 rows affected (0.0015 sec)
 
 通过选择左侧菜单中的"，您可以访问查询分析器，如图。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig5_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig5_HTML.jpg)
+![](../附图/Figure 19-5.png)
 
 打开查询分析，默认打开查询响应时间索引 （QRTi） 图表的顶部和下面的查询列表。默认时间范围是过去一小时。您可以选择显示另一个图形或更改图形数。具有查询响应时间索引的默认图形值得考虑。
 
@@ -1167,7 +949,7 @@ Query OK, 0 rows affected (0.0015 sec)
 
 查询列表是查看实际查询所需的操作。图。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig6_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig6_HTML.jpg)
+![](../附图/Figure 19-6.png)
 
 该信息是高级别的，旨在帮助您缩小在给定期间内要仔细查看的候选查询范围。在该示例中，您可以看到查询已执行了近 160，000 次，以便按名称查找城市。您应该问的第一个问题是，执行此查询的时间是否合理。这可能是预料之中的，但高执行计数也可能表示跑道进程不断执行同一查询，或者您需要实现查询缓存。您还可以从绿色甜甜圈中看到，与查询响应时间索引有关，所有执行都在最佳时间范围内。
 
@@ -1175,7 +957,7 @@ Query OK, 0 rows affected (0.0015 sec)
 
 如果要更详细地调查查询，请单击查询区域右上角的三个垂直点，该点允许您转到查询的详细信息屏幕。图显示了查询详细信息的示例。全尺寸屏幕截图可在来自该书文件中提供。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig7_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig7_HTML.jpg)
+![](../附图/Figure 19-7.png)
 
 详细信息包括从性能架构摘要中可获得的指标。在这里，您可以看到，检查的行确实比返回的要多，因此值得进一步调查是否需要索引。这些图表显示了查询执行在一段时间中的发展。
 
@@ -1191,7 +973,7 @@ Query OK, 0 rows affected (0.0015 sec)
 
 如果查看图则有一个示例，其中几个时间序列图用于数据库和系统的利用率变化的时间段。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig8_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig8_HTML.jpg)
+![](../附图/Figure 19-8.png)
 
 如果查看图表最顶层图形中的 CPU 利用率突然增加，峰值超过 80%。为什么会这样， 这是件坏事吗？数据库查询图显示，秒数增加，InnoDB 行详细信息图中读取的行数也会增加。因此，CPU 使用率很可能是由查询活动增加引起的。从那里，您可以转到查询分析器并调查哪些查询正在运行。
 
@@ -1215,13 +997,13 @@ MySQL 企业监视器中提供多个临时报告。其他监视解决方案可�
 
 使用报告的原则是相同的，因此仅显示两个示例。第一个位于，其中 InnoDB 锁等待情况显示在锁等待报告中。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig9_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig9_HTML.jpg)
+![](../附图/Figure 19-9.png)
 
 该报表以分页模式显示行，您可以通过单击列标题更改顺序。更改顺序不会重新加载数据。如果需要重新加载数据，请使用的"重新加载"按钮。
 
 您还可以操作报表中可用的列。在右上角，有一个按钮来选择要在报表中可见的列。图中的屏幕截图显示了如何选择要显示的列的示例。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig10_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig10_HTML.jpg)
+![](../附图/Figure 19-10.png)
 
 当您切换是否包含列时，报表将立即更新，而不会重新加载报表。这意味着，对于间歇性问题（如锁定等待），您可以操作报表，而不会丢失正在查看的数据。如果通过拖动列标题来更改列的顺序，则情况也相同。
 
@@ -1229,7 +1011,7 @@ MySQL 企业监视器中提供多个临时报告。其他监视解决方案可�
 
 图显示了数据库中表的总插入延迟的树图视图示例。在此示例中，只有三个表具有足够大的分数，占总插入延迟的分数，以绘制矩形。
 
-![../images/484666_1_En_19_Chapter/484666_1_En_19_Fig11_HTML.jpg](../images/484666_1_En_19_Chapter/484666_1_En_19_Fig11_HTML.jpg)
+![](../附图/Figure 19-11.png)
 
 查看树状图，可以立即看到将数据插入城市表中所花费的时间比其他表大得多。
 
@@ -1264,9 +1046,3 @@ MySQL 工作台提供基于的性能报告，以及基于性能架构的客户�
 最后，您不应忘记与性能架构语句表具有优势的慢速查询日志，该日志保留慢速查询的录制。这样可以调查重新启动之前发生的问题。慢速查询日志还记录查询完成的时间，当用户报告系统在某些时候速度较慢时，这非常有用。
 
 找到要进一步调查的查询后，该怎么办？第一步是分析它，下一章将讨论它。
-
-脚注
-
-[1](#Fn1_source)
-
-https://en.wikipedia.org/wiki/Apdex

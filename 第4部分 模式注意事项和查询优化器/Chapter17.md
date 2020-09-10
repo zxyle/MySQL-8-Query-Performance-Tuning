@@ -364,107 +364,86 @@ rows_sent： 1766
 
 如果考虑用作嵌套循环算法示例的相同查询，但禁用索引的使用（模拟两个没有索引的表），并且不允许哈希联接（在 8.0.18 及更晚）中），则有一个可以使用块嵌套循环算法的查询。是
 
-选择 /** NO_HASH_JOIN（国家、城市）*/
+```
+SELECT /*+ NO_HASH_JOIN(country,city) */
+ CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-国家代码，国家/地区。名称为国家/地区，
 
-城市。名称为"城市"，城市。区
-
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 在 MySQL 8.0.17 及更早版本中器提示删除注释。
 
 清单显示了使用Python样代码的块嵌套循环算法的伪代码实现。
 
-结果 |
+```python
+Listing 17-2. Pseudo code representing a block nested loop join
+result = []
+join_buffer = []
+for country_row in country:
+ if country_row.Continent == 'Asia':
+ join_buffer.append(country_row.Code)
+ if is_full(join_buffer):
+ for city_row in city:
+ CountryCode = city_row.CountryCode
+ if CountryCode in join_buffer:
+ country_row = get_row(CountryCode)
+ result.append(
+ join_rows(country_row, city_row))
+ join_buffer = []
+if len(join_buffer) > 0:
+ for city_row in city:
+ CountryCode = city_row.CountryCode
+ if CountryCode in join_buffer:
+ country_row = get_row(CountryCode)
+ result.append(join_rows(country_row, city_row))
+ join_buffer = []
+```
 
-join_buffer ]
 
-对于country_row国家/地区：
-
-如果country_row。大陆 = "亚洲"：
-
-join_buffer.附加（country_row.代码）
-
-如果is_full（join_buffer）：
-
-城市city_row的一部分：
-
-国家/地区代码 = city_row。国家代码
-
-如果国家代码在join_buffer：
-
-country_row = get_row（国家代码）
-
-结果. 追加 （
-
-join_rows（country_row，city_row））
-
-join_buffer ]
-
-如果 len（join_buffer） > 0：
-
-城市city_row的一部分：
-
-国家/地区代码 = city_row。国家代码
-
-如果国家代码在join_buffer：
-
-country_row = get_row（国家代码）
-
-结果.附录（join_rows（country_rowcity_row））
-
-join_buffer ]
 
 列表表示存储联接所需的列的联接缓冲区。在伪代码中，使用。对于用作示例的查询，只需要地区表中"列。这是需要注意的一件重要的事情，不久将进一步讨论。当联接缓冲区已满时，将在城市表上执行扫描;如果城市表的"国家列与联接缓冲区中之一匹配，则构造结果行。
 
 图显示了表示联接的。为简单起见，即使对两个表执行完整表扫描，也只包含联接所需的行的主要键值。
 
-![../images/484666_1_En_17_Chapter/484666_1_En_17_Fig3_HTML.png](C:/Program Files/images/484666_1_En_17_Chapter/484666_1_En_17_Fig3_HTML.png)
+![](../附图/Figure 17-3.png)
 
 该图显示了如何一起读取存储来自国家/地区表中的行并存储在联接缓冲区中。每次联接缓冲区已满时，将执行城市表扫描，并逐步生成结果。在图中，一次有六行适合联接缓冲区。由于"列每行只需要 3 个字节，因此实际上联接缓冲区将能够保存所有国家/地区代码，除非使用尽可能小的
 
 使用联接缓冲区缓冲地区代码如何影响查询统计信息？至于前面的示例，首先，执行查询，在一个连接中查找亚洲城市：
 
-选择 /** NO_HASH_JOIN（国家、城市）*/
+```sql
+SELECT /*+ NO_HASH_JOIN(country,city) */
+ CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+Figure 17-3. An example of a block nested loop join
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-国家代码，国家/地区。名称为国家/地区，
 
-城市。名称为"城市"，城市。区
-
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 然后在另一个连接中获取检查的行数和查询延迟以使用第一个连接的线程 ID）：
 
-mysql> 选择rows_examined， rows_sent，
-
-last_statement_latency延迟
-
-从系统. 会话
-
-在哪里thd_id = 30°G
-
-1.行***************************************************************************************************
-
+```sql
+mysql> SELECT rows_examined, rows_sent,
+ last_statement_latency AS latency
+ FROM sys.session
+ WHERE thd_id = 30\G
+**************************** 1. row ****************************
 rows_examined: 4318
+ rows_sent: 1766
+ latency: 16.87 ms
+1 row in set (0.0490 sec)s
+```
 
-rows_sent： 1766
 
-   latency: 16.87 ms
-
-1 row in set (0.0490 sec)
 
 结果假定为 join_buffer_size的默认值。统计数据显示，块嵌套循环的性能明显优于嵌套循环算法，而无需使用索引。相比之下，使用索引执行查询检查了 2005 行，并测量了大约 4 ms，而使用不带索引的嵌套循环联接检查了 208268 行，并且大约需要 45 ms。这看起来与查询执行时间不相干，但国家表都很小。对于大型表，差异将非线性增长，可能意味着查询完成和似乎永远运行之间的差异。
 
@@ -536,89 +515,58 @@ MySQL will use the hash join whenever the block nested loop would otherwise be c
 
 如果考虑此部分的重复示例查询，可以通过忽略可用于联接的表上的索引来使用哈希联接来执行它：
 
-选择国家代码、国家/地区。名称为国家/地区，
+```sql
+SELECT CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-城市。名称为"城市"，城市。区
 
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 执行此联接的伪代码与块嵌套循环的伪代码类似，只不过联接所需的列已散列，并且支持溢出到磁盘。伪在清单。
 
-结果 |
+```python
+result = []
+join_buffer = []
+partitions = 0
+on_disk = False
+for country_row in country:
+ if country_row.Continent == 'Asia':
+ hash = xxHash64(country_row.Code)
+ if not on_disk:
+ join_buffer.append(hash)
+ if is_full(join_buffer):
+ # Create partitions on disk
+ on_disk = True
+ partitions = write_buffer_to_disk(join_buffer)
+ join_buffer = []
+ else
+ write_hash_to_disk(hash)
+if not on_disk:
+ for city_row in city:
+ hash = xxHash64(city_row.CountryCode)
+ if hash in join_buffer:
+ country_row = get_row(hash)
+ city_row = get_row(hash)
+ result.append(join_rows(country_row, city_row))
+else:
+ for city_row in city:
+ hash = xxHash64(city_row.CountryCode)
+ write_hash_to_disk(hash)
+ for partition in range(partitions):
+ join_buffer = load_build_from_disk(partition)
+ for hash in load_hash_from_disk(partition):
+ if hash in join_buffer:
+ country_row = get_row(hash)
+ city_row = get_row(hash)
+ result.append(join_rows(country_row, city_row))
+ join_buffer = []
+```
 
-join_buffer ]
 
-分区 = 0
-
-on_disk = 错误
-
-对于country_row国家/地区：
-
-如果country_row。大陆 = "亚洲"：
-
-哈希 = xxHash64（country_row。代码）
-
-如果不是on_disk：
-
-join_buffer.附加（哈希）
-
-如果is_full（join_buffer）：
-
-\# 在磁盘上创建分区
-
-on_disk = 真实
-
-分区 = write_buffer_to_disk（join_buffer）
-
-join_buffer ]
-
-还
-
-write_hash_to_disk（哈希）
-
-如果不是on_disk：
-
-城市city_row的一部分：
-
-哈希 = xxHash64（city_row。国家代码）
-
-如果哈希在join_buffer：
-
-country_row = get_row（哈希）
-
-city_row = get_row（哈希）
-
-结果.附录（join_rows（country_rowcity_row））
-
-还：
-
-城市city_row的一部分：
-
-哈希 = xxHash64（city_row。国家代码）
-
-write_hash_to_disk（哈希）
-
-用于范围（分区）中的分区：
-
-join_buffer = load_build_from_disk（分区）
-
-用于哈希load_hash_from_disk（分区）：
-
-如果哈希在join_buffer：
-
-country_row = get_row（哈希）
-
-city_row = get_row（哈希）
-
-结果.附录（join_rows（country_rowcity_row））
-
-join_buffer ]
 
 伪代码从国家/地区表开始，并计算值，并存储在联接缓冲区中。如果缓冲区已满，则代码将切换到磁盘上算法，并从缓冲区中写出哈希。这也是确定分区数的地方。在此之后，将散/地区表的其余部分。
 
@@ -628,41 +576,37 @@ join_buffer ]
 
 图显示了内存中哈希联接。为简单起见，即使对两个表执行完整表扫描，也只包含联接所需的行的主要键值。
 
-![../images/484666_1_En_17_Chapter/484666_1_En_17_Fig4_HTML.png](C:/Program Files/images/484666_1_En_17_Chapter/484666_1_En_17_Fig4_HTML.png)
+![](../附图/Figure 17-4.png)
 
 来自国家/地区表中的匹配行的的值将进行哈希处理并存储在联接缓冲区中。然后，对城市表执行表，并计算每代码"哈希值，并且结果由匹配的行构造。
 
 通过首先在一个连接中执行查询，可以像以前算法一样检查查询的统计信息：
 
-选择国家代码、国家/地区。名称为国家/地区，
+```sql
+SELECT CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-城市。名称为"城市"，城市。区
 
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 Then you can look at the Performance Schema statistics for the query by querying the sys.session view in a second connection (change thd_id = 30 to use the thread id of the first connection):
 
-mysql> 选择rows_examined， rows_sent，
-
-last_statement_latency延迟
-
-从系统. 会话
-
-在哪里thd_id = 30°G
-
+```
+mysql> SELECT rows_examined, rows_sent,
+ last_statement_latency AS latency
+ FROM sys.session
+ WHERE thd_id = 30\G
 rows_examined: 4318
-
-rows_sent： 1766
-
-   latency: 3.53 ms
-
+ rows_sent: 1766
+ latency: 3.53 ms
 1 row in set (0.0467 sec)
+```
+
+
 
 您可以看到查询执行得非常好，哈希联接检查的行数与块嵌套循环相同，但它比索引联接快。这不是一个错误：在某些情况下，哈希联接甚至可能优于索引联接。可以使用以下规则来估计哈希联接算法与索引和块嵌套循环联接相比的性能：
 
@@ -698,31 +642,23 @@ MySQL 可以使用联接优化来改进上一节中讨论的联接算法的基�
 
 在讨论这三种算法时，考虑使用每种算法的实际查询可能很有用。表可用于此目的。 是
 
-创建表"付款"（
+```sql
+CREATE TABLE `payment` (
+ `payment_id` smallint unsigned NOT NULL,
+ `customer_id` smallint unsigned NOT NULL,
+ `staff_id` tinyint unsigned NOT NULL,
+ `rental_id` int(DEFAULT NULL,
+ `amount` decimal(5,2) NOT NULL,
+ `payment_date` datetime NOT NULL,
+ `last_update` timestamp NULL,
+ PRIMARY KEY (`payment_id`),
+ KEY `idx_fk_staff_id` (`staff_id`),
+ KEY `idx_fk_customer_id` (`customer_id`),
+ KEY `fk_payment_rental` (`rental_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+```
 
-"payment_id" 小未签名不 NULL，
 
-"customer_id" 小未签名不空，
-
-"staff_id" 小未签名不空，
-
-"rental_id" int （默认 NULL，
-
-"量"小数（5，2）不是空，
-
-"payment_date"日期时间不为空，
-
-"last_update"时间戳 NULL，
-
-主键（payment_id"），
-
-键"idx_fk_staff_id"（'staff_id'），
-
-键"idx_fk_customer_id"（"customer_id"），
-
-键"fk_payment_rental"（'rental_id'）
-
-） 引擎 =InnoDB 默认字符集=utf8
 
 默认值、自动增量信息和外键定义已从表中删除，以专注于列和索引。该表有四个索引，全部在单个列上，这使得它成为索引合并优化的一个很好的候选项。
 
@@ -732,79 +668,56 @@ MySQL 可以使用联接优化来改进上一节中讨论的联接算法的基�
 
 当AND 分隔的多个索引列上具有条件时，使用交集。使用交集索引合并算法的两个查询示例是
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75;
+SELECT *
+ FROM sakila.payment
+ WHERE payment_id > 10
+ AND customer_id = 318;
+```
 
-从 sakila. 付款
 
-在哪里staff_id # 1
-
-和customer_id = 75;
-
-选择 *
-
-从 sakila. 付款
-
-在哪里payment_id > 10
-
-​    AND customer_id = 318;
 
 第一个查询在两个辅助索引上具有相等条件，第二个查询在主键上具有范围条件，在辅助索引上具有相等条件。索引合并优化与第二个查询独占地使用 InnoDB 表。清单显示了使用两种不同格式的两个查询中的第一个的输出。
 
-mysql> 解释
-
-选择 *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75°G
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表：付款
-
-分区：空
-
-类型： index_merge
-
-possible_keys： idx_fk_staff_id，idx_fk_customer_id
-
-键：
-
-key_len：
-
-参考： 空
-
-​     rows: 20
-
-过滤： 100
-
-额外：;使用地点
-
-1 row in set, 1 warning (0.0007 sec)
-
-mysql> 解释格式 = 树
-
-选择 *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75°G
-
-1.行***************************************************************************************************
-
-解释： -> 过滤器： （sakila.payment.customer_id = 75） 和 （sakila.payment.staff_id = 1） （成本 = 14.48 行 = 20）
-
--> 使用相交=14.48 行=20）对付款进行索引范围扫描
-
+```
+Listing 17-4. Example of an EXPLAIN output for an intersection merge
+mysql> EXPLAIN
+ SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: payment
+ partitions: NULL
+ type: index_merge
+possible_keys: idx_fk_staff_id,idx_fk_customer_id
+ key: idx_fk_customer_id,idx_fk_staff_id
+ key_len: 2,1
+ ref: NULL
+ rows: 20
+ filtered: 100
+ Extra: Using intersect(idx_fk_customer_id,idx_fk_staff_id); Using
+where 1 row in set, 1 warning (0.0007 sec)
+mysql> EXPLAIN FORMAT=TREE
+ SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75\G
+**************************** 1. row ****************************
+EXPLAIN: -> Filter: ((sakila.payment.customer_id = 75) and (sakila.payment.
+staff_id = 1)) (cost=14.48 rows=20)
+ -> Index range scan on payment using intersect(idx_fk_customer_id,idx_
+fk_staff_id) (cost=14.48 rows=20)
 1 row in set (0.0004 sec)
+```
+
+
 
 请注意中的"使用相交（...）"消息，以及树格式输出中的索引范围扫描。 这表明索引索引的索引。 传统输出还包括键列中的两个并在"字符串"列中提供长度。
 
@@ -812,79 +725,56 @@ mysql> 解释格式 = 树
 
 当OR 分隔的表存在一系列相等条件时，使用联合。可以使用联合算法的两个查询示例是
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ OR customer_id = 318;
+SELECT *
+ FROM sakila.payment
+ WHERE payment_id > 15000
+ OR customer_id = 318;
+```
 
-从 sakila. 付款
 
-在哪里staff_id # 1
-
-或customer_id = 318;
-
-选择 *
-
-从 sakila. 付款
-
-在哪里payment_id > 15000
-
-或customer_id = 318;
 
 第一个查询在辅助索引上具有两个相等条件，而第二个查询在主键上具有范围条件，在辅助索引上具有相等条件。第二个查询将仅对 InnoDB 表使用索引合并。清单显示了第一个查询的相应 EXPLAIN 输出的示例。
 
-mysql> 解释
-
-选择 *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-或customer_id = 318°G
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表：付款
-
-分区：空
-
-类型： index_merge
-
-possible_keys： idx_fk_staff_id，idx_fk_customer_id
-
-键： idx_fk_staff_id，idx_fk_customer_id
-
-key_len： 1，2
-
-参考： 空
-
-​     rows: 8069
-
-过滤： 100
-
-额外：;使用地点
-
+```
+Listing 17-5. The EXPLAIN output for a union merge
+mysql> EXPLAIN
+ SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ OR customer_id = 318\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: payment
+ partitions: NULL
+ type: index_merge
+possible_keys: idx_fk_staff_id,idx_fk_customer_id
+ key: idx_fk_staff_id,idx_fk_customer_id
+ key_len: 1,2
+ ref: NULL
+ rows: 8069
+ filtered: 100
+ Extra: Using union(idx_fk_staff_id,idx_fk_customer_id); Using where
 1 row in set, 1 warning (0.0008 sec)
-
-mysql> 解释格式 = 树
-
-选择 *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-或customer_id = 318°G
-
-1.行***************************************************************************************************
-
-解释： -> 过滤器： （（sakila.payment.staff_id = 1） 或 （sakila.payment.customer_id = 318）） （成本 = 2236.18 行 = 8069）
-
--> 使用联合=2236.18 行=8069） 付款的索引范围扫描
-
+mysql> EXPLAIN FORMAT=TREE
+ SELECT *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ OR customer_id = 318\G
+**************************** 1. row ****************************
+EXPLAIN: -> Filter: ((sakila.payment.staff_id = 1) or (sakila.payment.
+customer_id = 318)) (cost=2236.18 rows=8069)
+ -> Index range scan on payment using union(idx_fk_staff_id,idx_fk_
+customer_id) (cost=2236.18 rows=8069)
 1 row in set (0.0010 sec)
+```
+
+
 
 请注意中的"使用（..."）和树格式输出中的索引范围扫描。这表明索引索引的索引。
 
@@ -892,79 +782,56 @@ mysql> 解释格式 = 树
 
 类似于使用联合算法的查询，但条件是范围条件而不是相等条件。可以使用排序联合算法的两个查询示例是
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.payment
+ WHERE customer_id < 30
+ OR rental_id < 10;
+SELECT *
+ FROM sakila.payment
+ WHERE customer_id < 30
+ OR rental_id > 16000;
+```
 
-从 sakila. 付款
 
-哪里customer_id < 30
-
-或rental_id < 10;
-
-选择 *
-
-从 sakila. 付款
-
-哪里customer_id < 30
-
-或rental_id > 16000;
 
 两个查询在两个辅助索引上都有范围条件。清单第一个查询的传统和树格式的相应 EXPLAIN 输出。
 
-mysql> 解释
-
-选择 *
-
-从 sakila. 付款
-
-哪里customer_id < 30
-
-或rental_id < 10+G
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表：付款
-
-分区：空
-
-类型： index_merge
-
-possible_keys： idx_fk_customer_id，fk_payment_rental
-
-键： idx_fk_customer_id，fk_payment_rental
-
-key_len： 2，5
-
-参考： 空
-
-​     rows: 826
-
-过滤： 100
-
-额外：;使用地点
-
-1 row in set, 1 warning (0.0009 sec)
-
-mysql> 解释格式 = 树
-
-选择 *
-
-从 sakila. 付款
-
-哪里customer_id < 30
-
-或rental_id < 10+G
-
-1.行****************************************************************************************************************
-
-解释： -> 过滤器： （sakila.payment.customer_id < 30） 或 （sakila.payment.rental_id < 10）） （成本=1040.52 行=826）
-
--> 使用 （成本=1040.52 行=826） 付款的索引范围扫描
-
+```sql
+Listing 17-6. The EXPLAIN output using a sort-union merge
+mysql> EXPLAIN
+ SELECT *
+ FROM sakila.payment
+ WHERE customer_id < 30
+ OR rental_id < 10\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: payment
+ partitions: NULL
+ type: index_merge
+possible_keys: idx_fk_customer_id,fk_payment_rental
+ key: idx_fk_customer_id,fk_payment_rental
+ key_len: 2,5
+ ref: NULL
+ rows: 826
+ filtered: 100
+ Extra: Using sort_union(idx_fk_customer_id,fk_payment_rental);
+Using where 1 row in set, 1 warning (0.0009 sec)
+mysql> EXPLAIN FORMAT=TREE
+ SELECT *
+ FROM sakila.payment
+ WHERE customer_id < 30
+ OR rental_id < 10\G
+**************************** 1. row *****************************
+EXPLAIN: -> Filter: ((sakila.payment.customer_id < 30) or (sakila.payment.
+rental_id < 10)) (cost=1040.52 rows=826)
+ -> Index range scan on payment using sort_union(idx_fk_customer_id,fk_
+payment_rental) (cost=1040.52 rows=826)
 1 row in set (0.0005 sec)
+```
+
+
 
 请注意在"sort_union（...）格式输出中的索引范围扫描使用这表明索引索引的索引。
 
@@ -987,91 +854,61 @@ mysql> 解释格式 = 树
 
 此外，还有两个优化器。这两个提示都将表名作为参数，也可以选择应考虑或忽略的索引。例如，如果您想要执行查询，查找1，customer_id 设置为 75而不使用索引合并，可以使用以下查询之一执行：
 
-选择 /** NO_INDEX_MERGE（付款）*/
+```
+SELECT /*+ NO_INDEX_MERGE(payment) */
+ *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75;
+SELECT /*+ NO_INDEX_MERGE(
+ payment
+ idx_fk_staff_id,idx_fk_customer_id) */
+ *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75;
+```
 
-​    *
 
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75;
-
-选择 /*= NO_INDEX_MERGE （
-
-付款
-
-idx_fk_staff_id，idx_fk_customer_id） */
-
-​    *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75;
 
 由于索引合并被视为范围优化的特殊情况优化器提示也会禁用索引合并。可以使用 EXPLAIN 输出确认合并不再使用，如清单。
 
-mysql> 解释
-
-选择 /** NO_INDEX_MERGE（付款）*/
-
-​        *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75°G
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表：付款
-
-分区：空
-
-类型： 参考
-
-possible_keys： idx_fk_staff_id，idx_fk_customer_id
-
-键： idx_fk_customer_id
-
-   key_len: 2
-
-参考： 康斯特
-
-​     rows: 41
-
-过滤： 50.0870361328125
-
-额外：使用的地方
-
-1 行设置，1 个警告（0.0010 秒）
-
-mysql> 解释格式 = 树
-
-选择 /** NO_INDEX_MERGE（付款）*/
-
-​        *
-
-从 sakila. 付款
-
-在哪里staff_id # 1
-
-和customer_id = 75°G
-
-1.行***************************************************************************************************
-
-解释： -> 过滤器： （sakila.payment.staff_id = 1） （成本 = 26.98 行 = 21）
-
--> 使用帐户 （idx_fk_customer_id 75） （customer_id 成本=26.98 行=41） 付款的索引查找
-
+```sql
+Listing 17-7. The EXPLAIN output when index merges are unselected
+mysql> EXPLAIN
+ SELECT /*+ NO_INDEX_MERGE(payment) */
+ *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: payment
+ partitions: NULL
+ type: ref
+possible_keys: idx_fk_staff_id,idx_fk_customer_id
+ key: idx_fk_customer_id
+ key_len: 2
+ ref: const
+ rows: 41
+ filtered: 50.0870361328125
+ Extra: Using where
+1 row in set, 1 warning (0.0010 sec)
+mysql> EXPLAIN FORMAT=TREE
+ SELECT /*+ NO_INDEX_MERGE(payment) */
+ *
+ FROM sakila.payment
+ WHERE staff_id = 1
+ AND customer_id = 75\G
+**************************** 1. row ****************************
+EXPLAIN: -> Filter: (sakila.payment.staff_id = 1) (cost=26.98 rows=21)
+ -> Index lookup on payment using idx_fk_customer_id (customer_
+id=75) (cost=26.98 rows=41)
 1 row in set (0.0006 sec)
+```
+
+
 
 另一个优化是多范围读取。
 
@@ -1090,43 +927,30 @@ mysql> 解释格式 = 树
 
 可以从查询计划中查看是否使用了多范围读取优化。在这种情况下，传统的输出指定在"额外"列中使用输出将字段为。 清单显示了使用多范围优化时传统格式的完整 EXPLAIN 输出的示例。
 
-mysql> 解释
+```sql
+Listing 17-8. The EXPLAIN output for a query using Multi-Range Read
+mysql> EXPLAIN
+ SELECT /*+ MRR(city) */
+ *
+ FROM world.city
+ WHERE CountryCode BETWEEN 'AUS' AND 'CHN'\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: city
+ partitions: NULL
+ type: range
+possible_keys: CountryCode
+ key: CountryCode
+ key_len: 3
+ ref: NULL
+ rows: 812
+ filtered: 100
+ Extra: Using index condition; Using MRR
+1 row in set, 1 warning (0.0006 sec)
+```
 
-选择 /*= MRR（城市）*/
 
-​        *
-
-来自世界. city
-
-"澳大利亚" 和 "Chn" \ g 之间的国家代码
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表： 城市
-
-分区：空
-
-类型： 范围
-
-possible_keys：国家代码
-
-密钥：国家代码
-
-key_len： 3
-
-参考： 空
-
-​     rows: 812
-
-过滤： 100
-
-额外：使用索引条件;
-
-1 行在设置中，1 个警告（0.0006 秒）
 
 有必要使用优化器提示显式请求使用读取优化，或者禁用 mrr_cost_based 优化器切换，因为示例查询的估计行数太小，不能将多范围读取优化与基于成本的优化一起使用来选择它。
 
@@ -1144,81 +968,55 @@ key_len： 3
 
 如果要使用 optimizer_switch 变量启用启用优化器开关（默认情况下禁用）、禁用 mrr_cost_based 优化器开关默认情况下启用），并确保优化器开关（默认情况下启用）。若要为会话启用批处理密钥访问，可以使用以下查询执行以下操作：
 
-设置会话
+```
+SET SESSION
+ optimizer_switch
+ = 'mrr=on,mrr_cost_based=off,batched_key_access=on';
+```
 
-optimizer_switch
 
-\ 'mrr=on，mrr_cost_based\off，batched_key_access\on';
 
 当优化已启用此方式时，您还可以使用 优化器提示来影响是否应使用优化。使用时，传统 EXPLAIN中的列批处理密钥访问），在 JSON字段设置为。清单显示了使用批处理访问时的完整 EXPLAIN 输出的示例。
 
-mysql> 解释
+```
+Listing 17-9. The EXPLAIN output with Batched Key Access
+mysql> EXPLAIN
+ SELECT /*+ BKA(ci) */
+ co.Code, co.Name AS Country,
+ ci.Name AS City
+ FROM world.country co
+ INNER JOIN world.city ci
+ ON ci.CountryCode = co.Code\G
+**************************** 1. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: co
+ partitions: NULL
+ type: ALL
+possible_keys: PRIMARY
+ key: NULL
+ key_len: NULL
+ ref: NULL
+ rows: 239
+ filtered: 100
+ Extra: NULL
+**************************** 2. row *****************************
+ id: 1
+ select_type: SIMPLE
+ table: ci
+ partitions: NULL
+ type: ref
+possible_keys: CountryCode
+ key: CountryCode
+ key_len: 3
+ ref: world.co.Code
+ rows: 18
+ filtered: 100
+ Extra: Using join buffer (Batched Key Access)
+2 rows in set, 1 warning (0.0007 sec)
+```
 
-选择
 
-co.代码，Co.名称为国家/地区，
-
-词。名称为城市
-
-来自世界. 国家合作
-
-内加入世界. city ci
-
-在 ci 上。国家代码 = co.代码\G
-
-1.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表： co
-
-分区：空
-
-类型： 全部
-
-possible_keys： 初级
-
-键： 空
-
-key_len： 空
-
-参考： 空
-
-行： 239
-
-过滤： 100
-
-额外： 空
-
-2.行****************************************************************************************************************
-
-id： 1
-
-select_type： 简单
-
-表： ci
-
-分区：空
-
-类型： 参考
-
-possible_keys：国家代码
-
-密钥：国家代码
-
-key_len： 3
-
-参考： 世界. co. 代码
-
-行： 18
-
-过滤： 100
-
-额外：
-
-2 行，1 个警告（0.0007 秒）
 
 在此示例中，使用"国家代码索引在城市表上的联接器提示访问。
 
@@ -1312,7 +1110,7 @@ InnoDB 中的所有辅助非统一索引都附加在索引上的主要键列。�
 
 您可以使用选项来限制用于范围访问的内存量。默认值为 8 MiB。如果将值设置为 0，则意味着可以使用无限量的内存。
 
-#### 塞米琼
+#### 半连接
 
 用于 IN。有四种支持的策略：物化、重复杂草、第一次匹配和松散扫描（不要与松散的索引扫描优化混淆）。启用子查询物化时，半连体优化将尽可能使用物化策略。对于半参与优化仅在 MySQL 8.0.16 及更晚版本中支持，（类似 – 也称为反连体），MySQL 8.0.17 或更晚是必需的。
 
@@ -1348,7 +1146,7 @@ InnoDB 中的所有辅助非统一索引都附加在索引上的主要键列。�
 - 
 - 传统格式在具有using 索引，JSON 格式字段设置。
 
-#### 子奎德物化
+#### 子查询实现
 
 策略将子查询的结果存储到内部临时表中。如果可能，优化器将在临时表上添加自动生成的哈希索引，从而快速将其加入到查询的其余部分。
 
@@ -1366,7 +1164,7 @@ InnoDB 中的所有辅助非统一索引都附加在索引上的主要键列。�
 
 您可以通过多种方式配置 MySQL 来影响优化器。您已经遇到一些配置选项、优化器开关和优化器提示。本节将开始介绍如何配置与不同操作关联的引擎和服务器成本，然后通过配置选项介绍有关优化器交换机的其他详细信息。最后，将讨论优化器提示。
 
-### 发动机成本
+### 引擎成本
 
 引擎成本提供有关读取数据的成本信息。由于数据可以从内存或磁盘获取，并且不同的存储引擎读取数据的成本可能不同，因此它并非一刀切。因此，MySQL 允许您配置每个存储引擎从内存和磁盘读取的成本。
 
@@ -1384,27 +1182,21 @@ InnoDB 中的所有辅助非统一索引都附加在索引上的主要键列。�
 
 您可以使用 UPDATE 语句更新现有成本。如果要插入存储引擎的估计值，请使用语句;如果要删除自定义成本值，请使用语句。在这两种情况下，都必须执行语句才能使更改对新连接生效（现有连接继续使用旧值）。例如，如果要为 InnoDB 添加特定数据，假设主机具有慢速磁盘 I/O 和非常快的内存，可以使用以下语句，例如
 
-mysql> 插入mysql.engine_cost
+```sql
+mysql> INSERT INTO mysql.engine_cost
+ (engine_name, device_type, cost_name,
+ cost_value, comment)
+ VALUES ('InnoDB', 0, 'io_block_read_cost',
+ 2, 'InnoDB on non-local cloud storage'),
+ ('InnoDB', 0, 'memory_block_read_cost',
+ 0.15, 'InnoDB with very fast memory');
+Query OK, 2 rows affected (0.0887 sec)
+Records: 2 Duplicates: 0 Warnings: 0
+mysql> FLUSH OPTIMIZER_COSTS;
+Query OK, 0 rows affected (0.0877 sec)
+```
 
-（engine_name，device_type，cost_name，
 
-cost_value， 评论）
-
-值（"InnoDB"，0，"io_block_read_cost"，
-
-2，"非本地云存储上的 InnoDB"），
-
-（"InnoDB"， 0， "memory_block_read_cost"，
-
-0.15，"具有非常快内存的 InnoDB"）;
-
-查询确定，2 行受影响（0.0887 秒）
-
-记录： 2 重复： 0 警告： 0
-
-mysql> flush OPTIMIZER_COSTS;
-
-查询确定，0 行受到影响（0.0877 秒）
 
 如果要更改成本值，建议将值大约翻倍或一半，并评估效果。由于引擎成本是全局的，因此应确保在更改个良好的监视基线，并在更改后比较查询性能，以检测更改是否具有预期效果。
 
@@ -1433,33 +1225,24 @@ MySQL 使用基于成本的方法来确定最佳查询计划。要想让这一�
 
 如果要更改服务器成本之一，则需要使用常规语句，后跟OPTIMIZER_COSTS。然后，这些更改将影响新连接。例如，如果将磁盘上的内部临时表存储在 RAM 磁盘（共享内存磁盘）上，并且希望降低成本以反映
 
-mysql> 更新mysql.server_cost
-
-设置cost_value = 1，
-
-注释 = "存储在内存磁盘上"
-
-在哪里cost_name = "disk_temptable_create_cost";
-
-查询确定，1 行受影响（0.1051 秒）
-
-匹配行： 1 已更改： 1 警告： 0
-
-mysql> 更新mysql.server_cost
-
-设置cost_value = 0.1，
-
-注释 = "存储在内存磁盘上"
-
-在哪里cost_name = "disk_temptable_row_cost";
-
-查询确定，1 行受影响（0.1496 秒）
-
-匹配行： 1 已更改： 1 警告： 0
-
-mysql> flush OPTIMIZER_COSTS;
-
+```sql
+mysql> UPDATE mysql.server_cost
+ SET cost_value = 1,
+ Comment = 'Stored on memory disk'
+ WHERE cost_name = 'disk_temptable_create_cost';
+Query OK, 1 row affected (0.1051 sec)
+Rows matched: 1 Changed: 1 Warnings: 0
+mysql> UPDATE mysql.server_cost
+ SET cost_value = 0.1,
+ Comment = 'Stored on memory disk'
+ WHERE cost_name = 'disk_temptable_row_cost';
+Query OK, 1 row affected (0.1496 sec)
+Rows matched: 1 Changed: 1 Warnings: 0
+mysql> FLUSH OPTIMIZER_COSTS;
 Query OK, 0 rows affected (0.1057 sec)
+```
+
+
 
 更改成本可能并不总是影响查询计划，因为优化器可能别无选择，只能使用给定的查询计划，或者计算的成本是如此不同，因此更改服务器成本以影响查询计划可能会对其他查询产生太大的影响。请记住，所有连接的服务器成本都是全局的，因此只有在存在系统问题时，才应更改成本。如果问题只影响几个查询，最好使用优化器提示来影响查询计划。
 
@@ -1471,21 +1254,30 @@ Query OK, 0 rows affected (0.1057 sec)
 
 选项是一个复合选项，所有优化器交换机使用相同的选项，但有可能在不包括您不想更改的交换机的情况下更改单个交换机。将要更改的开关设置为打开关闭启用或禁用它。可以在影响所有新连接的全局范围内或在会话级别更改优化器交换机。例如，如果要禁用当前优化器开关，可以使用以下语句：
 
-mysql> 设置会话optimizer_switch = "derived_merge=关闭";
-
+```
+mysql> SET SESSION optimizer_switch = 'derived_merge=off';
 Query OK, 0 rows affected (0.0003 sec)
+```
+
+
 
 如果要永久更改该值，可以使用"或方式使用：
 
-mysql> 设置optimizer_switch = "derived_merge +off";
-
+```
+mysql> SET PERSIST optimizer_switch = 'derived_merge=off';
 Query OK, 0 rows affected (0.0431 sec)
+```
+
+
 
 如果您希望将值存储在 MySQL 配置文件中，则同样适用，例如：
 
+```
 [mysqld]
+optimizer_switch = "derived_merge=off"
+```
 
-optimizer_switch = "derived_merge+关"
+
 
 表列出了截至 MySQL 8.0.18 可用的优化器交换机及其默认值以及交换机操作的简要摘要。优化器开关按它们在"自动"选项中排序。
 
@@ -1524,13 +1316,14 @@ optimizer_switch = "derived_merge+关"
 
 优化器提示使用特殊注释、或句之后。 语法在注释开始后立即使用带 + 的内联注释，例如：
 
-选择
+```
+SELECT /*+ MAX_EXECUTION_TIME(2000) */
+ id, Name, District
+ FROM world.city
+ WHERE CountryCode = 'AUS';
+```
 
-id， 名称， 区
 
-来自世界. city
-
-国家代码 = "澳大利亚";
 
 本示例将查询的最大执行时间设置为 2000 毫秒。
 
@@ -1571,73 +1364,58 @@ id， 名称， 区
 
 对于具有多个查询块的复杂查询，命名很有用，以便可以指定优化器提示应应用于的查询块。使用 器提示设置查询块的名称：
 
-选择
+```
+SELECT /*+ QB_NAME(payment) */
+ rental_id
+ FROM sakila.payment
+ WHERE staff_id = 1 AND customer_id = 75;
+You can then refer to the query block by adding an @ in front of the query block
+name when specifying a hint:
+SELECT /*+ NO_INDEX_MERGE(@payment payment) */
+ rental_id, rental_date, return_date
+ FROM sakila.rental
+ WHERE rental_id IN (
+ SELECT /*+ QB_NAME(payment) */
+ rental_id
+ FROM sakila.payment
+ WHERE staff_id = 1 AND customer_id = 75
+ );
+```
 
-rental_id
 
-从 sakila. 付款
-
-其中staff_id = 1 和 customer_id = 75;
-
-然后，在指定提示时，可以通过在查询块名称前面添加一个 @ 来引用查询块：
-
-选择
-
-rental_id， rental_date， return_date
-
-从萨基拉. 出租
-
-rental_id的地方 （
-
-选择
-
-rental_id
-
-从 sakila. 付款
-
-在哪里staff_id = 1 和 customer_id = 75
-
-​    );
 
 该示例将 IN 条件中的查询块为。然后在顶层引用此块名称，以禁用付款查询块中的索引合并功能。当您使用这种查询块名称时，提示中列出的所有表都必须来自同一个查询块。指定查询块的替代表示法是在表名之后添加它，例如：
 
-选择 /*= NO_INDEX_MERGE) */
+```
+SELECT /*+ NO_INDEX_MERGE(payment@payment) */
+ rental_id, rental_date, return_date
+ FROM sakila.rental
+ WHERE rental_id IN (
+ SELECT /*+ QB_NAME(payment) */
+ rental_id
+ FROM sakila.payment
+ WHERE staff_id = 1 AND customer_id = 75
+ );
+```
 
-rental_id， rental_date， return_date
 
-从萨基拉. 出租
-
-rental_id的地方 （
-
-选择
-
-rental_id
-
-从 sakila. 付款
-
-在哪里staff_id = 1 和 customer_id = 75
-
-​    );
 
 这与上一示例中的相同，但它的优点是，您可以将一个提示用于不同查询块中的表。
 
 优化器提示的一大用途是更改查询期间配置变量的值。这对于最好以但某些查询的值越大，可以提高性能的选项特别有用。使用优化器提示，参数为变量赋值。在参考手册中，可与器提示一起使用的应用：是"。例如，要将 1 0（此选项将很快解释），您可以使用
 
-选择
+```
+SELECT /*+ SET_VAR(join_buffer_size = 1048576)
+ SET_VAR(optimizer_search_depth = 0) */
+ CountryCode, country.Name AS Country,
+ city.Name AS City, city.District
+ FROM world.country IGNORE INDEX (Primary)
+ INNER JOIN world.city IGNORE INDEX (CountryCode)
+ ON city.CountryCode = country.Code
+ WHERE Continent = 'Asia';
+```
 
-​      **SET_VAR （optimizer_search_depth = 0） \*/**
 
-国家代码，国家/地区。名称为国家/地区，
-
-城市。名称为"城市"，城市。区
-
-从世界. 国家忽略索引 （主要）
-
-内部加入世界. 城市忽略索引 （国家代码）
-
-在城市。国家/地区代码 = 国家/地区。代码
-
-哪里大陆 = "亚洲";
 
 从示例中需要注意几点。首先提示不支持在同一提示中设置两个选项，因此您需要为每个选项指定一次提示。其次，不支持表达式或单位，因此对于需要直接以字节形式提供值。
 
@@ -1655,27 +1433,27 @@ MySQL 支持三个索引提示：
 
 使用其中一个索引提示时，需要在括号内逗号分隔列表中提供应受提示影响的索引的名称。索引提示放在表名之后。如果为表添加别名，请将索引提示放在别名之后。例如，若要在不使用国家/地区表上的主键或城市的国家索引的情况下城市，可以使用以下查询：
 
-选择 ci。国家代码， Co.名称为国家/地区，
+```
+SELECT ci.CountryCode, co.Name AS Country,
+ ci.Name AS City, ci.District
+ FROM world.country co IGNORE INDEX (Primary)
+ INNER JOIN world.city ci IGNORE INDEX (CountryCode)
+ ON ci.CountryCode = co.Code
+ WHERE co.Continent = 'Asia';
+```
 
-词。名字作为城市， ci 。区
 
-来自世界. 国家共同
-
-内加入世界. city ci
-
-在 ci 上。国家代码 = co.代码
-
-哪里是公司。大陆 = "亚洲";
 
 请注意主键如何。在示例中，索引提示应用于可以使用表索引的所有操作。可以通过添加 FOR JOIN、"按顺序"或"组 BY"来限制范围以联接、分组，例如：
 
-选择 *
+```
+SELECT *
+ FROM world.city USE INDEX FOR ORDER BY (Primary)
+ WHERE CountryCode = 'AUS'
+ ORDER BY ID;
+```
 
-从世界.
 
-国家代码 = "澳大利亚"
-
-按 ID 顺序;
 
 虽然在大多数情况下最好限制索引提示的使用以便优化器可以随着索引和数据的变化而自由更改查询计划，但索引提示是可用的功能最强大的工具之一，您不应回避在需要时使用它们。
 
@@ -1714,35 +1492,25 @@ MySQL 支持三个索引提示：
 
 清单显示了 MySQL 安装后默认资源组的资源组信息。"VCPU_IDS值取决于您系统中的虚拟 CPU 数。
 
-mysql> 选择 *
-
-从information_schema。RESOURCE_GROUPS\G
-
-1.行***************************************************************************************************
-
-RESOURCE_GROUP_NAME： USR_default
-
-RESOURCE_GROUP_TYPE：用户
-
-RESOURCE_GROUP_ENABLED： 1
-
-VCPU_IDS： 0-7
-
-THREAD_PRIORITY： 0
-
-2.行***************************************************************************************************
-
-RESOURCE_GROUP_NAME： SYS_default
-
-RESOURCE_GROUP_TYPE： 系统
-
-RESOURCE_GROUP_ENABLED： 1
-
-VCPU_IDS： 0-7
-
-THREAD_PRIORITY： 0
-
+```
+mysql> SELECT *
+ FROM information_schema.RESOURCE_GROUPS\G
+*************************** 1. row ***************************
+ RESOURCE_GROUP_NAME: USR_default
+ RESOURCE_GROUP_TYPE: USER
+RESOURCE_GROUP_ENABLED: 1
+ VCPU_IDS: 0-7
+ THREAD_PRIORITY: 0
+*************************** 2. row ***************************
+ RESOURCE_GROUP_NAME: SYS_default
+ RESOURCE_GROUP_TYPE: SYSTEM
+RESOURCE_GROUP_ENABLED: 1
+ VCPU_IDS: 0-7
+ THREAD_PRIORITY: 0
 2 rows in set (0.0007 sec)
+```
+
+
 
 默认情况下有两个资源组连接的优先级组和线程的一个资源组。两个组配置相同，允许使用所有 CPU。这两个组既不能删除也不能修改。但是，您可以创建自己的资源组。
 
@@ -1779,29 +1547,35 @@ THREAD_PRIORITY： 0
 
 创建新资源组时，必须设置组的名称和类型。其余参数是可选的。默认值是将包括主机上的所有可用 CPU，将优先级设置为 0，然后启用组。为可以使用7 的用户连接创建名为 my_group 的已启用组的示例是（这要求主机至少有八个虚拟 CPU），如下所示：
 
-创建资源组my_group
-
-类型 = 用户
-
-VCPU = 2-3，6，7
-
+```
+CREATE RESOURCE GROUP my_group
+ TYPE = USER
+ VCPU = 2-3,6,7
 THREAD_PRIORITY = 0
+ENABLE;
+```
 
-启用;
+
 
 显示如何一个列出 CPU 或使用范围。资源组名称被视为标识符，因此您只需在与架构和表名称相同的情况下用背子引用它。
 
 语句类似于创建，但不能更改组名称或组类型。例如，要更改名为"已创建"的组的 CPU 和
 
-更改资源组my_group
-
-VCPU = 2-5
-
+```
+ ALTER RESOURCE GROUP my_group
+ VCPU = 2-5
 THREAD_PRIORITY = 10;
+```
+
+
 
 如果需要删除资源组，可以使用只需的 DROP 资源组语句，例如：
 
-删除资源组my_group;
+```sql
+DROP RESOURCE GROUP my_group;
+```
+
+
 
 对于 语句，有一个可选参数 。这指定了当有线程使用资源组时，MySQL 应如何处理案例。表总结了该行为。
 
@@ -1820,59 +1594,62 @@ THREAD_PRIORITY = 10;
 
 首先，重新组（这一次只使用一个 CPU 使其在所有系统上工作）：
 
-创建资源组my_group
-
-类型 = 用户
-
-VCPU = 0
-
+```
+CREATE RESOURCE GROUP my_group
+ TYPE = USER
+ VCPU = 0
 THREAD_PRIORITY = 0
+ENABLE;
+```
 
-启用;
+
 
 使用语句将线程分配给资源组。这适用于系统和用户线程。若要将连接本身分配给资源组，请使用资源组名称为唯一参数的 语句，例如：
 
-设置资源组my_group;
+```
+SET RESOURCE GROUP my_group;
+```
+
+
 
 如果要更改一个或多个其他线程的资源组，请添加末尾的关键字，然后添加要分配给该组的性能架构线程 ID 的逗号分隔列表。例如，要将线程 47、49 和 50在本例中，线程 ID 显然会有所不同 - 替换为系统中存在的线程）
 
-设置资源组my_group 47、49、50;
+```
+SET RESOURCE GROUP my_group FOR 47, 49, 50;
+```
+
+
 
 作为替代方法，您可以使用 优化器提示在查询期间将资源组分配给线程，例如：
 
-选择 /** RESOURCE_GROUP （my_group） */
+```
+SELECT /*+ RESOURCE_GROUP(my_group) */
+ *
+ FROM world.city
+ WHERE CountryCode = 'USA';
+```
 
-​    *
 
-来自世界. city
-
-国家代码 = "美国";
 
 优化器提示通常是使用资源组的最佳方法，因为它允许您按查询设置它，并且当您使用。它也可以与 MySQL 重写插件或代理（如 ProxySQL）结合使用，该代理支持将优化器提示注释添加到查询中。
 
 可以使用表列查看每个线程使用的资源组。例如，若要查看使用之前使用组
 
-mysql> 选择THREAD_ID， RESOURCE_GROUP
-
-从 performance_schema. 线程
-
-在THREAD_ID（47、49、50）;
-
+```
+mysql> SELECT THREAD_ID, RESOURCE_GROUP
+ FROM performance_schema.threads
+ WHERE THREAD_ID IN (47, 49, 50);
 +-----------+----------------+
-
-|THREAD_ID |RESOURCE_GROUP |
-
+| THREAD_ID | RESOURCE_GROUP |
 +-----------+----------------+
-
-|47 |my_group |
-
-|49 |my_group |
-
-|50 |my_group |
-
+| 47 | my_group |
+| 49 | my_group |
+| 50 | my_group |
 +-----------+----------------+
+3 rows in set (0.0008 sec)
+```
 
-设置 3 行（0.008 秒）
+
 
 这留下了如何使用资源组的问题。
 
@@ -1907,36 +1684,4 @@ MySQL 支持三种联接算法。最简单的算法（也是原始算法）是�
 
 最后一个涵盖的功能是在 MySQL 8 中添加的资源组。资源组可用于指定允许线程使用哪些 CPU 以及线程应执行哪个优先级。这对于某些线程的优先级高于其他线程或防止资源争用非常有用。
 
-下一章将介绍锁定在 MySQL 中的工作原理。
-
-脚注
-
-[1](#Fn1_source)
-
-需要成员资格/订阅）
-
- 
-
-[2](#Fn2_source)
-
-[https://dev.mysql.com/worklog/task/?id=2241](https://dev.mysql.com/worklog/task/%3Fid%3D2241)
-
- 
-
-[3](#Fn3_source)
-
-https://twitter.com/lefred/status/1222916855150600192
-
- 
-
-[4](#Fn4_source)
-
-和
-
- 
-
-[5](#Fn5_source)
-
-http://oysteing.blogspot.com/2012/04/improved-dbt-3-results-with-mysql-565.html
-
- 
+下一章将介绍锁在 MySQL 中的工作原理。
