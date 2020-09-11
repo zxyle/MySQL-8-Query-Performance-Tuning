@@ -12,7 +12,7 @@ MySQL 企业监视器是 Oracle 的监控解决方案，专用于 MySQL。它可
 
 ------
 
-**注意 MySQL 企业监视器要求 MySQL 企业版或 MySQLCluster CGE（运营商级版）订阅在 30 天试用期之后使用（另请参阅下一节中的下载说明）。您可以在一个数据库查看MySQLwww.mysql.com/products/enterprise/。**
+**注意** MySQL 企业监视器要求 MySQL 企业版或 MySQLCluster CGE（运营商级版）订阅在 30 天试用期之后使用（另请参阅下一节中的下载说明）。您可以在一个数据库查看MySQLwww.mysql.com/products/enterprise/。
 
 ------
 

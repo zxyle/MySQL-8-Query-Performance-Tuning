@@ -41,8 +41,6 @@
 
 （SCHEMA_NAME，DIGEST）上有一个唯一索引，用于对数据进行分组。表中最多可以有Performance_schema_digests_size（动态调整大小，但通常默认为10000）行。插入最后一行时，架构和摘要都设置为NULL，并且该行用作通用行。每次使用“全部处理”行时，Performance_schema_digest_lost状态变量都会增加。使用events_statements_current，events_statements_history和events_ statement_history_long表的单个查询也可以使用此表中汇总的信息。
 
-
-
 提示由于数据是按SCHEMA_NAME DIGEST分组的，因此，当应用程序与设置默认架构一致时（例如，在MySQL Shell中使用world或--schema命令行选项，或者在您使用的客户端/连接器）。要么总是设置它，要么从不设置它。以相同的方式，如果在引用表时有时包括模式名称，有时则不包括模式名称，否则相同的查询将被计为两个不同的摘要。
 
 两组列需要更多说明，分位数列和查询样本列。分位数列的值是基于摘要的直方图统计信息确定的。基本上，如果您使用给定摘要和默认架构的events_statements_ histogram_by_digest表，并转到具有95％查询执行量的存储桶，则该存储桶将用于确定第95个百分位。直方图表将在稍后讨论。
@@ -130,8 +128,6 @@ SUM_CREATED_TMP_DISK_TABLES: 0
 如前所述，MySQL还维护语句的直方图统计信息。有两个直方图表可用：events_statements_histogram_by_digest和events_statements_histogram_global。两者之间的区别在于，前者具有按默认架构和摘要分组的直方图信息，而后者则包含针对所有查询分组的信息。直方图信息可用于确定查询延迟的分布，类似于在events_statements_summary_ by_digest表中针对分位数列讨论的内容，但粒度更细。这些表是自动管理的。
 
 如前所述，准备好的语句不包括在语句事件表中。相反，您需要使用prepare_statements_instances表。
-
-
 
 ### Prepared Statements Summary
 

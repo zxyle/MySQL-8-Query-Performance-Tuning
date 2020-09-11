@@ -333,8 +333,6 @@ CREATE TABLE `chapter_24`.`country` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
-
-
 这里很明显，城市列是列是一个整数。这就是为什么在城市的表是联接中的第时，无法使用"国家/地区 Id"列。
 
 另请注意，两个表的排序规则。城市使用排序规则（MySQL 5.7 及更早的默认排序规则），而 排序规则）。不同的字符集或排序规则甚至可以阻止查询完全执行：

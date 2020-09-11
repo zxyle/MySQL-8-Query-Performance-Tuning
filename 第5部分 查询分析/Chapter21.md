@@ -618,8 +618,6 @@ mysql> ROLLBACK;
 Query OK, 0 rows affected (0.0841 sec)
 ```
 
-
-
 对于 XA 事务：
 
 ```
@@ -628,8 +626,6 @@ Query OK, 0 rows affected (0.0003 sec)
 mysql> XA ROLLBACK 'abc', 'def', 1;
 Query OK, 0 rows affected (0.0759 sec)
 ```
-
-
 
 性能架构表可用于分析事务的另一种方式是使用汇总表获取聚合数据。
 
