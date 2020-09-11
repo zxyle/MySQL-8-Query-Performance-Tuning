@@ -20,21 +20,20 @@ MySQL 支持 ALTER 的多种算法，该算法决定如何执行架构更改。�
 
 通常算法允许并发数据更改，从而减少对其他连接的影响，而至少需要读取锁。MySQL 会根据请求的更改选择影响最少的算法，但您也可以显式请求特定算法。例如，如果您希望确保 MySQL 不继续更改，如果不支持您选择的算法，这非常有用。使用 算法关键字指定，例如：
 
-mysql > 改变表世界. city
+```
+mysql> ALTER TABLE world.city
+ ADD COLUMN Council varchar(50),
+ ALGORITHM=INSTANT;
+If the change cannot be performed using the requested algorithm, the statement fails
+with an ER_ALTER_OPERATION_NOT_SUPPORTED error (error number 1845), for example:
+mysql> ALTER TABLE world.city
+ DROP COLUMN Council,
+ ALGORITHM=INSTANT;
+ERROR: 1845: ALGORITHM=INSTANT is not supported for this operation. Try
+ALGORITHM=COPY/INPLACE.
+```
 
-添加柱形理事会 varchar （50），
 
-算法=即时;
-
-如果无法使用请求的算法执行更改，则语句将失败错误（错误编号 1845），例如：
-
-mysql > 改变表世界. city
-
-下降列柱理事会，
-
-算法=即时;
-
-错误： 1845： 此操作不支持算法\即时。尝试算法=复制/放置。
 
 如果可以使用 INSTANT 算法显然将获得最佳的 ALTER 性能。在编写本文时，允许使用 INSTANT 算法执行操作：
 
@@ -71,15 +70,15 @@ mysql > 改变表世界. city
 
 删除或截断表时的主要问题是缓冲区池中对表数据的所有引用。特别是，自适应哈希索引可能会导致问题。因此，您可以通过在操作期间禁用自适应哈希索引，从而在删除或截断大型表时显著提高性能，例如：
 
-mysql> 设置innodb_adaptive_hash_index + 关闭;
+```
+mysql> SET GLOBAL innodb_adaptive_hash_index = OFF;
+Query OK, 0 rows affected (0.1008 sec)
+mysql> DROP TABLE <name of large table>;
+mysql> SET GLOBAL innodb_adaptive_hash_index = ON;
+Query OK, 0 rows affected (0.0098 sec)
+```
 
-查询确定，0 行受到影响（0.1008 秒）
 
-mysql> 删除表 < 大表的名称 >;
-
-mysql> 设置innodb_adaptive_hash_index = 打开;
-
-查询确定，0 行受到影响（0.0098 秒）
 
 禁用自适应哈希索引将使从哈希索引运行中受益的查询运行速度变慢，但对于大小为几百千兆字节或更大的表，禁用自适应哈希索引的减速速度相对较小，通常优先于发生潜在停滞的情况，因为删除对正在删除或截断的表的引用的开销。
 
@@ -91,385 +90,203 @@ mysql> 设置innodb_adaptive_hash_index = 打开;
 
 数据加载完成后，清单中的脚本可用于确定表空间文件中按日志序列号（LSN） 衡量的每个页面的年龄。日志序列号越高，页面修改得越新。此脚本的灵感来自innodb_ruby科尔，并生成了类似于地图。但是，innodb_ruby不支持 MySQL 8，因此开发了单独的 Python 程序。该程序已经通过 Python 2.7 （Linux） 和 3.6 （Linux 和微软 Windows） 进行了测试。在本书的 GitHub 存储库listing_25_1.py 中的文件中也提供它。
 
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+```
+Listing 25-1. Python program to map the LSN age of InnoDB pages
+'''Read a MySQL 8 file-per-table tablespace file and generate an
+SVG formatted map of the LSN age of each page.
+Invoke with the --help argument to see a list of arguments and
+Usage instructions.'''
+import sys
+import argparse
+import math
+from struct import unpack
+# Some constants from InnoDB
+FIL_PAGE_OFFSET = 4 # Offset for the page number
+FIL_PAGE_LSN = 16 # Offset for the LSN
+FIL_PAGE_TYPE = 24 # Offset for the page type
+FIL_PAGE_TYPE_ALLOCATED = 0 # Freshly allocated page
+def mach_read_from_2(page, offset):
+ '''Read 2 bytes in big endian. Based on the function of the same
+ name in the InnoDB source code.'''
+ return unpack('>H', page[offset:offset + 2])[0]
+1
+https://github.com/jeremycole/innodb_ruby
+def mach_read_from_4(page, offset):
+ '''Read 4 bytes in big endian. Based on the function of the same
+ name in the InnoDB source code.'''
+ return unpack('>L', page[offset:offset + 4])[0]
+def mach_read_from_8(page, offset):
+ '''Read 8 bytes in big endian. Based on the function of the same
+ name in the InnoDB source code.'''
+ return unpack('>Q', page[offset:offset + 8])[0]
+def get_color(lsn, delta_lsn, greyscale):
+ '''Get the RGB color of a relative lsn.'''
+ color_fmt = '#{0:02x}{1:02x}{2:02x}'
+ if greyscale:
+ value = int(255 * lsn / delta_lsn)
+ color = color_fmt.format(value, value, value)
+ else:
+ # 0000FF -> 00FF00 -> FF0000 -> FFFF00
+ # 256 + 256 + 256 values
+ value = int((3 * 256 - 1) * lsn / delta_lsn)
+ if value < 256:
+ color = color_fmt.format(0, value, 255 - value)
+ elif value < 512:
+ value = value % 256
+ color = color_fmt.format(value, 255 - value, 0)
+ else:
+ value = value % 256
+ color = color_fmt.format(255, value, 0)
+ return color
+def gen_svg(min_lsn, max_lsn, lsn_age, args):
+ '''Generate an SVG output and print to stdout.'''
+ pages_per_row = args.width
+ page_width = args.size
+ num_pages = len(lsn_age)
+ num_rows = int(math.ceil(1.0 * num_pages / pages_per_row))
+ x1_label = 5 * page_width + 1
+ x2_label = (pages_per_row + 7) * page_width
+ delta_lsn = max_lsn - min_lsn
+ print('<?xml version="1.0"?>')
+ print('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">')
+ print('<text x="{0}" y="{1}" font-family="monospace" font-size="{2}" '
+ .format(x1_label, int(1.5 * page_width) + 1, page_width) +
+ 'font-weight="bold" text-anchor="end">Page</text>')
+ page_number = 0
+ page_fmt = ' <rect x="{0}" y="{1}" width="{2}" height="{2}" fill="{3}" />'
+ label_fmt = ' <text x="{0}" y="{1}" font-family="monospace" '
+ label_fmt += 'font-size="{2}" text-anchor="{3}">{4}</text>'
+ for i in range(num_rows):
+ y = (i + 2) * page_width
+ for j in range(pages_per_row):
+ x = 6 * page_width + j * page_width
+ if page_number >= len(lsn_age) or lsn_age[page_number] is None:
+ color = 'black'
+ else:
+ relative_lsn = lsn_age[page_number] - min_lsn
+ color = get_color(relative_lsn, delta_lsn, args.greyscale)
+ print(page_fmt.format(x, y, page_width, color))
+ page_number += 1
+ y_label = y + page_width
+ label1 = i * pages_per_row
+ label2 = (i + 1) * pages_per_row
+ print(label_fmt.format(x1_label, y_label, page_width, 'end', label1))
+ print(label_fmt.format(x2_label, y_label, page_width, 'start', label2))
+ # Create a frame around the pages
+ frame_fmt = ' <path stroke="black" stroke-width="1" fill="none" d="'
+ frame_fmt += 'M{0},{1} L{2},{1} S{3},{1} {3},{4} L{3},{5} S{3},{6} {2},{6}'
+ frame_fmt += ' L{0},{6} S{7},{6} {7},{5} L{7},{4} S{7},{1} {0},{1} Z" />'
+ x1 = int(page_width * 6.5)
+ y1 = int(page_width * 1.5)
+ x2 = int(page_width * 5.5) + page_width * pages_per_row
+ x2b = x2 + page_width
+ y1b = y1 + page_width
+ y2 = int(page_width * (1.5 + num_rows))
+ y2b = y2 + page_width
+ x1c = x1 - page_width
+ print(frame_fmt.format(x1, y1, x2, x2b, y1b, y2, y2b, x1c))
+ # Create legend
+ x_left = 6 * page_width
+ x_right = x_left + pages_per_row * page_width
+ x_mid = x_left + int((x_right - x_left) * 0.5)
+ y = y2b + 2 * page_width
+ print('<text x="{0}" y="{1}" font-family="monospace" '.format(x_left, y) +
+ 'font-size="{0}" text-anchor="start">{1}</text>'.format(page_width,
+ min_lsn))
+ print('<text x="{0}" y="{1}" font-family="monospace" '.format(x_right, y) +
+ 'font-size="{0}" text-anchor="end">{1}</text>'.format(page_width,
+ max_lsn))
+ print('<text x="{0}" y="{1}" font-family="monospace" '.format(x_mid, y) +
+ 'font-size="{0}" font-weight="bold" text-anchor="middle">{1}</text>'
+ .format(page_width, 'LSN Age'))
+ color_width = 1
+ color_steps = page_width * pages_per_row
+ y = y + int(page_width * 0.5)
+ for i in range(color_steps):
+ x = 6 * page_width + i * color_width
+ color = get_color(i, color_steps, args.greyscale)
+ print('<rect x="{0}" y="{1}" width="{2}" height="{3}" fill="{4}" />'
+ .format(x, y, color_width, page_width, color))
+ print('</svg>')
+def analyze_lsn_age(args):
+ '''Read the tablespace file and find the LSN for each page.'''
+ page_size_bytes = int(args.page_size[0:-1]) * 1024
+ min_lsn = None
+ max_lsn = None
+ lsn_age = []
+ with open(args.tablespace, 'rb') as fs:
+ # Read at most 1000 pages at a time to avoid storing too much
+ # in memory at a time.
+ chunk = fs.read(1000 * page_size_bytes)
+ while len(chunk) > 0:
+ num_pages = int(math.floor(len(chunk) / page_size_bytes))
+ for i in range(num_pages):
+ # offset is the start of the page inside the
+ # chunk of data
+ offset = i * page_size_bytes
+ # The page number, lsn for the page, and page
+ # type can be found at the FIL_PAGE_OFFSET,
+ # FIL_PAGE_LSN, and FIL_PAGE_TYPE offsets
+ # relative to the start of the page.
+ page_number = mach_read_from_4(chunk, offset + FIL_PAGE_OFFSET)
+ page_lsn = mach_read_from_8(chunk, offset + FIL_PAGE_LSN)
+ page_type = mach_read_from_2(chunk, offset + FIL_PAGE_TYPE)
+ if page_type == FIL_PAGE_TYPE_ALLOCATED:
+ # The page has not been used yet
+ continue
+ if min_lsn is None:
+ min_lsn = page_lsn
+ max_lsn = page_lsn
+ else:
+ min_lsn = min(min_lsn, page_lsn)
+ max_lsn = max(max_lsn, page_lsn)
+ if page_number == len(lsn_age):
+ lsn_age.append(page_lsn)
+ elif page_number > len(lsn_age):
+ # The page number is out of order - expand the list first
+ lsn_age += [None] * (page_number - len(lsn_age))
+ lsn_age.append(page_lsn)
+ else:
+ lsn_age[page_number] = page_lsn
+ chunk = fs.read(1000 * page_size_bytes)
+ sys.stderr.write("Total # Pages ...: {0}\n".format(len(lsn_age)))
+ gen_svg(min_lsn, max_lsn, lsn_age, args)
+def main():
+ '''Parse the arguments and call the analyze_lsn_age()
+ function to perform the analysis.'''
+ parser = argparse.ArgumentParser(
+ prog='listing_25_1.py',
+ description='Generate an SVG map with the LSN age for each page in an' +
+ ' InnoDB tablespace file. The SVG is printed to stdout.')
+ parser.add_argument(
+ '-g', '--grey', '--greyscale', default=False,
+ dest='greyscale', action='store_true',
+ help='Print the LSN age map in greyscale.')
+ parser.add_argument(
+ '-p', '--page_size', '--page-size', default='16k',
+ dest='page_size',
+ choices=['4k', '8k', '16k', '32k', '64k'],
+ help='The InnoDB page size. Defaults to 16k.')
+ parser.add_argument(
+ '-s', '--size', default=16, dest='size',
+ choices=[4, 8, 12, 16, 20, 24], type=int,
+ help='The size of the square representing a page in the output. ' +
+ 'Defaults to 16.')
+ parser.add_argument(
+ '-w', '--width', default=64, dest='width',
+ type=int,
+ help='The number of pages to include per row in the output. ' +
+ 'The default is 64.')
+ parser.add_argument(
+ dest='tablespace',
+ help='The tablespace file to analyze.')
+ args = parser.parse_args()
+ analyze_lsn_age(args)
+if __name__ == '__main__':
+ main()
+```
 
-SVG 格式化的每个页面的 LSN 年龄的地图。
 
-使用 --help 参数调用 以查看参数列表和
-
-使用说明。
-
-导入系统
-
-导入阿格斯
-
-导入数学
-
-从结构导入解包
-
-\# Innodb 的一些常量
-
-FIL_PAGE_OFFSET页号的偏移量 = 4 = 偏移量
-
-FIL_PAGE_LSN = 16 = Lsn 的偏移量
-
-FIL_PAGE_TYPE页面类型的偏移量 = 24 = 偏移量
-
-FIL_PAGE_TYPE_ALLOCATED = 0 = 新分配的页面
-
-def mach_read_from_2（页，偏移）：
-
-''''读取2字节在大末名。基于相同的函数
-
-Innodb 源代码中的名称。
-
-返回解包（'>H'，页面[偏移量：偏移=2]）{0}
-
-def mach_read_from_4（页，偏移）：
-
-'''''''''''''''''''''''''''''''''''''''''基于相同的函数
-
-Innodb 源代码中的名称。
-
-返回解包（'>L'，页面[偏移量：偏移[4]）{0}
-
-def mach_read_from_8（页，偏移）：
-
-''''读取8字节在大末名。基于相同的函数
-
-Innodb 源代码中的名称。
-
-返回解包（'>Q'，页面[偏移量：偏移=8]）{0}
-
-def get_color （lsn， delta_lsn， 灰度）：
-
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-color_fmt = "#0：02x"{1：02x}{2：02x}'
-
-如果灰度：
-
-值 = int（255 * lsn / delta_lsn）
-
-颜色 = color_fmt格式（值、值、值）
-
-还：
-
-\# 0000FF -> 00FF00 -> FF000 -> Fff00
-
-\# 256 × 256 × 256 值
-
-值 = int（（3 * 256 - 1） * lsn / delta_lsn）
-
-如果值 < 256：
-
-颜色 = color_fmt.格式（0，值，255 - 值）
-
-elif 值 < 512：
-
-值 = 值 % 256
-
-颜色 = color_fmt.格式（值，255 - 值，0）
-
-还：
-
-值 = 值 % 256
-
-颜色 = color_fmt.格式（255，值，0）
-
-返回颜色
-
-def gen_svg （min_lsn， max_lsn， lsn_age， args）：
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-pages_per_row = args. 宽度
-
-page_width = args. 大小
-
-num_pages = len（lsn_age）
-
-num_rows = int （math.ceil（1.0 * num_pages / pages_per_row）
-
-x1_label = 5 * page_width = 1
-
-x2_label = （pages_per_row = 7） * page_width
-
-delta_lsn = max_lsn - min_lsn
-
-打印（'<？xml 版本="1.0"？>'）
-
-打印（'<svg xmlns：\"http：//www.w3.org/2000/svg"版本="1.1">"）
-
-打印（'<文本 x="{0}"y="{1}"字体系列="单空间"字体大小="{2}""
-
-.格式（x1_label，国际（1.5 * page_width） = 1，page_width）|
-
-"字体权重="粗体"文本锚\"结束">页面</文本>'）
-
-page_number = 0
-
-page_fmt = '<rect x="{0}"y="{1}"宽度="{2}"高度="{2}"填充="{3}"/>"
-
-label_fmt = ========={1} {0}=============================================================================================
-
-  label_fmt += 'font-size="{2}" text-anchor="{3}">{4}</text>'
-
-i 在范围 （num_rows）：
-
-y = （i = 2） = page_width
-
-对于 j 在范围（pages_per_row）：
-
-x = 6 = page_width = j = page_width
-
-如果page_number>= len（lsn_age）或 lsn_age[page_number] 为无：
-
-颜色 = "黑色"
-
-还：
-
-relative_lsn = lsn_age [page_number] - min_lsn
-
-颜色 = get_color （relative_lsn， delta_lsn， args. 灰度）
-
-打印（page_fmt.格式（x、y、page_width、颜色）
-
-page_number + 1
-
-y_label _ y _ page_width
-
-标签 1 = i = pages_per_row
-
-标签 2 = （i = 1） = pages_per_row
-
-打印（label_fmt.格式（x1_labely_labelpage_width、"结束"、标签1）
-
-打印（label_fmt.格式（x2_label、y_label、page_width、"启动"、标签2）
-
-\# 在页面周围创建框架
-
-frame_fmt = '<路径描边= "黑色" 笔画宽度 = "1" 填充 = "无" d =""
-
-frame_fmt = "M{0}，{1} L{2}，{1} S{3}，{1} {3}，{4} L{3}，{5} S{3}，{6} {2}，{6}"
-
-frame_fmt = "L{0}，{6} S{7}，{6} {7}，{5} L{7}，{4} S{7}，{1} {0}，{1} Z" />"
-
-x1 = int（page_width * 6.5）
-
-y1 = int（page_width * 1.5）
-
-x2 = int （page_width * 5.5） = page_width = pages_per_row
-
-x2b = x2 = page_width
-
-y1b = y1 = page_width
-
-y2 = int（page_width * （1.5 = num_rows））
-
-y2b = y2 = page_width
-
-x1c = x1 - page_width
-
-打印（frame_fmt格式）（x1、y1、x2、x2b、y1b、y2、y2b、x1c）
-
-\# 创建图例
-
-x_left = 6 * page_width
-
-x_right [ x_left pages_per_row ] page_width
-
-x_mid = x_left = int （x_right - x_left） * 0.5）
-
-y = y2b = 2 = page_width
-
-打印（'<文本 x="{0}"y="{1}"字体系列="单空间".格式（x_left，y） |
-
-"字体大小="{0}"文本锚\"开始">{1}</text>"格式（page_width，
-
-min_lsn））
-
-打印（'<文本 x="{0}"y="{1}"字体系列="单空间".格式（x_right，y） |
-
-"字体大小="{0}"文本锚\"结束">{1}</text>'格式（page_width，
-
-max_lsn））
-
-打印（'<文本 x="{0}"y="{1}"字体系列="单空间".格式（x_mid，y） |
-
-"字体大小="{0}"字体粗"字体粗"文本锚\"中间">{1}</文本>"
-
-.格式（page_width，'LSN 年龄））
-
-color_width = 1
-
-color_steps [ page_width] pages_per_row
-
-y = y = int（page_width * 0.5）
-
-i 在范围 （color_steps）：
-
-x = 6 = page_width = i = color_width
-
-颜色 = get_color （i， color_steps， args. 灰度）
-
-打印（'<rect x="{0}"y="{1}"宽度="{2}"高度="{3}"填充="{4}"/>"
-
-.格式（x、y、color_width、page_width、颜色）
-
-打印（'</svg>'）
-
-def analyze_lsn_age（args）：
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-page_size_bytes = int（args.page_size[0：-1]） * 1024
-
-min_lsn = 无
-
-max_lsn = 无
-
-lsn_age ]
-
-与 open （args. tablespace， 'rb'） 作为 fs：
-
-\* 一次最多阅读 10 页，以避免存储太多
-
-\# 一次在内存中。
-
-块 = fs. read （1000 * page_size_bytes）
-
-而 len（块） > 0：
-
-num_pages = int（数学地板（伦（块）/page_size_bytes）
-
-i 在范围 （num_pages）：
-
-\# 偏移量是页面在
-
-\# 数据块
-
-偏移 [i] page_size_bytes
-
-\# 页号、页数的 lsn 和页
-
-\# 类型可以在FIL_PAGE_OFFSET找到
-
-\# FIL_PAGE_LSN， FIL_PAGE_TYPE偏移
-
-\# 相对于页面的开始。
-
-​        **page_number = mach_read_from_4（块、偏移 = FIL_PAGE_OFFSET）**
-
-​        **page_lsn = mach_read_from_8（块、偏移 = FIL_PAGE_LSN）**
-
-​        **page_type = mach_read_from_2（块、偏移 = FIL_PAGE_TYPE）**
-
-如果page_type = FIL_PAGE_TYPE_ALLOCATED：
-
-\# 尚未使用该页面
-
-继续
-
-如果min_lsn为无：
-
-min_lsn = page_lsn
-
-max_lsn = page_lsn
-
-还：
-
-min_lsn = 分钟（min_lsn，page_lsn）
-
-max_lsn = 最大值（max_lsn，page_lsn）
-
-如果page_number = len（lsn_age）：
-
-lsn_age.附录（page_lsn）
-
-elif page_number > len （lsn_age）：
-
-\# 页号出问题 - 先展开列表
-
-lsn_age [ 无] （page_number - len （lsn_age））
-
-lsn_age.附录（page_lsn）
-
-还：
-
-lsn_age[page_number] page_lsn
-
-块 = fs. read （1000 * page_size_bytes）
-
-sys. stderr. write （"总计 = 页面...： {0}\n". 格式 （len（lsn_age）
-
-gen_svg（min_lsn，max_lsnlsn_age，阿格）
-
-def 主 （）：
-
-'''''analyze_lsn_age'''''''''''''''''''''''''''''''''''''''''''''
-
-函数执行分析。
-
-解析器 = 阿格帕斯。参数Parser（
-
-prog= listing_25_1. py'
-
-描述='生成具有 LSN 年龄的 SVG 地图，用于 "
-
-' InnoDB 表空间文件。SVG 打印到粗壮。
-
-parser.add_argument（
-
-"-g"，"-灰色"，"-灰度"，默认值=错误，
-
-dest= "灰度"， 行动 = "store_true"，
-
-帮助\'打印灰度 LSN 年龄图。
-
-parser.add_argument（
-
-"-p"，"-page_size"，"--页面大小"，默认值为"16k"，
-
-dest='page_size'，
-
-选项 ="4k"，"8k"，"16k"，"32k"，"64k"=
-
-帮助\'InnoDB页面大小。默认值为 16k。
-
-parser.add_argument（
-
-'-s'， '-大小'，默认=16，dest="大小"，
-
-选项[4，8，12，16，20，24]，类型=int、
-
-help= '表示输出中页面的正方形的大小。' +
-
-"默认值为 16"）
-
-parser.add_argument（
-
-'-w'， '-宽度'，默认=64，dest="宽度"，
-
-类型=int，
-
-help='要在输出中包括每一行的页数。' +
-
-"默认值为 64"）
-
-parser.add_argument（
-
-dest= "表空间"，
-
-帮助\'要分析的表空间文件。
-
-args = parser.parse_args（）
-
-analyze_lsn_age（弧）
-
-如果__name__ = "__main__"：
-
-主（）
 
 页号、日志序列号和页类型按每个页面定义的"FIL_PAGE_OFFSET、FIL_PAGE_LSN和量以字节为单位） 提取。如果具有 FIL_PAGE_TYPE_ALLOCATED 常，则意味着尚未使用，因此可以跳过该页 - 这些页面在日志序列号映射中为黑色。
 
@@ -477,49 +294,44 @@ analyze_lsn_age（弧）
 
 现在，您可以生成测试表。清单显示了表的创建方式。这是具有自动递增主键的表。
 
-mysql - sql > 创建架构chapter_25;
-
-查询确定，1 行受影响（0.0020 秒）
-
-mysql - sql > 创建chapter_25. table_autoinc （
-
-id bigint 未签名不auto_increment，
-
-瓦尔瓦尔查尔（36），
-
-主键（ID）
-
-​      );
-
+```
+Listing 25-2. Populating a table with an auto-incrementing primary key
+mysql-sql> CREATE SCHEMA chapter_25;
+Query OK, 1 row affected (0.0020 sec)
+mysql-sql> CREATE TABLE chapter_25.table_autoinc (
+ id bigint unsigned NOT NULL auto_increment,
+ val varchar(36),
+ PRIMARY KEY (id)
+ );
 Query OK, 0 rows affected (0.3382 sec)
-
-mysql - sql > \py
-
-正在切换到 Python 模式...
-
-mysql -py> 用于 i 范围内 （40）：
-
-session.start_transaction（）
-
-j 在范围（5000）：
-
-session.run_sql（"插入chapter_25.table_autoinc （val） 值 （UUID（））"）
-
-会话.提交（）
-
+mysql-sql> \py
+Switching to Python mode...
+mysql-py> for i in range(40):
+ session.start_transaction()
+ for j in range(5000):
+ session.run_sql("INSERT INTO chapter_25.table_autoinc
+(val) VALUES (UUID())")
+ session.commit()
 Query OK, 0 rows affected (0.1551 sec)
+```
+
+
 
 该表有一主键和填充了 UUID 以创建一些随机数据。MySQL 外壳的 Python 语言模式用于插入数据。方法在版本 8.0.17 及更晚版本中提供。最后，您可以执行脚本，以可扩展矢量图形 （SVG） 格式生成表空间年龄图：
 
-外壳> python listing_25_1.py <路径到数据迪尔>\chapter_25\table_autoinc.ibd > table_autoinc.svg
+```
+shell> python listing_25_1.py <path to datadir>\chapter_25\table_autoinc.
+ibd > table_autoinc.svg
+Total # Pages ...: 880
+```
 
-总计 # 页数...： 880
+
 
 程序的输出显示表空间中有 880 页，文件末尾可能有一些未使用的页面。
 
 图显示了表的日志
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig1_HTML.jpg](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig1_HTML.jpg)
+![](../附图/Figure 25-1.png)
 
 在图中，左上角表示表空间的第一页。当您从左到右和从上到下浏览图形时，页面会进一步进入表空间文件，右下角表示最后一页。该图显示，除第一页页，页面的年龄模式遵循与图底部的 LSN 年龄比例相同的模式。这意味着，当您浏览表空间时，页面的年龄会变年轻。前几个页面是例外，例如，它们包括表空间标头。
 
@@ -527,67 +339,58 @@ Query OK, 0 rows affected (0.1551 sec)
 
 那么， 如果按随机顺序插入， 它看起来如何？随机顺序插入的常见示例是 UUID 作为主键，但为了确保两个表的行大小相同，改为使用随机整数。清单显示了的填充。
 
-mysql - py > \sql
-
-正在切换到 SQL 模式...命令以 结束 于 ;
-
-mysql - sql > 创建表chapter_25. table_ 随机 （
-
-id 大无符号不空，
-
-瓦尔瓦尔查尔（36），
-
-主键（ID）
-
-​      );
-
+```
+Listing 25-3. Populating a table with a random primary key
+mysql-py> \sql
+Switching to SQL mode... Commands end with ;
+mysql-sql> CREATE TABLE chapter_25.table_random (
+ id bigint unsigned NOT NULL,
+ val varchar(36),
+ PRIMARY KEY (id)
+ );
 Query OK, 0 rows affected (0.0903 sec)
-
-mysql - sql > \py
-
-正在切换到 Python 模式...
-
-mysql -py> 导入随机
-
-mysql -py> 导入数学
-
-mysql - py > maxint = 数学. pow （2， 64） - 1
-
-mysql - py > 随机. 种子 （42）
-
-mysql -py> 用于 i 范围内 （40）：
-
-session.start_transaction（）
-
-j 在范围（5000）：
-
-session.run_sql（"插入chapter_25.table_随机值（{0}，UUID（）".格式（随机.兰丁（0，最大）
-
-会话.提交（）
-
+mysql-sql> \py
+Switching to Python mode...
+mysql-py> import random
+mysql-py> import math
+mysql-py> maxint = math.pow(2, 64) - 1
+mysql-py> random.seed(42)
+mysql-py> for i in range(40):
+ session.start_transaction()
+ for j in range(5000):
+ session.run_sql("INSERT INTO chapter_25.table_random
+VALUE ({0}, UUID())".format(random.randint(0, maxint)))
+ session.commit()
 Query OK, 0 rows affected (0.0185 sec)
+```
+
+
 
 Python模块用于生成 64 位随机无符号整数。种子被显式设置，因为它（通过实验）知道 42 的种子连续生成 200，000 个不同的数字，因此不会发生重复的密钥错误。填充表时，执行脚本：
 
-外壳 > python listing_25_1.py < 到 datadir>\ chapter_25\table_random.ibd > table_random.svg
-
+```
+shell> python listing_25_1.py <path to datadir>\chapter_25\table_random.ibd
+> table_random.svg
 Total # Pages ...: 1345
+```
+
+
 
 脚本的输出显示，此表空间有 1345 页。生成的年龄图如图。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig2_HTML.jpg](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig2_HTML.jpg)
+![](../附图/Figure 25-2.png)
 
 这一次，日志序列号年龄模式完全不同。除未使用的页面外，所有页面的年龄颜色与最新日志序列号的颜色相对应。这意味着所有包含数据的页面都大约在同一时间更新，换句话说，它们都写入到批量加载结束之前。与使用自动递增主键的表中使用的 880 页相比，包含数据的页数为 1345。页面数超过 50%。
 
 以随机顺序插入的原因是 InnoDB 在插入数据时填充了页面。当数据按顺序主，这意味着下一行将始终连续为上一行，因此当按主键顺序排序行时，这工作得很好。图。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig3_HTML.png](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig3_HTML.png)
+![](../附图/Figure 25-3.png)
 
 图中显示了正在插入的两个新行。id = 1005 的行可以完全适合页面 N，因此当插入 id = 1006 的行时，它将插入到下一页中。在这种情况下，一切都很好，很紧凑。
 
 当行以随机顺序到达时，有时需要将行插入已满的页面中，以便没有新行的空间。在这种情况下，InnoDB 将现有页面一分为二，在两个页面拆分后的每一页中，原始页面的数据，因此有新行的空间。如图。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig4_HTML.png](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig4_HTML.png)
+![](../附图/Figure 25-4.png)
 
 在这种情况下，插入了 id = 3500 的行，但在逻辑上属于它的页面 N 中不再有空间。因此，第 N 页被拆分为第 N 页和 N+1 页，每个页面中大约有一半的数据。
 
@@ -595,7 +398,7 @@ Total # Pages ...: 1345
 
 其次，以前一起读取到内存中的行现在位于磁盘上不同位置的两个页面中。当 InnoDB 增加表空间文件的大小时，它通过分配一个新的范围，当页面大小为 16 KiB 或更少时，分配 1 MiB 的新范围。这有助于使磁盘 I/O 更具顺序性（新范围获得磁盘上的连续扇区）。页面多，页面不仅在一个范围内，而且分布在多个范围内，导致随机磁盘 I/O 的分布量也越大。当由于页面拆分而创建新页面时，它很可能位于磁盘的完全不同的部分，因此在读取，随机 I/O 的数量会增加。图。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig5_HTML.png](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig5_HTML.png)
+![](../附图/Figure 25-5.png)
 
 在图中描绘了三个范围。为简单起见，每个扩展区只显示五个页面（默认页面大小为 16 KiB，每个扩展区有 64 页）。已参与页面拆分的页面将突出显示。第 11 页被拆分时，唯一的后期页面是第 13 页，因此第 11 页和第 12 页仍然相对接近。但是，当创建了几个额外的页面时，第 15 页被拆分，这意味着第 16 页最终出现在下一个范围。
 
@@ -611,45 +414,31 @@ Total # Pages ...: 1345
 
 清单显示了创建两个表的示例，这些表使用自动递增列以主键顺序插入数据。
 
+```
+Listing 25-4. Creating tables with an auto-increment primary key
 mysql> \sql
-
-正在切换到 SQL 模式...命令以 结束 于 ;
-
-mysql> 如果存在， chapter_25;
-
-查询确定，0 行受影响，1 个警告 （0.0456 秒）
-
-mysql> 创建架构chapter_25;
-
+Switching to SQL mode... Commands end with ;
+mysql> DROP SCHEMA IF EXISTS chapter_25;
+Query OK, 0 rows affected, 1 warning (0.0456 sec)
+mysql> CREATE SCHEMA chapter_25;
 Query OK, 1 row affected (0.1122 sec)
-
-mysql> 创建表 chapter_25. t1 （
-
-id int 未签名不
-
-​     val varchar(10),
-
-​     **主键（ID）**
-
-​    );
-
+mysql> CREATE TABLE chapter_25.t1 (
+ id int unsigned NOT NULL auto_increment,
+ val varchar(10),
+ PRIMARY KEY (id)
+ );
 Query OK, 0 rows affected (0.4018 sec)
-
-mysql> 创建表 chapter_25. t2 （
-
-id int 未签名不
-
-创建日期日期时间不为空
-
-默认CURRENT_TIMESTAMP（），
-
-​     val varchar(10),
-
-​     **主键（id、创建日期）**
-
-​    );
-
+mysql> CREATE TABLE chapter_25.t2 (
+ id int unsigned NOT NULL auto_increment,
+ CreatedDate datetime NOT NULL
+ DEFAULT CURRENT_TIMESTAMP(),
+ val varchar(10),
+ PRIMARY KEY (id, CreatedDate)
+ );
 Query OK, 0 rows affected (0.3422 sec)
+```
+
+
 
 表只有主键的单个列，该值是自动递增的。使用无符号整数而不是符号整数的原因是自动递增值始终大于 0，因此在用尽可用值之前，使用无符号整数允许两倍于数值。这些示例使用 4 字节整数，如果使用所有值，则允许的行数小于 43 亿。如果这还不够，您可以将列声明为 bigint 无8 个字节并允许 1.8E19 行。
 
@@ -657,37 +446,27 @@ Query OK, 0 rows affected (0.3422 sec)
 
 使用自动递增主sys 架构中的递增值的使用，并监视是否有任何表接近耗尽其值。清单显示了输出。
 
-mysql> 选择 *
+```
+Listing 25-5. Using the sys.schema_auto_increment_columns view
+mysql> SELECT *
+ FROM sys.schema_auto_increment_columns
+ WHERE table_schema = 'sakila'
+ AND table_name = 'payment'\G
+*************************** 1. row ***************************
+ table_schema: sakila
+ table_name: payment
+ column_name: payment_id
+ data_type: smallint
+ column_type: smallint(5) unsigned
+ is_signed: 0
+ is_unsigned: 1
+ max_value: 65535
+ auto_increment: 16049
+auto_increment_ratio: 0.2449
+1 row in set (0.0024 sec)
+```
 
-从 sys.schema_auto_increment_columns
 
-"table_schema" 在哪里
-
-和table_name = "付款" = g
-
-1.行***************************************************************************************************
-
-table_schema： 萨基拉
-
-table_name：付款
-
-column_name： payment_id
-
-data_type： 小
-
-column_type： 小 （5） 未签名
-
-is_signed： 0
-
-is_unsigned： 1
-
-max_value： 65535
-
-auto_increment： 16049
-
-auto_increment_ratio： 0.2449
-
-设置 1 行（0.0024 秒）
 
 从输出中可以看到，该表对的自动递增值使用小未。下一个自动增量值为 16049，因此使用了 24.49% 的可用值。
 
@@ -699,29 +478,22 @@ auto_increment_ratio： 0.2449
 
 重建的一个示例是
 
-mysql> 优化表 chapter_25. t1\ g
+```
+mysql> OPTIMIZE TABLE chapter_25.t1\G
+*************************** 1. row ***************************
+ Table: chapter_25.t1
+ Op: optimize
+Msg_type: note
+Msg_text: Table does not support optimize, doing recreate + analyze instead
+*************************** 2. row ***************************
+ Table: chapter_25.t1
+ Op: optimize
+Msg_type: status
+Msg_text: OK
+2 rows in set (0.6265 sec)
+```
 
-1.行***************************************************************************************************
 
-表： chapter_25.t1
-
-操作：优化
-
-Msg_type： 注意
-
-Msg_text：表不支持优化，而是进行重新创建和分析
-
-2.行***************************************************************************************************
-
-表： chapter_25.t1
-
-操作：优化
-
-Msg_type：状态
-
-Msg_text： 确定
-
-设置 2 行（0.6265 秒）
 
 对于大型表，重建可能需要大量时间，但该过程是联机的，但启动和结束时需要锁以确保一致性的持续时间很短。
 
@@ -729,23 +501,20 @@ Msg_text： 确定
 
 如果将数据从一个复制到另一个表，可以使用相同的原则。清单显示了将 world 的行
 
-mysql> 创建world.city_new
-
-喜欢世界. 城市;
-
+```
+Listing 25-6. Ordering data by the primary key when copying it
+mysql> CREATE TABLE world.city_new
+ LIKE world.city;
 Query OK, 0 rows affected (0.8607 sec)
-
-mysql> 插入world.city_new
-
-选择 *
-
-来自世界. city
-
-按 ID 顺序;
-
+mysql> INSERT INTO world.city_new
+ SELECT *
+ FROM world.city
+ ORDER BY ID;
 Query OK, 4079 rows affected (2.0879 sec)
+Records: 4079 Duplicates: 0 Warnings: 0
+```
 
-记录： 4079 重复： 0 警告： 0
+
 
 作为最后一个案例，请考虑何时将 UUID 作为主键。
 
@@ -757,47 +526,35 @@ Query OK, 4079 rows affected (2.0879 sec)
 
 时间戳是一个 60 位值，使用 UTC 进行 UTC 自 1582 年 10 月 15 日午夜（当公历投入使用时）以来的 100 纳秒间隔数。它分为三个部分，第一部分和最后最重要的部分最不重要。（时间戳的高字段还包括位。UUID 的组件也如图。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig6_HTML.png](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig6_HTML.png)
+![](../附图/Figure 25-6.png)
 
 时间戳的低部分表示高达 4，294，967，295 （0xffff） 的间隔 100 纳秒或不到 430 秒。这意味着每 7 分钟和 10 秒以下一点，时间戳的低部分滚动，使 UUID 从排序角度重新开始。这就是为什么普通 UUID 不能很好地用于索引组织的数据，因为这意味着插入将在很大程度上位于主键树中的随机位置。
 
 MySQL 8 包括两个用于操作 UUID 的新功能，使其更适合作为 InnoDB 中的主要 。这些函数将 UUID 从十六进制表示形式分别转换为二进制表示和背面。他们接受相同的两个参数：要转换的 UUID 值以及是否交换时间戳的低点和高部分。清单显示了一个插入数据并使用函数检索数据的示例。
 
+```
+Listing 25-7. Using the UUID_TO_BIN() and BIN_TO_UUID() functions
 mysql> CREATE TABLE chapter_25.t3 (
-
-id 二进制 （16） 不为空，
-
-​     val varchar(10),
-
-主键（ID）
-
-​    );
-
+ id binary(16) NOT NULL,
+ val varchar(10),
+ PRIMARY KEY (id)
+ );
 Query OK, 0 rows affected (0.4413 sec)
-
-mysql> 插入 chapter_25. t3
-
-值（UUID_TO_BIN）
-
-'14614d6e-b5a8-11e9-ae6e-080027b7c106'，
-
-真
-
-），"abc"）;
-
+mysql> INSERT INTO chapter_25.t3
+ VALUES (UUID_TO_BIN(
+ '14614d6e-b5a8-11e9-ae6e-080027b7c106',
+ TRUE
+ ), 'abc');
 Query OK, 1 row affected (0.2166 sec)
-
-mysql > 选择BIN_TO_UUID （id， True） 作为 id， val
-
-从 chapter_25.t3+G
-
-1.行***************************************************************************************************
-
-id： 14614d6e - b5a8 - 11e9 - ae6e - 080027b7c106
-
-瓦尔： abc
-
+mysql> SELECT BIN_TO_UUID(id, TRUE) AS id, val
+ FROM chapter_25.t3\G
+*************************** 1. row ***************************
+ id: 14614d6e-b5a8-11e9-ae6e-080027b7c106
+val: abc
 1 row in set (0.0004 sec)
+```
+
+
 
 这种方法的优点是双重的。由于具有交换的低时间和高时间组件，因此它变得单调增加，使其更适合索引组织的行。二进制存储意味着 UUID 只需要 16 字节的存储，而不是十六进制版本中的 36 字节，并具有破折号来分隔 UUID 的各个部分。请记住，由于数据由主键组织，因此主键将添加到辅助索引，以便从索引转到行，因此存储主键所需的字节越少，辅助索引越小。
 
@@ -809,47 +566,34 @@ id： 14614d6e - b5a8 - 11e9 - ae6e - 080027b7c106
 
 插入数据时需要维护辅助索引，但辅助索引的排序顺序与主键的顺序不一样，因此在插入数据时将不断重新排列它们。只要索引可以在内存中保持，插入速率可以保持高，但当索引不再适合缓冲池时，它们的成本会突然增加，插入速率也会显著降低。图说明了性能如何取决于缓冲辅助索引的可用性。
 
-![../images/484666_1_En_25_Chapter/484666_1_En_25_Fig7_HTML.png](../images/484666_1_En_25_Chapter/484666_1_En_25_Fig7_HTML.png)
+![](../附图/Figure 25-7.png)
 
 该图显示了插入速率在一段时间内大致保持不变，在此期间，越来越多的缓冲池用于辅助索引。当无法将更多索引存储在缓冲池中时，插入速率会突然下降。在将数据加载到包含包含整个行且没有别的情况下的表中的极端情况下，当辅助索引使用接近一半的缓冲池（其余为主键）时，将下降。
 
 您可以使用以确定索引在缓冲池中使用的空间。例如，要查找缓冲区池中使用的内存量请按表上的"国家代码查找
 
-mysql> 选择计数（*） 作为数字页面，
-
-IFNULL（SUM（DATA_SIZE），0）作为数据大小，
-
-IFNULL（SUM（IF）COMPRESSED_SIZE = 0，
-
-@@global.innodb_page_大小，
-
+```
+mysql> SELECT COUNT(*) AS NumPages,
+ IFNULL(SUM(DATA_SIZE), 0) AS DataSize,
+ IFNULL(SUM(IF(COMPRESSED_SIZE = 0,
+ @@global.innodb_page_size,
 COMPRESSED_SIZE
-
-​              )
-
-),
-
-0
-
-） 作为压缩大小
-
-从information_schema。INNODB_BUFFER_PAGE
-
-在哪里TABLE_NAME '世界'. '城市''
-
-和INDEX_NAME = "国家代码";
-
+ )
+ ),
+ 0
+ ) AS CompressedSize
+ FROM information_schema.INNODB_BUFFER_PAGE
+ WHERE TABLE_NAME = '`world`.`city`'
+ AND INDEX_NAME = 'CountryCode';
 +----------+----------+----------------+
-
-|数字页面 |数据大小 |压缩大小 |
-
+| NumPages | DataSize | CompressedSize |
 +----------+----------+----------------+
-
-|3 |27148 |49152 |
-
+| 3 | 27148 | 49152 |
 +----------+----------+----------------+
-
 1 row in set (0.1027 sec)
+```
+
+
 
 结果将取决于您使用索引的多少，因此一般来说，您的结果会有所不同。查询最好在测试系统使用，因为在该表上查询
 
@@ -861,9 +605,12 @@ COMPRESSED_SIZE
 
 在进行期间增加缓冲池大小是最明显的策略，也是最不可能有用的策略。将数据插入已经具有大量数据的表中时，它主要很有用，并且您知道在数据加载期间，您可以占用其他进程所需的一些内存，并将其用于缓冲池。在这种情况下，支持动态调整缓冲池的大小非常有用。例如，将缓冲池大小设置为 256 MiB
 
-mysql> 设置全球innodb_buffer_pool_size = 256 * 1024 * 1024;
-
+```
+mysql> SET GLOBAL innodb_buffer_pool_size = 256 * 1024 * 1024;
 Query OK, 0 rows affected (0.0003 sec)
+```
+
+
 
 数据加载完成后，您可以将缓冲池大小设置回常规值（如果使用默认值，则为 134217728）。
 
@@ -904,13 +651,17 @@ Query OK, 0 rows affected (0.0003 sec)
 
 使用 LOAD 一个优点是 MySQL 命令行程序可以自动并行执行加载。
 
-## MySQL 外壳并行加载数据
+## MySQL Shell 并行加载数据
 
 将数据加载到 MySQL 时，可能会遇到的一个问题是单个线程无法将 InnoDB 推到其所能承受的极限。如果将数据拆分为批处理并使用多个线程加载数据，则可以提高总体加载速率。自动执行此操作的一个选项是使用 MySQL 命令行管理程序 8.0.17 及更晚的并行数据加载功能。
 
 并行加载功能可通过 Python 实用程序和方法提供。本讨论将假定您正在使用 Python 模式。第一个参数是文件名，第二个（可选）参数是包含可选参数的字典。您可以使用 实用程序获取帮助文本，例如
 
-mysql - py > util. help （'import_table'）
+```
+mysql-py> util.help('import_table')
+```
+
+
 
 帮助文本包括可以通过第二个参数中指定的字典提供的所有设置的详细说明。
 
@@ -918,57 +669,40 @@ MySQL Shell 禁用重复密钥和外键检查，并设置未提交执行导入�
 
 默认值是将数据插入当前架构中的表中，其名称与没有扩展名的文件相同。例如，如果文件名为则默认表。清单中显示了将文件加载到表中一个简单示例。文件可从本书的 GitHub 存储库中
 
+```
+Listing 25-8. Using the util.import_table() utility with default settings
 mysql> \sql
-
-正在切换到 SQL 模式...命令以 结束 于 ;
-
-mysql - sql > 创建架构， 如果不存在chapter_25;
-
-查询确定，1 行受影响，1 个警告 （0.0490 秒）
-
-mysql - sql > 删除表如果存在chapter_25. t_load;
-
+Switching to SQL mode... Commands end with ;
+mysql-sql> CREATE SCHEMA IF NOT EXISTS chapter_25;
+Query OK, 1 row affected, 1 warning (0.0490 sec)
+mysql-sql> DROP TABLE IF EXISTS chapter_25.t_load;
 Query OK, 0 rows affected (0.3075 sec)
-
-mysql - sql > 创建表 chapter_25. t_load （
-
-id int 未签名不auto_increment，
-
-瓦尔瓦尔查尔 （40） 不是空，
-
-主键（ID），
-
-索引（瓦尔）
-
-​      );
-
+mysql-sql> CREATE TABLE chapter_25.t_load (
+ id int unsigned NOT NULL auto_increment,
+ val varchar(40) NOT NULL,
+ PRIMARY KEY (id),
+ INDEX (val)
+ );
 Query OK, 0 rows affected (0.3576 sec)
-
-mysql>
-
+mysql> SET GLOBAL local_infile = ON;
 Query OK, 0 rows affected (0.0002 sec)
-
 mysql> \py
-
-正在切换到 Python 模式...
-
-mysql -py> •使用chapter_25
-
-默认架构设置为"chapter_25"。
-
-mysql-py>
-
-从文件"D：/MySQL/文件/t_load.csv"导入到MSQL服务器中的表"chapter_25"，t_load 在本地主机：3306使用2个线程
-
-[Worker000] chapter_25.t_load： 记录： 721916 已删除： 0 跳过： 0 警告： 0
-
-[Worker001] chapter_25.t_load： 记录： 1043084 已删除： 0 跳过： 0 警告： 0
-
+Switching to Python mode...
+mysql-py> \use chapter_25
+Default schema set to `chapter_25`.
+mysql-py> util.import_table('D:/MySQL/Files/t_load.csv')
+Importing from file 'D:/MySQL/Files/t_load.csv' to table `chapter_25`.`t_load`
+in MySQL Server at localhost:3306 using 2 threads
+[Worker000] chapter_25.t_load: Records: 721916 Deleted: 0 Skipped: 0 Warnings: 0
+[Worker001] chapter_25.t_load: Records: 1043084 Deleted: 0 Skipped: 0 Warnings: 0
 100% (85.37 MB / 85.37 MB), 446.55 KB/s
+File 'D:/MySQL/Files/t_load.csv' (85.37 MB) was imported in 1 min 52.1678 sec
+at 761.13 KB/s
+Total rows affected in chapter_25.t_load: Records: 1765000 Deleted: 0
+Skipped: 0 Warnings: 0
+```
 
-文件'D：/MySQL/文件/t_load.csv' （85.37 MB） 在 1 分钟 52.1678 秒内导入，761.13 KB/s
 
-在 1.t_load chapter_25 中受影响的行总数：记录：1765000 已删除：0 跳过：0 警告：0
 
 创建架构时取决于您是否更早创建了架构。请注意，您必须启用选项才能使实用程序正常工作。
 
@@ -976,47 +710,35 @@ mysql-py>
 
 您可以选择告诉 MySQL 外壳要拆分的大小。最优的是每个线程最终处理相同数量的数据。例如，如果要除以 85.37 MB 数据，请将区块大小设置为大小的一半多一点，例如 43 MB。如果为大小指定了十进制值，则该值将向下舍入。还可以设置其他几个选项，清单显示了设置其中一些选项的示例。
 
-mysql - py > \sql chapter_25. t_load
-
+```
+Listing 25-9. Using util.import_table() with several custom settings
+mysql-py> \sql TRUNCATE TABLE chapter_25.t_load
 Query OK, 0 rows affected (1.1294 sec)
+mysql-py> settings = {
+ 'schema': 'chapter_25',
+ 'table': 't_load',
+ 'columns': ['id', 'val'],
+ 'threads': 4,
+ 'bytesPerChunk': '21500k',
+ 'fieldsTerminatedBy': '\t',
+ 'fieldsOptionallyEnclosed': False,
+ 'linesTerminatedBy': '\n'
+ }
+mysql-py> util.import_table('D:/MySQL/Files/t_load.csv', settings)
+Importing from file 'D:/MySQL/Files/t_load.csv' to table `chapter_25`.
+`t_load` in MySQL Server at localhost:3306 using 4 threads
+[Worker001] chapter_25.t_load: Records: 425996 Deleted: 0 Skipped: 0 Warnings: 0
+[Worker002] chapter_25.t_load: Records: 440855 Deleted: 0 Skipped: 0 Warnings: 0
+[Worker000] chapter_25.t_load: Records: 447917 Deleted: 0 Skipped: 0 Warnings: 0
+[Worker003] chapter_25.t_load: Records: 450232 Deleted: 0 Skipped: 0 Warnings: 0
+100% (85.37 MB / 85.37 MB), 279.87 KB/s
+File 'D:/MySQL/Files/t_load.csv' (85.37 MB) was imported in 2 min 2.6656
+sec at 695.99 KB/s
+Total rows affected in chapter_25.t_load: Records: 1765000 Deleted:
+0 Skipped: 0 Warnings: 0
+```
 
-mysql - py > 设置
 
-"架构"："chapter_25"，
-
-"表"："t_load"，
-
-"列"： [id'， "val"，
-
-"线程"： 4，
-
-"字节百元"："21500k"，
-
-"字段被污染"： "\t"，
-
-"字段禁止关闭"：错误，
-
-"行被污染"： "\n"
-
-​     }
-
-mysql-py> util.import_table（'D：/MySQL/文件/t_load.csv'，设置）
-
-从文件"D：/MySQL/文件/t_load.csv"导入到桌面"chapter_25".'t_load 在 MySQL 服务器本地主机：3306 使用 4 个线程
-
-[Worker001] chapter_25.t_load： 记录： 425996 已删除： 0 跳过： 0 警告： 0
-
-[Worker002] chapter_25.t_load： 记录： 440855 已删除： 0 跳过： 0 警告： 0
-
-[Worker000] chapter_25.t_load： 记录： 447917 已删除： 0 跳过： 0 警告： 0
-
-[Worker003] chapter_25.t_load： 记录： 450232 已删除： 0 跳过： 0 警告： 0
-
-100% （85.37 MB / 85.37 MB），279.87 KB/s
-
-文件 'D：/MySQL/文件/t_load.csv' （85.37 MB） 在 2 分钟内 2.6656 秒导入，当时为 695.99 KB/s
-
-在 1.t_load chapter_25 中受影响的行总数：记录：1765000 已删除：0 跳过：0 警告：0
 
 在这种情况下，将显式指定目标架构、表和列，将文件拆分为四个大致相等的区块，线程数设置为四个。CSV 文件的格式也包含在设置中（指定的值为默认值）。
 
@@ -1037,23 +759,3 @@ mysql-py> util.import_table（'D：/MySQL/文件/t_load.csv'，设置）
 对于批量插入，有两个加载数据的选项。您可以使用常规，也可以使用 LOAD 语句。后者一般是首选方法。它还允许您使用 MySQL 命令行管理程序 8.0.17 及更晚的并行表导入功能。
 
 下一章将学习提高复制性能。
-
-脚注
-
-[1](#Fn1_source)
-
-https://github.com/jeremycole/innodb_ruby
-
- 
-
-[2](#Fn2_source)
-
-[www.ietf.org/rfc/rfc4122.txt](http://www.ietf.org/rfc/rfc4122.txt)
-
- 
-
-[3](#Fn3_source)
-
-https://dev.mysql.com/doc/refman/en/clone-plugin.html
-
- 

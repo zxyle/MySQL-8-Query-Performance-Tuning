@@ -12,13 +12,24 @@
 
 当查询执行时，它需要，并且当您使用默认事务隔离级别 -时，所有锁将保留到提交事务。使用 READ级别时，可能会释放某些锁，但至少会保留那些涉及已更改记录的锁。锁本身是一个资源，但它也需要内存来存储有关锁的信息。对于正常工作负载，您可能不太想这样做，但巨大的事务最终可能会使用太多的内存，以使事务在
 
-错误： 1206： 锁总数超过锁表大小
+```
+ERROR: 1206: The total number of locks exceeds the lock table size
+```
 
 从记录到错误日志的警告消息（更短的时间）中可以看到，锁所需的内存从缓冲池中获取。因此，您持有的锁越多，持有的时间越长，可用于缓存数据和索引的内存就更少。
 
 错误之前在错误日志中发出警告，指出超过 67% 的缓冲池用于锁或自适应哈希索引：
 
-2019-07-06T03：23：04.345256Z 10 [警告] [MY-011958] [InnoDB] 超过 67% 的缓冲池被锁堆或自适应哈希索引占用！检查事务未设置太多行锁。您的缓冲池大小为 7 MB。也许你应该把缓冲池变大？启动 InnoDB 监视器以打印诊断，包括锁堆和哈希索引大小。
+```
+2019-07-06T03:23:04.345256Z 10 [Warning] [MY-011958] [InnoDB] Over 67
+percent of the buffer pool is occupied by lock heaps or the adaptive hash
+index! Check that your transactions do not set too many row locks. Your
+buffer pool size is 7 MB. Maybe you should make the buffer pool bigger?.
+Starting the InnoDB Monitor to print diagnostics, including lock heap and
+hash index sizes.
+```
+
+
 
 警告后是 InnoDB 监视器的定期重复输出，因此您可以确定哪些事务是罪魁祸首。事务 InnoDB 监视器输出将在"InnoDB 监视器"部分中讨论。
 
@@ -80,111 +91,64 @@
 
 从该表的信息可以确定哪些事务的影响最大。清单显示了为两个事务返回的信息的示例。
 
-mysql> 选择 *
+```
+Listing 21-1. Example output of the INNODB_TRX table
+mysql> SELECT *
+ FROM information_schema.INNODB_TRX\G
+*************************** 1. row ***************************
+ trx_id: 5897
+ trx_state: RUNNING
+ trx_started: 2019-07-06 11:11:12
+ trx_requested_lock_id: NULL
+ trx_wait_started: NULL
+ trx_weight: 4552416
+ trx_mysql_thread_id: 10
+ trx_query: UPDATE db1.t1 SET val1 = 4
+ trx_operation_state: updating or deleting
+ trx_tables_in_use: 1
+ trx_tables_locked: 1
+ trx_lock_structs: 7919
+ trx_lock_memory_bytes: 1417424
+ trx_rows_locked: 4552415
+ trx_rows_modified: 4544497
+ trx_concurrency_tickets: 0
+ trx_isolation_level: REPEATABLE READ
+ trx_unique_checks: 1
+ trx_foreign_key_checks: 1
+trx_last_foreign_key_error: NULL
+ trx_adaptive_hash_latched: 0
+ trx_adaptive_hash_timeout: 0
+ trx_is_read_only: 0
+trx_autocommit_non_locking: 0
+*************************** 2. row ***************************
+ trx_id: 421624759431440
+ trx_state: RUNNING
+ trx_started: 2019-07-06 11:46:55
+ trx_requested_lock_id: NULL
+ trx_wait_started: NULL
+ trx_weight: 0
+ trx_mysql_thread_id: 8
+ trx_query: SELECT COUNT(*) FROM db1.t1
+ trx_operation_state: counting records
+ trx_tables_in_use: 1
+ trx_tables_locked: 0
+ trx_lock_structs: 0
+ trx_lock_memory_bytes: 1136
+ trx_rows_locked: 0
+ trx_rows_modified: 0
+ trx_concurrency_tickets: 0
+ trx_isolation_level: REPEATABLE READ
+ trx_unique_checks: 1
+ trx_foreign_key_checks: 1
+trx_last_foreign_key_error: NULL
+ trx_adaptive_hash_latched: 0
+ trx_adaptive_hash_timeout: 0
+ trx_is_read_only: 1
+trx_autocommit_non_locking: 1
+2 rows in set (0.0023 sec)
+```
 
-从information_schema。INNODB_TRX\G
 
-1.行***************************************************************************************************
-
-trx_id： 5897
-
-trx_state： 运行
-
-trx_started： 2019-07-06 11：11：12
-
-trx_requested_lock_id： 空
-
-trx_wait_started： 空
-
-trx_weight： 4552416
-
-trx_mysql_thread_id： 10
-
-trx_query： 更新 db1.t1 设置 val1 = 4
-
-trx_operation_state：更新或删除
-
-trx_tables_in_use： 1
-
-trx_tables_locked： 1
-
-trx_lock_structs： 7919
-
-trx_lock_memory_bytes： 1417424
-
-trx_rows_locked： 4552415
-
-trx_rows_modified： 4544497
-
-trx_concurrency_tickets： 0
-
-trx_isolation_level：可重复读取
-
-trx_unique_checks： 1
-
-trx_foreign_key_checks： 1
-
-trx_last_foreign_key_error： 空
-
-trx_adaptive_hash_latched： 0
-
-trx_adaptive_hash_timeout： 0
-
-trx_is_read_only： 0
-
-trx_autocommit_non_locking： 0
-
-2.行***************************************************************************************************
-
-trx_id： 421624759431440
-
-trx_state： 运行
-
-trx_started： 2019-07-06 11：46：55
-
-trx_requested_lock_id： 空
-
-trx_wait_started： 空
-
-trx_weight： 0
-
-trx_mysql_thread_id： 8
-
-trx_query： 从 db1. t1 中选择计数（*）
-
-trx_operation_state：计数记录
-
-trx_tables_in_use： 1
-
-trx_tables_locked： 0
-
-trx_lock_structs： 0
-
-trx_lock_memory_bytes： 1136
-
-trx_rows_locked： 0
-
-trx_rows_modified： 0
-
-trx_concurrency_tickets： 0
-
-trx_isolation_level：可重复读取
-
-trx_unique_checks： 1
-
-trx_foreign_key_checks： 1
-
-trx_last_foreign_key_error： 空
-
-trx_adaptive_hash_latched： 0
-
-trx_adaptive_hash_timeout： 0
-
-trx_is_read_only： 1
-
-trx_autocommit_non_locking： 1
-
-设置 2 行（0.0023 秒）
 
 第一行显示修改数据的事务示例。在检索信息时，已修改了 4，544，497 行，并且记录锁更多。您还可以看到事务仍在主动执行查询语句）。
 
@@ -192,11 +156,13 @@ trx_autocommit_non_locking： 1
 
 您应该担心哪些事务取决于您系统的预期工作负载。如果您有 OLAP 工作负荷，则预期会有相对较长的运行查询。对于纯 OLTP 工作负载，任何运行超过几秒钟且修改多个行的事务都可能是问题的迹象。例如，要查找超过一分钟的事务，可以使用以下查询：
 
-选择 *
+```
+SELECT *
+ FROM information_schema.INNODB_TRX
+ WHERE trx_started < NOW() - INTERVAL 1 MINUTE;
+```
 
-从information_schema。INNODB_TRX
 
-在哪里trx_started < NOW（） - 间隔 1 分钟;
 
 与数据库是 InnoDB 监视器中的事务列表。
 
@@ -204,57 +170,39 @@ trx_autocommit_non_locking： 1
 
 是一种瑞士军刀，包含 InnoDB 信息，还包括交易信息。监视器输出中的"交易"部分专用于事务信息。此信息不仅包括事务列表，还包括历史记录列表长度。清单显示了 InnoDB 监视器的摘录，其中示例为事务部分，该部分是在上一个输出的表。
 
-mysql> 显示引擎 Innodb 状态\ g
-
-1.行***************************************************************************************************
-
-类型： InnoDB
-
-名字：
-
-地位：
-
+```
+Listing 21-2. Transaction information from the InnoDB monitor
+mysql> SHOW ENGINE INNODB STATUS\G
+*************************** 1. row ***************************
+ Type: InnoDB
+ Name:
+Status:
 =====================================
-
-2019-07-06 11：46：58 0x7f7728f69700 INNODB 监视器输出
-
+2019-07-06 11:46:58 0x7f7728f69700 INNODB MONITOR OUTPUT
 =====================================
-
-从过去 6 秒计算的秒平均值
-
+Per second averages calculated from the last 6 seconds
 ...
+------------
+TRANSACTIONS
+------------
+Trx id counter 5898
+Purge done for trx's n:o < 5894 undo n:o < 0 state: running but idle
+History list length 3
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 421624759429712, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 421624759428848, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 5897, ACTIVE 2146 sec updating or deleting
+mysql tables in use 1, locked 1
+7923 lock struct(s), heap size 1417424, 4554508 row lock(s), undo log
+entries 4546586
+MySQL thread id 10, OS thread handle 140149617817344, query id 25 localhost
+127.0.0.1 root updating
+UPDATE db1.t1 SET val1 = 4
+```
 
-\------------
 
-交易
-
-\------------
-
-Trx id 计数器 5898
-
-为 trx 的 n： o 完成清除< 5894 撤消 n：o< 0 状态：正在运行但空闲
-
-**历史记录列表长度 3**
-
-每个会话的事务列表：
-
----交易 421624759429712，未启动
-
-0 锁结构，堆大小 1136，0 行锁
-
---- 421624759428848，未启动
-
-0 锁结构，堆大小 1136，0 行锁
-
---- 5897，主动 2146 秒更新或删除
-
-mysql 表在使用 1， 锁定 1
-
-7923 锁结构，堆大小 1417424，4554508 行锁（s），撤消日志条目 4546586
-
-MySQL 线程 ID 10， Os 线程句柄 140149617817344， 查询 ID 25 本地主机 127.0.0.1 根更新
-
-更新 db1.t1 集 val1 = 4
 
 "事务"的顶部显示事务 ID 计数器的当前值，后跟从撤消日志中清除内容的信息。它显示小于 5894 的事务 ID 的撤消日志已清除。此清除的后面越大，历史记录列表长度越大（在节的第三行）。从 InnoDB 监视器输出中读取历史记录列表长度是获取历史记录列表长度的传统方法。下一节将介绍在用于监视目的时如何以更好的方式获取值。
 
@@ -268,217 +216,125 @@ InnoDB 监视器报告对于数据库管理员获取 InnoDB 中所做所为的�
 
 包括多个指标，用于显示有关视图。这些指标都位于事务子系统中。清单显示了，它们是否默认启用，以及解释指标量值的简短注释。
 
-mysql> 选择名称、计数、状态、注释
-
-从information_schema。INNODB_METRICS
-
-子系统 = "交易"\ G
-
-1.行***************************************************************************************************
-
-姓名： trx_rw_commits
-
-计数： 0
-
-状态：已禁用
-
-注释：已提交的读写事务数
-
-2.行***************************************************************************************************
-
-姓名： trx_ro_commits
-
-计数： 0
-
-状态：已禁用
-
-注释：已提交的只读事务数
-
-3.行***************************************************************************************************
-
-姓名： trx_nl_ro_commits
-
-计数： 0
-
-状态：已禁用
-
-注释：未锁定自动提交只读事务的数量
-
-4.行***************************************************************************************************
-
-姓名： trx_commits_insert_update
-
-计数： 0
-
-状态：已禁用
-
-注释：使用插入和更新提交的交易数
-
-5.行***************************************************************************************************
-
-姓名： trx_rollbacks
-
-计数： 0
-
-状态：已禁用
-
-注释：回滚的事务数
-
-6.行***************************************************************************************************
-
-姓名： trx_rollbacks_savepoint
-
-计数： 0
-
-状态：已禁用
-
-注释：回滚到保存点的事务数
-
-7.行***************************************************************************************************
-
-姓名： trx_rollback_active
-
-计数： 0
-
-状态：已禁用
-
-注释：回滚的已恢复活动事务数
-
-8.行***************************************************************************************************
-
-姓名： trx_active_transactions
-
-计数： 0
-
-状态：已禁用
-
-注释：活动事务数
-
-9.行***************************************************************************************************
-
-姓名： trx_on_log_no_waits
-
-计数： 0
-
-状态：已禁用
-
-注释：在事务提交期间等待重做
-
-10.行***************************************************************************************************
-
-姓名： trx_on_log_waits
-
-计数： 0
-
-状态：已禁用
-
-注释：在事务提交期间等待重做
-
-11.行***************************************************************************************************
-
-姓名： trx_on_log_wait_loops
-
-计数： 0
-
-状态：已禁用
-
-注释：在事务提交期间等待重做
-
-12.行***************************************************************************************************
-
-姓名： trx_rseg_history_len
-
+```
+Listing 21-3. InnoDB metrics related to transactions
+mysql> SELECT NAME, COUNT, STATUS, COMMENT
+ FROM information_schema.INNODB_METRICS
+ WHERE SUBSYSTEM = 'transaction'\G
+*************************** 1. row ***************************
+ NAME: trx_rw_commits
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of read-write transactions committed
+*************************** 2. row ***************************
+ NAME: trx_ro_commits
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of read-only transactions committed
+*************************** 3. row ***************************
+ NAME: trx_nl_ro_commits
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of non-locking auto-commit read-only transactions committed
+*************************** 4. row ***************************
+ NAME: trx_commits_insert_update
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of transactions committed with inserts and updates
+*************************** 5. row ***************************
+ NAME: trx_rollbacks
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of transactions rolled back
+*************************** 6. row ***************************
+ NAME: trx_rollbacks_savepoint
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of transactions rolled back to savepoint
+*************************** 7. row ***************************
+ NAME: trx_rollback_active
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of resurrected active transactions rolled back
+*************************** 8. row ***************************
+ NAME: trx_active_transactions
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of active transactions
+*************************** 9. row ***************************
+ NAME: trx_on_log_no_waits
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Waits for redo during transaction commits
+*************************** 10. row ***************************
+ NAME: trx_on_log_waits
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Waits for redo during transaction commits
+*************************** 11. row ***************************
+ NAME: trx_on_log_wait_loops
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Waits for redo during transaction commits
+*************************** 12. row ***************************
+ NAME: trx_rseg_history_len
  COUNT: 45
-
-状态：已启用
-
-注释：列表TRX_RSEG_HISTORY长度
-
-13.行***************************************************************************************************
-
-姓名： trx_undo_slots_used
-
-计数： 0
-
-状态：已禁用
-
-注释：使用的撤消插槽数
-
-14.行***************************************************************************************************
-
-姓名： trx_undo_slots_cached
-
-计数： 0
-
-状态：已禁用
-
-注释：缓存的撤消插槽数
-
-15.行***************************************************************************************************
-
-姓名： trx_rseg_current_size
-
-计数： 0
-
-状态：已禁用
-
-注释：页面中的当前回滚段大小
-
+ STATUS: enabled
+COMMENT: Length of the TRX_RSEG_HISTORY list
+*************************** 13. row ***************************
+ NAME: trx_undo_slots_used
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of undo slots used
+*************************** 14. row ***************************
+ NAME: trx_undo_slots_cached
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Number of undo slots cached
+*************************** 15. row ***************************
+ NAME: trx_rseg_current_size
+ COUNT: 0
+ STATUS: disabled
+COMMENT: Current rollback segment size in pages
 15 rows in set (0.0403 sec)
+```
+
+
 
 这些指标中最重要的列表长度。这也是默认情况下启用的唯一指标。与提交和回滚相关的指标可用于确定您有多少读写、只读和非锁定只读事务，以及它们提交和回滚的频繁发生。许多回滚表明存在问题。如果您怀疑重做日志是一个指标来衡量事务提交期间等待重做日志的事务量度。
 
 查询 InnoDB 指标的替代一种方式是使用，该视图还包括全局状态变量。清单显示了使用获取当前值以及是否启用指标的示例。
 
-mysql> 选择Variable_name名称，
-
-Variable_value作为值，
-
-启用
-
-从系统.指标
-
-其中类型 = "InnoDB 指标 - 事务";
-
+```
+Listing 21-4. Using the sys.metrics view to get the transaction metrics
+mysql> SELECT Variable_name AS Name,
+ Variable_value AS Value,
+ Enabled
+ FROM sys.metrics
+ WHERE Type = 'InnoDB Metrics - transaction';
 +---------------------------+-------+---------+
-
-|名称 |价值 |已启用 |
-
+| Name | Value | Enabled |
 +---------------------------+-------+---------+
-
-|trx_active_transactions |0 |否 |
-
-|trx_commits_insert_update |0 |否 |
-
-|trx_nl_ro_commits |0 |否 |
-
-|trx_on_log_no_waits |0 |否 |
-
-|trx_on_log_wait_loops |0 |否 |
-
-|trx_on_log_waits |0 |否 |
-
-|trx_ro_commits |0 |否 |
-
-|trx_rollback_active |0 |否 |
-
-|trx_rollbacks |0 |否 |
-
-|trx_rollbacks_savepoint |0 |否 |
-
-|trx_rseg_current_size |0 |否 |
-
-|trx_rseg_history_len |45 |是
-
-|trx_rw_commits |0 |否 |
-
-|trx_undo_slots_cached |0 |否 |
-
-|trx_undo_slots_used |0 |否 |
-
+| trx_active_transactions | 0 | NO |
+| trx_commits_insert_update | 0 | NO |
+| trx_nl_ro_commits | 0 | NO |
+| trx_on_log_no_waits | 0 | NO |
+| trx_on_log_wait_loops | 0 | NO |
+| trx_on_log_waits | 0 | NO |
+| trx_ro_commits | 0 | NO |
+| trx_rollback_active | 0 | NO |
+| trx_rollbacks | 0 | NO |
+| trx_rollbacks_savepoint | 0 | NO |
+| trx_rseg_current_size | 0 | NO |
+| trx_rseg_history_len | 45 | YES |
+| trx_rw_commits | 0 | NO |
+| trx_undo_slots_cached | 0 | NO |
+| trx_undo_slots_used | 0 | NO |
 +---------------------------+-------+---------+
-
 15 rows in set (0.0152 sec)
+```
+
+
 
 这表明历史记录列表长度为 45，这是一个很好的低值，因此撤消日志中几乎没有开销。其余指标将被禁用。
 
@@ -523,253 +379,160 @@ Variable_value作为值，
 
 对于使用表可以启动两个事务。第一个事务是更新多个城市人口的正常事务：
 
-开始交易;
+```
+START TRANSACTION;
+UPDATE world.city SET Population = 5200000 WHERE ID = 130;
+UPDATE world.city SET Population = 4900000 WHERE ID = 131;
+UPDATE world.city SET Population = 2400000 WHERE ID = 132;
+UPDATE world.city SET Population = 2000000 WHERE ID = 133;
+```
 
-更新世界.城市集人口 = 5200000 其中 ID = 130;
 
-更新世界.城市集人口 = 4900000 其中 ID = 131;
-
-更新世界.城市集人口 = 2400000 其中 ID = 132;
-
-更新世界.城市集人口 = 2000000 其中 ID = 133;
 
 第二个事务是 XA 事务：
 
-XA 开始 "abc"， "def"， 1;
+```
+XA START 'abc', 'def', 1;
+UPDATE world.city SET Population = 900000 WHERE ID = 3805;
+```
 
-更新世界.城市集人口 = 900000 其中 ID = 3805;
+
 
 清单显示了显示当前表的示例输出。
 
-mysql> 选择 *
-
-从 performance_schema.events_事务_当前
-
-状态 = "活动"\ G
-
-1.行***************************************************************************************************
-
-THREAD_ID： 54
-
-EVENT_ID： 39
-
-END_EVENT_ID： 空
-
-EVENT_NAME：事务
-
-状态：活动
-
-TRX_ID： 空
-
-GTID：自动
-
-XID_FORMAT_ID： 空
-
-XID_GTRID： 空
-
-XID_BQUAL： 空
-
-XA_STATE： 空
-
-来源： transaction.cc:219
-
-TIMER_START： 488967975158077184
-
-TIMER_END： 489085567376530432
-
-TIMER_WAIT： 117592218453248
-
-ACCESS_MODE： 读写
-
-ISOLATION_LEVEL：可重复读取
-
-自动提交： 否
-
-NUMBER_OF_SAVEPOINTS： 0
-
-NUMBER_OF_ROLLBACK_TO_SAVEPOINT： 0
-
-NUMBER_OF_RELEASE_SAVEPOINT： 0
-
-OBJECT_INSTANCE_BEGIN： 空
-
-NESTING_EVENT_ID： 38
-
-NESTING_EVENT_TYPE： 声明
-
-2.行***************************************************************************************************
-
-​           THREAD_ID: 57
-
-EVENT_ID： 10
-
-END_EVENT_ID： 空
-
-EVENT_NAME：事务
-
-状态：活动
-
-TRX_ID： 空
-
-GTID：自动
-
-XID_FORMAT_ID： 1
-
-XID_GTRID： abc
-
-XID_BQUAL： def
-
-XA_STATE： 活动
-
-来源： transaction.cc:219
-
-TIMER_START： 488977176010232448
-
-TIMER_END： 489085567391481984
-
-TIMER_WAIT： 108391381249536
-
-ACCESS_MODE： 读写
-
-ISOLATION_LEVEL：可重复读取
-
-自动提交： 否
-
-NUMBER_OF_SAVEPOINTS： 0
-
-NUMBER_OF_ROLLBACK_TO_SAVEPOINT： 0
-
-NUMBER_OF_RELEASE_SAVEPOINT： 0
-
-OBJECT_INSTANCE_BEGIN： 空
-
-NESTING_EVENT_ID： 9
-
-NESTING_EVENT_TYPE： 声明
-
+```
+mysql> SELECT *
+ FROM performance_schema.events_transactions_current
+ WHERE STATE = 'ACTIVE'\G
+*************************** 1. row ***************************
+ THREAD_ID: 54
+ EVENT_ID: 39
+ END_EVENT_ID: NULL
+ EVENT_NAME: transaction
+ STATE: ACTIVE
+ TRX_ID: NULL
+ GTID: AUTOMATIC
+ XID_FORMAT_ID: NULL
+ XID_GTRID: NULL
+ XID_BQUAL: NULL
+ XA_STATE: NULL
+ SOURCE: transaction.cc:219
+ TIMER_START: 488967975158077184
+ TIMER_END: 489085567376530432
+ TIMER_WAIT: 117592218453248
+ ACCESS_MODE: READ WRITE
+ ISOLATION_LEVEL: REPEATABLE READ
+ AUTOCOMMIT: NO
+ NUMBER_OF_SAVEPOINTS: 0
+NUMBER_OF_ROLLBACK_TO_SAVEPOINT: 0
+ NUMBER_OF_RELEASE_SAVEPOINT: 0
+ OBJECT_INSTANCE_BEGIN: NULL
+ NESTING_EVENT_ID: 38
+ NESTING_EVENT_TYPE: STATEMENT
+*************************** 2. row ***************************
+ THREAD_ID: 57
+ EVENT_ID: 10
+ END_EVENT_ID: NULL
+ EVENT_NAME: transaction
+ STATE: ACTIVE
+ TRX_ID: NULL
+ GTID: AUTOMATIC
+ XID_FORMAT_ID: 1
+ XID_GTRID: abc
+ XID_BQUAL: def
+ XA_STATE: ACTIVE
+ SOURCE: transaction.cc:219
+ TIMER_START: 488977176010232448
+ TIMER_END: 489085567391481984
+ TIMER_WAIT: 108391381249536
+ ACCESS_MODE: READ WRITE
+ ISOLATION_LEVEL: REPEATABLE READ
+ AUTOCOMMIT: NO
+ NUMBER_OF_SAVEPOINTS: 0
+NUMBER_OF_ROLLBACK_TO_SAVEPOINT: 0
+ NUMBER_OF_RELEASE_SAVEPOINT: 0
+ OBJECT_INSTANCE_BEGIN: NULL
+ NESTING_EVENT_ID: 9
+ NESTING_EVENT_TYPE: STATEMENT
 2 rows in set (0.0007 sec)
+```
+
+
 
 第 1 行中的事务是常规事务，而第 2 行中的事务是 XA 事务。这两个事务都是由从嵌套事件类型中可以看到的语句启动的。如果要查找触发事务的语句，可以使用该语句查询，如
 
-mysql> 选择SQL_TEXT
-
-从 performance_schema. events_语句_历史记录
-
-在哪里THREAD_ID = 54
-
-和EVENT_ID = 38°G
-
-1.行***************************************************************************************************
-
-SQL_TEXT：开始交易
-
+```
+mysql> SELECT SQL_TEXT
+ FROM performance_schema.events_statements_history
+ WHERE THREAD_ID = 54
+ AND EVENT_ID = 38\G
+*************************** 1. row ***************************
+SQL_TEXT: START TRANSACTION
 1 row in set (0.0009 sec)
+```
+
+
 
 这表明，由 THREAD_ID 的事务是使用的。由于表仅包含连接的最后 10 个语句，因此不能保证启动事务的语句仍在历史记录表中。如果在禁用自动提交时查看单语句事务或第一个语句（仍在执行时），则需要查询表。
 
 事务和语句之间的关系也相反。给定事务事件 ID 和线程 ID，可以使用语句事件历史记录和当前表查询为该事务执行的最后 10 个语句。清单和来自清单的第 1 行）的示例，其中包括启动事务的语句和后续语句。
 
-mysql> @thread_id = 54，
-
-@event_id = 39，
-
-@nesting_event_id = 38;
-
-mysql> 选择EVENT_ID， SQL_TEXT，
-
-FORMAT_PICO_TIME（TIMER_WAIT）AS 延迟，
-
-如果（END_EVENT_ID为空，'是'，'否'）作为当前
-
-从 （（选择EVENT_ID， END_EVENT_ID，
-
-TIMER_WAIT，
-
-SQL_TEXT， NESTING_EVENT_ID，
-
-NESTING_EVENT_TYPE
-
-从 performance_schema. events_语句_当前
-
-哪里THREAD_ID = @thread_id
-
-） 联盟 （
-
-选择EVENT_IDEND_EVENT_ID，
-
-TIMER_WAIT，
-
-SQL_TEXT， NESTING_EVENT_ID，
-
-NESTING_EVENT_TYPE
-
-从 performance_schema. events_语句_历史记录
-
-哪里THREAD_ID = @thread_id
-
-​        )
-
-） 事件
-
-在哪里 （NESTING_EVENT_TYPE = "交易"
-
-和 NESTING_EVENT_ID = @event_id）
-
-或EVENT_ID = @nesting_event_id
-
-按 desC EVENT_ID+G 订购
-
-1.行***************************************************************************************************
-
+```
+Listing 21-6. Finding the last ten statements executed in a transaction
+mysql> SET @thread_id = 54,
+ @event_id = 39,
+ @nesting_event_id = 38;
+mysql> SELECT EVENT_ID, SQL_TEXT,
+ FORMAT_PICO_TIME(TIMER_WAIT) AS Latency,
+ IF(END_EVENT_ID IS NULL, 'YES', 'NO') AS IsCurrent
+ FROM ((SELECT EVENT_ID, END_EVENT_ID,
+ TIMER_WAIT,
+ SQL_TEXT, NESTING_EVENT_ID,
+ NESTING_EVENT_TYPE
+ FROM performance_schema.events_statements_current
+ WHERE THREAD_ID = @thread_id
+ ) UNION (
+ SELECT EVENT_ID, END_EVENT_ID,
+ TIMER_WAIT,
+ SQL_TEXT, NESTING_EVENT_ID,
+ NESTING_EVENT_TYPE
+ FROM performance_schema.events_statements_history
+ WHERE THREAD_ID = @thread_id
+ )
+ ) events
+ WHERE (NESTING_EVENT_TYPE = 'TRANSACTION'
+ AND NESTING_EVENT_ID = @event_id)
+ OR EVENT_ID = @nesting_event_id
+ ORDER BY EVENT_ID DESC\G
+*************************** 1. row ***************************
  EVENT_ID: 43
-
-SQL_TEXT： 更新城市集人口 = 2000000 其中 ID = 133
-
-延迟： 291.01 我们
-
-当前： 否
-
-2.行***************************************************************************************************
-
+ SQL_TEXT: UPDATE city SET Population = 2000000 WHERE ID = 133
+ Latency: 291.01 us
+IsCurrent: NO
+*************************** 2. row ***************************
  EVENT_ID: 42
-
-SQL_TEXT： 更新城市集人口 = 2400000 其中 ID = 132
-
-延迟： 367.59 我们
-
-当前： 否
-
-3.行***************************************************************************************************
-
+ SQL_TEXT: UPDATE city SET Population = 2400000 WHERE ID = 132
+ Latency: 367.59 us
+IsCurrent: NO
+*************************** 3. row ***************************
  EVENT_ID: 41
-
-SQL_TEXT： 更新城市集人口 = 4900000 其中 ID = 131
-
-延迟： 361.03 我们
-
-当前： 否
-
-4.行***************************************************************************************************
-
+ SQL_TEXT: UPDATE city SET Population = 4900000 WHERE ID = 131
+ Latency: 361.03 us
+IsCurrent: NO
+*************************** 4. row ***************************
  EVENT_ID: 40
-
-SQL_TEXT： 更新城市集人口 = 5200000 其中 ID = 130
-
+ SQL_TEXT: UPDATE city SET Population = 5200000 WHERE ID = 130
  Latency: 399.32 us
-
-当前： 否
-
-5.行***************************************************************************************************
-
+IsCurrent: NO
+*************************** 5. row ***************************
  EVENT_ID: 38
-
-SQL_TEXT：开始交易
-
+ SQL_TEXT: START TRANSACTION
  Latency: 97.37 us
-
-当前： 否
-
+IsCurrent: NO
 9 rows in set (0.0012 sec)
+```
+
+
 
 子查询（派生表）从表和表查找线程语句事件。有必要包括当前事件，因为交易可能有持续语句。语句通过作为事务的子级或事务的嵌套事件（EVENT_ID。这将包括从启动事务的语句开始的所有语句。如果有持续声明，最多会有 11 个声明，否则最多有 10 个声明。
 
@@ -777,149 +540,96 @@ END_EVENT_ID 用于确定语句当前是否正在执行，并且语句使用 EVE
 
 这种类型的查询不仅有助于调查仍在执行查询的事务。当您遇到空闲事务，并且想知道事务在被放弃之前做了什么时，它也非常有用。查找活动事务的另一个相关方式是使用 表来包含有关每个连接的事务状态的信息。清单显示了一个查询活动事务的示例，不包括执行查询的连接的行。
 
-mysql> 选择 *
-
-从系统. 会话
-
-在哪里trx_state = "活动"
-
-和conn_id<>CONNECTION_ID（）\G
-
-1.行***************************************************************************************************
-
-thd_id： 54
-
-conn_id： 16
-
-用户： mysqlx / 工人
-
-db： 世界
-
-命令： 睡眠
-
-状态： 空
-
-时间： 690
-
-current_statement： 更新世界. 城市集人口 = 200000 其中 ID = 133
-
-statement_latency： 空
-
-进度： 空
-
-lock_latency： 281.76 ms
-
-rows_examined： 341
-
-rows_sent： 341
-
-rows_affected： 0
-
-tmp_tables： 0
-
-tmp_disk_tables： 0
-
-full_scan： 否
-
-last_statement： 更新世界. 城市集人口 = 200000 其中 ID = 133
-
-last_statement_latency： 391.80 ms
-
-current_memory： 2.35 米
-
-last_wait： 空
-
-last_wait_latency： 空
-
-来源： 空
-
-trx_latency： 11.49 m
-
-trx_state：活动
-
-trx_autocommit： 否
-
-皮德： 23376
-
-program_name： mysqlsh
-
-2.行***************************************************************************************************
-
-thd_id： 57
-
-conn_id： 18
-
-用户： mysqlx / 工人
-
-db： 世界
-
-命令： 睡眠
-
-状态： 空
-
-时间： 598
-
-current_statement： 更新世界. city Set 人口 = 900000 其中 ID = 3805
-
-statement_latency： 空
-
-进度： 空
-
-lock_latency： 104.00 我们
-
-rows_examined： 1
-
-rows_sent： 0
-
-rows_affected： 1
-
-tmp_tables： 0
-
-tmp_disk_tables： 0
-
-full_scan： 否
-
-last_statement： 更新世界. city Set 人口 = 900000 其中 ID = 3805
-
-last_statement_latency： 40.21 ms
-
-current_memory： 344.76 KiB
-
-last_wait： 空
-
-last_wait_latency： 空
-
-来源： 空
-
-trx_latency： 11.32 m
-
-trx_state：活动
-
-trx_autocommit： 否
-
-皮德： 25836
-
-program_name： mysqlsh
-
+```
+Listing 21-7. Finding active transactions with sys.session
+mysql> SELECT *
+ FROM sys.session
+ WHERE trx_state = 'ACTIVE'
+ AND conn_id <> CONNECTION_ID()\G
+*************************** 1. row ***************************
+ thd_id: 54
+ conn_id: 16
+ user: mysqlx/worker
+ db: world
+ command: Sleep
+ state: NULL
+ time: 690
+ current_statement: UPDATE world.city SET Population = 2000000 WHERE ID = 133
+ statement_latency: NULL
+ progress: NULL
+ lock_latency: 281.76 ms
+ rows_examined: 341
+ rows_sent: 341
+ rows_affected: 0
+ tmp_tables: 0
+ tmp_disk_tables: 0
+ full_scan: NO
+ last_statement: UPDATE world.city SET Population = 2000000 WHERE ID = 133
+last_statement_latency: 391.80 ms
+ current_memory: 2.35 MiB
+ last_wait: NULL
+ last_wait_latency: NULL
+ source: NULL
+ trx_latency: 11.49 m
+ trx_state: ACTIVE
+ trx_autocommit: NO
+ pid: 23376
+ program_name: mysqlsh
+*************************** 2. row ***************************
+ thd_id: 57
+ conn_id: 18
+ user: mysqlx/worker
+ db: world
+ command: Sleep
+ state: NULL
+ time: 598
+ current_statement: UPDATE world.city SET Population = 900000 WHERE ID = 3805
+ statement_latency: NULL
+ progress: NULL
+ lock_latency: 104.00 us
+ rows_examined: 1
+ rows_sent: 0
+ rows_affected: 1
+ tmp_tables: 0
+ tmp_disk_tables: 0
+ full_scan: NO
+ last_statement: UPDATE world.city SET Population = 900000 WHERE ID = 3805
+last_statement_latency: 40.21 ms
+ current_memory: 344.76 KiB
+ last_wait: NULL
+ last_wait_latency: NULL
+ source: NULL
+ trx_latency: 11.32 m
+ trx_state: ACTIVE
+ trx_autocommit: NO
+ pid: 25836
+ program_name: mysqlsh
 2 rows in set (0.0781 sec)
+```
+
+
 
 这表明第一行中的事务已处于活动状态超过 11 分钟，并且自上次执行查询以来是 690 秒（11.5 分钟）（您的值会有所不同）。系统可用于确定连接执行的最后一个查询。这是一个废弃的事务示例，它阻止 InnoDB 清除其撤消日志。废弃事务的最常见原因是数据库管理员以交互方式启动事务并分心，或者提交被禁用，并且没有意识到事务已启动。
 
 您可以回滚事务以避免更改任何数据。对于第一个（正常）事务：
 
-mysql> 回滚;
+```
+mysql> ROLLBACK;
+Query OK, 0 rows affected (0.0841 sec)
+```
 
-查询确定，0 行受到影响（0.0841 秒）
+
 
 对于 XA 事务：
 
-mysql> XA 结束 "abc"， "def"， 1;
+```
+mysql> XA END 'abc', 'def', 1;
+Query OK, 0 rows affected (0.0003 sec)
+mysql> XA ROLLBACK 'abc', 'def', 1;
+Query OK, 0 rows affected (0.0759 sec)
+```
 
-查询确定，0 行受到影响（0.0003 秒）
 
-mysql> Xa 回滚 "abc"， "def"， 1;
-
-查询确定，0 行受到影响（0.0759 秒）
 
 性能架构表可用于分析事务的另一种方式是使用汇总表获取聚合数据。
 
@@ -937,45 +647,32 @@ mysql> Xa 回滚 "abc"， "def"， 1;
 
 每个表都包含事务统计信息分组的列和三组列：总计、读写事务和只读事务。对于这三组列，都有事务总数以及总、最小、平均和最大延迟。清单显示了来自
 
-mysql> 选择 *
+```
+Listing 21-8. The events_transactions_summary_global_by_event_name table
+mysql> SELECT *
+ FROM performance_schema.events_transactions_summary_global_by_
+event_name\G
+*************************** 1. row ***************************
+ EVENT_NAME: transaction
+ COUNT_STAR: 1274
+ SUM_TIMER_WAIT: 13091950115512576
+ MIN_TIMER_WAIT: 7293440
+ AVG_TIMER_WAIT: 10276255661056
+ MAX_TIMER_WAIT: 11777025727144832
+ COUNT_READ_WRITE: 1273
+SUM_TIMER_READ_WRITE: 13078918924805888
+MIN_TIMER_READ_WRITE: 7293440
+AVG_TIMER_READ_WRITE: 10274091697408
+MAX_TIMER_READ_WRITE: 11777025727144832
+ COUNT_READ_ONLY: 1
+ SUM_TIMER_READ_ONLY: 13031190706688
+ MIN_TIMER_READ_ONLY: 13031190706688
+ AVG_TIMER_READ_ONLY: 13031190706688
+ MAX_TIMER_READ_ONLY: 13031190706688
+1 row in set (0.0005 sec)
+```
 
-从performance_schema.events_transactions_摘要_global_by_event_name\G
 
-1.行***************************************************************************************************
-
-EVENT_NAME：事务
-
-COUNT_STAR： 1274
-
-SUM_TIMER_WAIT： 13091950115512576
-
-MIN_TIMER_WAIT： 7293440
-
-AVG_TIMER_WAIT： 10276255661056
-
-MAX_TIMER_WAIT： 11777025727144832
-
-COUNT_READ_WRITE： 1273
-
-SUM_TIMER_READ_WRITE： 13078918924805888
-
-MIN_TIMER_READ_WRITE： 7293440
-
-AVG_TIMER_READ_WRITE： 10274091697408
-
-MAX_TIMER_READ_WRITE： 11777025727144832
-
-COUNT_READ_ONLY： 1
-
-SUM_TIMER_READ_ONLY： 13031190706688
-
-MIN_TIMER_READ_ONLY： 13031190706688
-
-AVG_TIMER_READ_ONLY： 13031190706688
-
-MAX_TIMER_READ_ONLY： 13031190706688
-
-设置 1 行（0.0005 秒）
 
 当您研究输出有多少事务（尤其是读）时，您可能会感到惊讶。请记住，在查询 InnoDB 表时，即使您未显式指定一个表，一切都是事务。因此，即使是查询单个行的简单语句也算作事务。关于读写事务和只读事务之间的分布，则性能架构仅在显式启动事务时才考虑事务只读：
 

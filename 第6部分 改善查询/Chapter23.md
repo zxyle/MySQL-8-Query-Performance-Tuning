@@ -74,7 +74,7 @@
 
 在讨论配置选项之前，值得查看数据在表空间和缓冲池之间如何流动，并通过重做日志系统返回表空间。图显示了此流的简单概述。
 
-![../images/484666_1_En_23_Chapter/484666_1_En_23_Fig3_HTML.jpg](../images/484666_1_En_23_Chapter/484666_1_En_23_Fig3_HTML.jpg)
+![](../附图/Figure 23-3.png)
 
 Figure 23-3
 
@@ -129,127 +129,80 @@ Table 23-1
 
 您可以使用以下公式获取缓冲池命中率（即，页面请求可以直接从缓冲池完成的频率，而无需从磁盘读取）。 两个变量状态变量。 清单显示了如何计算缓冲池命中率的示例。
 
-mysql> 选择Variable_name， Variable_value
-
-从系统.指标
-
-Variable_name在哪里
-
-（'Innodb_pages_read'，
-
-"Innodb_buffer_pool_read_requests"）\G
-
-1.行***************************************************************************************************
-
-Variable_name： innodb_buffer_pool_read_requests
-
-Variable_value： 141319
-
-2.行***************************************************************************************************
-
-Variable_name： innodb_pages_read
-
-Variable_value： 1028
-
-设置 2 行（0.0089 秒）
-
-mysql> 选择 100 - （100 * 1028/141319） 作为命中率;
-
+```
+Listing 23-1. Calculating the buffer pool hit rate
+mysql> SELECT Variable_name, Variable_value
+ FROM sys.metrics
+ WHERE Variable_name IN
+ ('Innodb_pages_read',
+ 'Innodb_buffer_pool_read_requests')\G
+*************************** 1. row ***************************
+ Variable_name: innodb_buffer_pool_read_requests
+Variable_value: 141319
+*************************** 2. row ***************************
+ Variable_name: innodb_pages_read
+Variable_value: 1028
+2 rows in set (0.0089 sec)
+mysql> SELECT 100 - (100 * 1028/141319) AS HitRate;
 +---------+
-
-|命中率 |
-
+| HitRate |
 +---------+
-
-|99.2726 |
-
+| 99.2726 |
 +---------+
+1 row in set (0.0003 sec)
+```
 
-设置 1 行（0.0003 秒）
 
-清单 23-1
 
 计算缓冲池命中率
 
 在该示例中，99.3%请求从缓冲池完成。此数字跨所有缓冲池实例。如果要确定给定期间的命中率，则需要在周期的开始和结束时收集状态变量的值，并在计算中使用它们之间的差值。您还可以从信息架构或的视图获取速率。在这两种情况下，速率都根据千次请求返回。清单显示了这方面的例子。您需要确保已执行一些查询以生成一些缓冲池活动以获得有意义的结果。
 
-mysql> 选择POOL_ID， NUMBER_PAGES_READ，
-
-NUMBER_PAGES_GET， HIT_RATE从 information_schema。INNODB_BUFFER_POOL_STATS\G
-
-1.行***************************************************************************************************
-
-POOL_ID： 0
-
-NUMBER_PAGES_READ： 1028
-
-NUMBER_PAGES_GET： 141319
-
-HIT_RATE： 1000
-
-设置 1 行（0.0004 秒）
-
-mysql> 显示引擎 Innodb 状态\ g
-
-1.行***************************************************************************************************
-
-类型： InnoDB
-
-名字：
-
-地位：
-
+```
+Listing 23-2. Getting the buffer pool hit rate directly from InnoDB
+mysql> SELECT POOL_ID, NUMBER_PAGES_READ,
+ NUMBER_PAGES_GET, HIT_RATE FROM information_schema.INNODB_
+BUFFER_POOL_STATS\G
+*************************** 1. row ***************************
+ POOL_ID: 0
+NUMBER_PAGES_READ: 1028
+ NUMBER_PAGES_GET: 141319
+ HIT_RATE: 1000
+1 row in set (0.0004 sec)
+mysql> SHOW ENGINE INNODB STATUS\G
+*************************** 1. row ***************************
+ Type: InnoDB
+ Name:
+Status:
 =================================================
-
-2019-07-20 19：33：12 0x7550 INNODB 监视器输出
-
+2019-07-20 19:33:12 0x7550 INNODB MONITOR OUTPUT
 =================================================
-
 ...
-
-\----------------------
-
-缓冲池和内存
-
-\----------------------
-
-分配的较大内存总数 137363456
-
-字典内存已分配 536469
-
-缓冲池大小 8192
-
-免费缓冲区 6984
-
-数据库页 1190
-
-旧数据库页 428
-
-修改的 db 页 0
-
-挂起读取 0
-
-挂起写入： LRU 0，刷新列表 0，单页 0
-
-页面使年轻的 38， 而不是年轻的 0
-
-0.00 年轻人/s， 0.00 非年轻人/s
-
-页面读取 1028，创建 237，写入 1065
-
-0.00 读取/s，0.00 创建/s，0.00 写入/s
-
-， 年轻制作率 0 / 1000 不是 0 / 1000
-
-页面提前 0.00/s 读取，未经访问被逐出 0.00/s，随机读取提前 0.00/s
-
-LRU len： 1190， unzip_LRU伦： 0
-
-I/O 总和{6}：cur{0}，解压缩总和{0}：cur{0}
-
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total large memory allocated 137363456
+Dictionary memory allocated 536469
+Buffer pool size 8192
+Free buffers 6984
+Database pages 1190
+Old database pages 428
+Modified db pages 0
+Pending reads 0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages made young 38, not young 0
+0.00 youngs/s, 0.00 non-youngs/s
+Pages read 1028, created 237, written 1065
+0.00 reads/s, 0.00 creates/s, 0.00 writes/s
+Buffer pool hit rate 1000 / 1000, young-making rate 0 / 1000 not 0 / 1000
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead
+0.00/s
+LRU len: 1190, unzip_LRU len: 0
+I/O sum[6]:cur[0], unzip sum[0]:cur[0]
 ...
+```
 
-Listing 23-2
+
 
 直接从 Innodb 获取缓冲池命中率
 
@@ -291,97 +244,57 @@ Listing 23-2
 
 您可以监视新旧块子这些子列表与发现命中率的方式类似。清单显示了使用 INNODB_BUFFER_POOL_STATSInnoDB 监视器的示例输出。
 
-mysql> 选择PAGES_MADE_YOUNG，
-
-PAGES_NOT_MADE_YOUNG，
-
-PAGES_MADE_YOUNG_RATE，
-
-PAGES_MADE_NOT_YOUNG_RATE，
-
-YOUNG_MAKE_PER_THOUSAND_GETS，
-
-NOT_YOUNG_MAKE_PER_THOUSAND_GETS
-
-从information_schema。INNODB_BUFFER_POOL_STATS\G
-
-1.行***************************************************************************************************
-
-PAGES_MADE_YOUNG： 98
-
-PAGES_NOT_MADE_YOUNG： 354
-
-PAGES_MADE_YOUNG_RATE： 0.0000000383894451752074
-
-PAGES_MADE_NOT_YOUNG_RATE： 0
-
-YOUNG_MAKE_PER_THOUSAND_GETS： 2
-
-NOT_YOUNG_MAKE_PER_THOUSAND_GETS： 10
-
+```
+Listing 23-3. Obtaining information about the new and old blocks sublists
+mysql> SELECT PAGES_MADE_YOUNG,
+ PAGES_NOT_MADE_YOUNG,
+ PAGES_MADE_YOUNG_RATE,
+ PAGES_MADE_NOT_YOUNG_RATE,
+ YOUNG_MAKE_PER_THOUSAND_GETS,
+ NOT_YOUNG_MAKE_PER_THOUSAND_GETS
+ FROM information_schema.INNODB_BUFFER_POOL_STATS\G
+*************************** 1. row ***************************
+ PAGES_MADE_YOUNG: 98
+ PAGES_NOT_MADE_YOUNG: 354
+ PAGES_MADE_YOUNG_RATE: 0.00000000383894451752074
+ PAGES_MADE_NOT_YOUNG_RATE: 0
+ YOUNG_MAKE_PER_THOUSAND_GETS: 2
+NOT_YOUNG_MAKE_PER_THOUSAND_GETS: 10
 1 row in set (0.0005 sec)
-
-mysql> 显示引擎 Innodb 状态\ g
-
-1.行***************************************************************************************************
-
-类型： InnoDB
-
-名字：
-
-地位：
-
+mysql> SHOW ENGINE INNODB STATUS\G
+*************************** 1. row ***************************
+ Type: InnoDB
+ Name:
+Status:
 ===============================================
-
 2019-07-21 12:06:49 0x964 INNODB MONITOR OUTPUT
-
 ===============================================
-
 ...
-
-\----------------------
-
-缓冲池和内存
-
-\----------------------
-
-分配的较大内存总数 137363456
-
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total large memory allocated 137363456
 Dictionary memory allocated 463009
-
-缓冲池大小 8192
-
-Free buffers    6974
-
-Database pages   1210
-
+Buffer pool size 8192
+Free buffers 6974
+Database pages 1210
 Old database pages 426
-
-修改的 db 页 0
-
-挂起读取 0
-
-挂起写入： LRU 0，刷新列表 0，单页 0
-
-**Pages made young 98, not young 354**
-
-**0.00 年轻人/s， 0.00 非年轻人/s**
-
+Modified db pages 0
+Pending reads 0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages made young 98, not young 354
+0.00 youngs/s, 0.00 non-youngs/s
 Pages read 996, created 223, written 430
-
-0.00 读取/s，0.00 创建/s，0.00 写入/s
-
-缓冲池命中率 1000 / 1000，
-
-页面提前 0.00/s 读取，未经访问被逐出 0.00/s，随机读取提前 0.00/s
-
+0.00 reads/s, 0.00 creates/s, 0.00 writes/s
+Buffer pool hit rate 1000 / 1000, young-making rate 2 / 1000 not 10 / 1000
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead
+0.00/s
 LRU len: 1210, unzip_LRU len: 0
-
 I/O sum[217]:cur[0], unzip sum[0]:cur[0]
-
 ...
+```
 
-Listing 23-3
+
 
 获取有关新旧块子列表的信息
 
@@ -462,9 +375,7 @@ I/O 容量的两在刷新更改期间使用"自动"选项，应设置为允许 I
 
 确定重做日志的较大性的最佳方法是通过监视解决方案监视它随着时间的推移的满数。图显示了显示重做日志文件的 I/O 速率以及按检查点延迟测量的重做日志的使用情况的图形示例。如果要创建类似的东西，则需要执行密集的写入工作日志;如果想要创建类似的东西，则需要执行密集的写入工作日志。数据库可能很有用。具体要求取决于硬件、配置、其他进程使用的资源等。
 
-![../images/484666_1_En_23_Chapter/484666_1_En_23_Fig4_HTML.jpg](../images/484666_1_En_23_Chapter/484666_1_En_23_Fig4_HTML.jpg)
-
-Figure 23-4
+![](../附图/Figure 23-4.png)
 
 重做日志的时间序列图
 
@@ -474,121 +385,66 @@ Figure 23-4
 
 可以从"数据"或从获取当前值。或者，日志序列号也可以从 InnoDBLOG，无论指标是否已启用。清单显示了使用这些资源确定检查点延迟的示例。
 
-mysql> 设置innodb_monitor_enable + log_lsn_current"，
-
-全球innodb_monitor_enable = "log_lsn_last_checkpoint";
-
-查询确定，0 行受到影响（0.0004 秒）
-
-mysql> 选择 *
-
-从系统.指标
-
-你Variable_name （'log_lsn_current'，
-
-"log_lsn_last_checkpoint"）\G
-
-1.行***************************************************************************************************
-
-Variable_name： log_lsn_current
-
+```
+Listing 23-4. Querying the redo log usage
+mysql> SET GLOBAL innodb_monitor_enable = 'log_lsn_current',
+ GLOBAL innodb_monitor_enable = 'log_lsn_last_checkpoint';
+Query OK, 0 rows affected (0.0004 sec)
+mysql> SELECT *
+ FROM sys.metrics
+ WHERE Variable_name IN ('log_lsn_current',
+ 'log_lsn_last_checkpoint')\G
+*************************** 1. row ***************************
+ Variable_name: log_lsn_current
 Variable_value: 1678918975
-
-类型： InnoDB 指标 - 日志
-
-已启用： 是
-
-2.行***************************************************************************************************
-
-Variable_name： log_lsn_last_checkpoint
-
+ Type: InnoDB Metrics - log
+ Enabled: YES
+*************************** 2. row ***************************
+ Variable_name: log_lsn_last_checkpoint
 Variable_value: 1641343518
-
-类型： InnoDB 指标 - 日志
-
-已启用： 是
-
+ Type: InnoDB Metrics - log
+ Enabled: YES
 2 rows in set (0.0078 sec)
-
-mysql> 选择圆 （
-
-100 * (
-
-（选择计数
-
-从information_schema。INNODB_METRICS
-
-名称 = "log_lsn_current"）
-
-\- （选择计数
-
-从information_schema。INNODB_METRICS
-
-名称 = "log_lsn_last_checkpoint"）
-
-） / （@@global. innodb_log_file_大小
-
-\* @@global. innodb_log_files_in_group
-
-）， 2） AS 日志日志;
-
+mysql> SELECT ROUND(
+ 100 * (
+ (SELECT COUNT
+ FROM information_schema.INNODB_METRICS
+ WHERE NAME = 'log_lsn_current')
+ - (SELECT COUNT
+ FROM information_schema.INNODB_METRICS
+ WHERE NAME = 'log_lsn_last_checkpoint')
+ ) / (@@global.innodb_log_file_size
+ * @@global.innodb_log_files_in_group
+ ), 2) AS LogUsagePct;
 +-------------+
-
-|LogUsagePct |
-
+| LogUsagePct |
 +-------------+
-
-|    39.25 |
-
+| 39.25 |
 +-------------+
-
 1 row in set (0.0202 sec)
-
-mysql> 显示引擎 Innodb 状态\ g
-
-1.行***************************************************************************************************
-
-类型： InnoDB
-
-名字：
-
-地位：
-
+mysql> SHOW ENGINE INNODB STATUS\G
+*************************** 1. row ***************************
+ Type: InnoDB
+ Name:
+Status:
 ===============================================
-
 2019-07-21 17:04:09 0x964 INNODB MONITOR OUTPUT
-
 ===============================================
-
 ...
-
-\---
-
-日志
-
-\---
-
-**日志序列号 1704842995**
-
-最多分配 1704842995 的日志缓冲区
-
-日志缓冲区最多完成 1704842235
-
-日志写入至 1704842235
-
-日志刷新至 1696214896
-
-添加了长达 1704827409 的脏页
-
-页面刷新到 1668546370
-
-**最后一个检查点在 1665659636**
-
-5360916 日志 i/o 完成，23651.73 日志 i/o 的/秒
-
+---
+LOG
+---
+Log sequence number 1704842995
+Log buffer assigned up to 1704842995
+Log buffer completed up to 1704842235
+Log written up to 1704842235
+Log flushed up to 1696214896
+Added dirty pages up to 1704827409
+Pages flushed up to 1668546370
+Last checkpoint at 1665659636
+5360916 log i/o's done, 23651.73 log i/o's/second
 ...
-
-Listing 23-4
+```
 
 查询重做日志使用情况
 
@@ -604,33 +460,31 @@ Listing 23-4
 
 通过查找名称为 performance_schema/innodb/parallel_read_thread 的线程，可以查看 例如，如果要尝试此功能，可以使用 MySQL Shell 中的 Python 模式继续计算员工数：
 
-Py> 对于 i 在范围 （100）： session.run_sql （'选择计数（*） 从员工. 工资'）
+```
+Py> for i in range(100): session.run_sql('SELECT COUNT(*) FROM employees.
+salaries')
+```
+
+
 
 具有 innodb_parallel_read_threads 线程的输出示例是
 
-mysql> 选择THREAD_ID， 类型， THREAD_OS_ID
-
-从 performance_schema. 线程
-
-​    WHERE NAME = 'thread/innodb/parallel_read_thread';
-
+```
+mysql> SELECT THREAD_ID, TYPE, THREAD_OS_ID
+ FROM performance_schema.threads
+ WHERE NAME = 'thread/innodb/parallel_read_thread';
 +-----------+------------+--------------+
-
-| THREAD_ID | TYPE    | THREAD_OS_ID |
-
+| THREAD_ID | TYPE | THREAD_OS_ID |
 +-----------+------------+--------------+
-
-|    91 | BACKGROUND |    12488 |
-
-|    92 | BACKGROUND |     5232 |
-
-|    93 | BACKGROUND |    13836 |
-
-|    94 | BACKGROUND |    24376 |
-
+| 91 | BACKGROUND | 12488 |
+| 92 | BACKGROUND | 5232 |
+| 93 | BACKGROUND | 13836 |
+| 94 | BACKGROUND | 24376 |
 +-----------+------------+--------------+
-
 4 rows in set (0.0005 sec)
+```
+
+
 
 您可以尝试使用较小的表（如世界数据库中表），并查看后台线程数的差异。
 
@@ -672,151 +526,83 @@ MySQL在查询执行期间使用多个。其中包括存储联接中使用的列
 
 您可以使用内存//内存和内存使用情况。物理 RAM 事件显示引擎内存部分的内存使用情况，而物理磁盘事件显示内存映射部分。清单显示了查询两个内存事件的内存使用情况的三个示例。
 
-mysql> 选择 *
-
-从 sys.memory_global_by_current_bytes
-
-event_name
-
-在（"内存/临时/physical_ram"，
-
-"内存/临时/physical_disk"）\G
-
-1.行***************************************************************************************************
-
-event_name：内存/临时/physical_ram
-
-current_count： 14
-
-current_alloc： 71.00 米布
-
-current_avg_alloc： 5.07 米布
-
-high_count： 15
-
-high_alloc： 135.00 米布
-
-high_avg_alloc： 9.00 米布
-
-2.行***************************************************************************************************
-
-event_name：内存/临时/physical_disk
-
-current_count： 1
-
-current_alloc： 64.00 米布
-
-current_avg_alloc： 64.00 米布
-
-high_count： 1
-
-high_alloc： 64.00 米布
-
-high_avg_alloc： 64.00 米布
-
+```
+Listing 23-5. Querying the TempTable memory usage
+mysql> SELECT *
+ FROM sys.memory_global_by_current_bytes
+ WHERE event_name
+ IN ('memory/temptable/physical_ram',
+ 'memory/temptable/physical_disk')\G
+*************************** 1. row ***************************
+ event_name: memory/temptable/physical_ram
+ current_count: 14
+ current_alloc: 71.00 MiB
+current_avg_alloc: 5.07 MiB
+ high_count: 15
+ high_alloc: 135.00 MiB
+ high_avg_alloc: 9.00 MiB
+*************************** 2. row ***************************
+ event_name: memory/temptable/physical_disk
+ current_count: 1
+ current_alloc: 64.00 MiB
+current_avg_alloc: 64.00 MiB
+ high_count: 1
+ high_alloc: 64.00 MiB
+ high_avg_alloc: 64.00 MiB
 2 rows in set (0.0012 sec)
-
-mysql> 选择 *
-
-从performance_schema.内存_摘要_global_by_event_name
-
-WHERE EVENT_NAME
-
-在（"内存/临时/physical_ram"，
-
-"内存/临时/physical_disk"）\G
-
-1.行***************************************************************************************************
-
-EVENT_NAME：内存/临时/physical_disk
-
-COUNT_ALLOC： 2
-
-COUNT_FREE： 1
-
-SUM_NUMBER_OF_BYTES_ALLOC： 134217728
-
-SUM_NUMBER_OF_BYTES_FREE： 67108864
-
-LOW_COUNT_USED： 0
-
-CURRENT_COUNT_USED： 1
-
-HIGH_COUNT_USED： 1
-
-LOW_NUMBER_OF_BYTES_USED： 0
-
-CURRENT_NUMBER_OF_BYTES_USED： 67108864
-
-HIGH_NUMBER_OF_BYTES_USED： 67108864
-
-2.行***************************************************************************************************
-
-EVENT_NAME：内存/临时/physical_ram
-
-​         COUNT_ALLOC: 27
-
-​         COUNT_FREE: 13
-
-  SUM_NUMBER_OF_BYTES_ALLOC: 273678336
-
-  SUM_NUMBER_OF_BYTES_FREE: 199229440
-
-LOW_COUNT_USED： 0
-
-​     CURRENT_COUNT_USED: 14
-
-​       HIGH_COUNT_USED: 15
-
-LOW_NUMBER_OF_BYTES_USED： 0
-
+mysql> SELECT *
+ FROM performance_schema.memory_summary_global_by_event_name
+ WHERE EVENT_NAME
+ IN ('memory/temptable/physical_ram',
+ 'memory/temptable/physical_disk')\G
+*************************** 1. row ***************************
+ EVENT_NAME: memory/temptable/physical_disk
+ COUNT_ALLOC: 2
+ COUNT_FREE: 1
+ SUM_NUMBER_OF_BYTES_ALLOC: 134217728
+ SUM_NUMBER_OF_BYTES_FREE: 67108864
+ LOW_COUNT_USED: 0
+ CURRENT_COUNT_USED: 1
+ HIGH_COUNT_USED: 1
+ LOW_NUMBER_OF_BYTES_USED: 0
+CURRENT_NUMBER_OF_BYTES_USED: 67108864
+ HIGH_NUMBER_OF_BYTES_USED: 67108864
+*************************** 2. row ***************************
+ EVENT_NAME: memory/temptable/physical_ram
+ COUNT_ALLOC: 27
+ COUNT_FREE: 13
+ SUM_NUMBER_OF_BYTES_ALLOC: 273678336
+ SUM_NUMBER_OF_BYTES_FREE: 199229440
+ LOW_COUNT_USED: 0
+ CURRENT_COUNT_USED: 14
+ HIGH_COUNT_USED: 15
+ LOW_NUMBER_OF_BYTES_USED: 0
 CURRENT_NUMBER_OF_BYTES_USED: 74448896
-
-  HIGH_NUMBER_OF_BYTES_USED: 141557760
-
+ HIGH_NUMBER_OF_BYTES_USED: 141557760
 2 rows in set (0.0004 sec)
-
-mysql> 选择 *
-
-从performance_schema.内存_摘要_by_thread_by_event_name
-
-WHERE EVENT_NAME
-
-在（"内存/临时/physical_ram"，
-
-"内存/临时/physical_disk"）
-
-和COUNT_ALLOC > 0\G
-
-1.行***************************************************************************************************
-
-THREAD_ID： 29
-
-EVENT_NAME：内存/临时/physical_disk
-
-COUNT_ALLOC： 2
-
-COUNT_FREE： 1
-
-SUM_NUMBER_OF_BYTES_ALLOC： 134217728
-
-SUM_NUMBER_OF_BYTES_FREE： 67108864
-
-LOW_COUNT_USED： 0
-
-CURRENT_COUNT_USED： 1
-
-HIGH_COUNT_USED： 1
-
-LOW_NUMBER_OF_BYTES_USED： 0
-
-CURRENT_NUMBER_OF_BYTES_USED： 67108864
-
-HIGH_NUMBER_OF_BYTES_USED： 67108864
-
+mysql> SELECT *
+ FROM performance_schema.memory_summary_by_thread_by_event_name
+ WHERE EVENT_NAME
+ IN ('memory/temptable/physical_ram',
+ 'memory/temptable/physical_disk')
+ AND COUNT_ALLOC > 0\G
+*************************** 1. row ***************************
+ THREAD_ID: 29
+ EVENT_NAME: memory/temptable/physical_disk
+ COUNT_ALLOC: 2
+ COUNT_FREE: 1
+ SUM_NUMBER_OF_BYTES_ALLOC: 134217728
+ SUM_NUMBER_OF_BYTES_FREE: 67108864
+ LOW_COUNT_USED: 0
+ CURRENT_COUNT_USED: 1
+ HIGH_COUNT_USED: 1
+ LOW_NUMBER_OF_BYTES_USED: 0
+CURRENT_NUMBER_OF_BYTES_USED: 67108864
+ HIGH_NUMBER_OF_BYTES_USED: 67108864
 1 row in set (0.0098 sec)
+```
 
-Listing 23-5
+
 
 查询内存
 
@@ -835,11 +621,3 @@ Listing 23-5
 最后，讨论了内部临时表。在 MySQL 8 中，引擎，该引擎支持在达到全局最大内存使用量时溢出到磁盘。在磁盘上存储内部临时表时，还可以将其转换为 InnoDB。
 
 下一章将介绍如何更改查询以执行更好的操作。
-
-脚注
-
-[1](#Fn1_source)
-
-[https://dev.mysql.com/doc/refman/en/innodb-parameters.html#sysvar_innodb_flush_method](https://dev.mysql.com/doc/refman/en/innodb-parameters.html%23sysvar_innodb_flush_method)
-
- 

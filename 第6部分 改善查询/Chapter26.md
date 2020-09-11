@@ -10,13 +10,13 @@
 
 的工作原理是记录对复制源所做的更改，然后将其发送到连接线程存储数据并应用数据的一个或多个应用线程的副本。图显示了复制的简化概述，省略了与存储引擎和实现详细信息相关的所有内容。
 
-![../images/484666_1_En_26_Chapter/484666_1_En_26_Fig1_HTML.png](../images/484666_1_En_26_Chapter/484666_1_En_26_Fig1_HTML.png)
+![](../附图/Figure 26-1.png)
 
 当事务提交其更改时，这些更改将写入 InnoDB 特定文件（重做日志和数据文件）和二。二进制日志由一系列文件以及索引文件以及列出二进制日志文件的索引文件组成。将事件写入二进制日志文件后，它们将发送到副本。可能有多个副本，在这种情况下，事件将发送到所有副本。
 
 在副本上，连接接收事件并将它们写入中。中继日志的工作方式与二进制日志相同，只是它用作临时存储，直到应用线程可以应用事件。可能有一个或多个应用程序线程。也可能副本从多个源（称为多源复制）复制，在这种情况下，每个复制通道有一组一个连接线程和一个或多个。（也就是说，最常见的是每个副本的单个源。或者，副本将更改写入其自己的二进制日志，使其成为复制副本进一步下游复制链的源。在这种情况下，通常调用它为中。图显示了一个使用副本接收来自两个源的更新的设置示例，其中一个是中继实例。
 
-![../images/484666_1_En_26_Chapter/484666_1_En_26_Fig2_HTML.png](../images/484666_1_En_26_Chapter/484666_1_En_26_Fig2_HTML.png)
+![](../附图/Figure 26-2.png)
 
 此处复制到中继，而中继实例又复制到。也会复制到实例。每个都有一个名称，可以区分它们，在多源复制中，每个通道必须具有唯一的名称。默认通道名称为空字符串。讨论监视时，它将使用像图中的复制设置。
 
@@ -32,7 +32,7 @@
 
 首次开始使用性能架构复制表时，可能很难理解这些表之间的关系及其与复制流的关系。图显示了单个复制通道的复制流，并添加了与它们包含的信息对应的复制表。图中的表也可用于组复制，通道用于事务通道。
 
-![../images/484666_1_En_26_Chapter/484666_1_En_26_Fig3_HTML.png](../images/484666_1_En_26_Chapter/484666_1_En_26_Fig3_HTML.png)
+![](../附图/Figure 26-3.png)
 
 事件从直接源到达图形的顶部，由具有两个表的连接线程处理，该连接和。连接线程将事件写入中继日志，并且应用器在应用复制筛选器时从中继日志中读取事件。复制筛选器可以在"复制"和中找到。 可以在"应用程序"和"应用程序"表中应用状态。
 
@@ -53,113 +53,67 @@
 
 复制连接表包括与连接到直接上游源相关的信息，以及在原始源上提交最新接收事件时的时间戳。在简单的复制设置中，即时源和原始源是相同的，但在链式复制中，两者是不同的。清单显示了上一节中讨论的中两个连接表的内容示例。为了提高本书的可读性，对输出重新格式化。原始格式化的输出（包括复制通道的行）包含在文件。
 
-mysql> 选择 *
+```
+Listing 26-1. The replication connection tables
+mysql> SELECT *
+ FROM performance_schema.replication_connection_configuration
+ WHERE CHANNEL_NAME = 'relay'\G
+*************************** 1. row ***************************
+ CHANNEL_NAME: relay
+ HOST: 127.0.0.1
+PORT: 3308
+USER: root
+ NETWORK_INTERFACE:
+ AUTO_POSITION: 1
+ SSL_ALLOWED: YES
+ SSL_CA_FILE:
+ SSL_CA_PATH:
+ SSL_CERTIFICATE:
+ SSL_CIPHER:
+ SSL_KEY:
+SSL_VERIFY_SERVER_CERTIFICATE: NO
+ SSL_CRL_FILE:
+ SSL_CRL_PATH:
+ CONNECTION_RETRY_INTERVAL: 60
+ CONNECTION_RETRY_COUNT: 86400
+ HEARTBEAT_INTERVAL: 30
+ TLS_VERSION:
+ PUBLIC_KEY_PATH:
+ GET_PUBLIC_KEY: NO
+ NETWORK_NAMESPACE:
+ COMPRESSION_ALGORITHM: uncompressed
+ ZSTD_COMPRESSION_LEVEL: 3
+1 row in set (0.0006 sec)
+mysql> SELECT *
+ FROM performance_schema.replication_connection_status
+ WHERE CHANNEL_NAME = 'relay'\G
+*************************** 1. row ***************************
+ CHANNEL_NAME: relay
+ GROUP_NAME:
+ SOURCE_UUID: cfa645e7-b691-11e9-a051-
+ace2d35785be
+ THREAD_ID: 44
+ SERVICE_STATE: ON
+ COUNT_RECEIVED_HEARTBEATS: 26
+ LAST_HEARTBEAT_TIMESTAMP: 2019-08-11
+10:26:16.076997
+ RECEIVED_TRANSACTION_SET: 4d22b3e5-a54f-11e9-8bdbace2d35785be:23-44
+ LAST_ERROR_NUMBER: 0
+ LAST_ERROR_MESSAGE:
+ LAST_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_QUEUED_TRANSACTION: 4d22b3e5-a54f-11e9-8bdbace2d35785be:44
+ LAST_QUEUED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 2019-08-11 10:27:09.483703
+LAST_QUEUED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 2019-08-11 10:27:10.158297
+ LAST_QUEUED_TRANSACTION_START_QUEUE_TIMESTAMP: 2019-08-11 10:27:10.296164
+ LAST_QUEUED_TRANSACTION_END_QUEUE_TIMESTAMP: 2019-08-11 10:27:10.299833
+ QUEUEING_TRANSACTION:
+ QUEUEING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ QUEUEING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ QUEUEING_TRANSACTION_START_QUEUE_TIMESTAMP: 0000-00-00 00:00:00
+1 row in set (0.0006 sec)
+```
 
-从performance_schema.复制_连接_配置
 
-在哪里CHANNEL_NAME = "中继" = G
-
-1.行***************************************************************************************************
-
-CHANNEL_NAME： 继电器
-
-主机： 127.0.0.1
-
-端口： 3308
-
-用户：根
-
-NETWORK_INTERFACE：
-
-AUTO_POSITION： 1
-
-SSL_ALLOWED： 是
-
-SSL_CA_FILE：
-
-SSL_CA_PATH：
-
-SSL_CERTIFICATE：
-
-SSL_CIPHER：
-
-SSL_KEY：
-
-SSL_VERIFY_SERVER_CERTIFICATE： 否
-
-SSL_CRL_FILE：
-
-SSL_CRL_PATH：
-
-CONNECTION_RETRY_INTERVAL： 60
-
-CONNECTION_RETRY_COUNT： 86400
-
-HEARTBEAT_INTERVAL： 30
-
-TLS_VERSION：
-
-PUBLIC_KEY_PATH：
-
-GET_PUBLIC_KEY： 否
-
-NETWORK_NAMESPACE：
-
-COMPRESSION_ALGORITHM：未压缩
-
-ZSTD_COMPRESSION_LEVEL： 3
-
-设置 1 行（0.0006 秒）
-
-mysql> 选择 *
-
-从performance_schema.复制_连接_状态
-
-在哪里CHANNEL_NAME = "中继" = G
-
-1.行***************************************************************************************************
-
-CHANNEL_NAME： 继电器
-
-GROUP_NAME：
-
-SOURCE_UUID： cfa645e7 - b691 - 11e9 - a051 - ace2d35785be
-
-THREAD_ID： 44
-
-SERVICE_STATE： 打开
-
-COUNT_RECEIVED_HEARTBEATS： 26
-
-LAST_HEARTBEAT_TIMESTAMP： 2019-08-11 10：26：16.076997
-
-RECEIVED_TRANSACTION_SET： 4d22b3e5- a54f - 11e9 - 8bdb - ace2d35785be： 23 - 44
-
-LAST_ERROR_NUMBER： 0
-
-LAST_ERROR_MESSAGE：
-
-LAST_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_QUEUED_TRANSACTION： 4d22b3e5- a54f - 11e9 - 8bdb - ace2d35785be： 44
-
-LAST_QUEUED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 2019-08-11 10：27：09.483703
-
-LAST_QUEUED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 2019-08-11 10：27：10.158297
-
-LAST_QUEUED_TRANSACTION_START_QUEUE_TIMESTAMP： 2019-08-11 10：27：10.296164
-
-LAST_QUEUED_TRANSACTION_END_QUEUE_TIMESTAMP： 2019-08-11 10：27：10.299833
-
-QUEUEING_TRANSACTION：
-
-QUEUEING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-QUEUEING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-QUEUEING_TRANSACTION_START_QUEUE_TIMESTAMP： 0000-00-00 00：00：00
-
-设置 1 行（0.0006 秒）
 
 配置表在很大程度上对应于使用 CHANGE Master TO 语句设置复制时可以提供，并且除非显式更改配置，否则数据是静态的。状态表主要包含随着事件处理而快速变化的可变数据。
 
@@ -187,111 +141,64 @@ QUEUEING_TRANSACTION_START_QUEUE_TIMESTAMP： 0000-00-00 00：00：00
 
 在高级别上，applier 表遵循与连接表相同的模式，增加了筛选器配置表并支持并行应用器。清单显示了中继表的示例。已对输出进行重新格式化，以提高可读性。在本书的 GitHub 存储库中中的文件中也有输出。
 
-mysql> 选择 *
+```
+Listing 26-2. The replication_applier_status_by_worker table
+mysql> SELECT *
+ FROM performance_schema.replication_applier_status_by_worker
+ WHERE CHANNEL_NAME = 'relay'\G
+*************************** 1. row ***************************
+ CHANNEL_NAME: relay
+ WORKER_ID: 1
+THREAD_ID: 54
+ SERVICE_STATE: ON
+ LAST_ERROR_NUMBER: 0
+ LAST_ERROR_MESSAGE:
+ LAST_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION:
+ LAST_APPLIED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION_START_APPLY_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION_END_APPLY_TIMESTAMP: 0000-00-00 00:00:00
+ APPLYING_TRANSACTION:
+ APPLYING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ APPLYING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 0000-00-00 00:00:00
+ APPLYING_TRANSACTION_START_APPLY_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION_RETRIES_COUNT: 0
+ LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER: 0
+ LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE:
+LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+ APPLYING_TRANSACTION_RETRIES_COUNT: 0
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER: 0
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE:
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+*************************** 2. row ***************************
+ CHANNEL_NAME: relay
+ WORKER_ID: 2
+THREAD_ID: 55
+ SERVICE_STATE: ON
+ LAST_ERROR_NUMBER: 0
+ LAST_ERROR_MESSAGE:
+ LAST_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+ LAST_APPLIED_TRANSACTION: 4d22b3e5-a54f11e9-8bdbace2d35785be:213
+ LAST_APPLIED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 2019-08-11 11:29:36.1076
+ LAST_APPLIED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 2019-08-11 11:29:44.822024
+ LAST_APPLIED_TRANSACTION_START_APPLY_TIMESTAMP: 2019-08-11 11:29:51.910259
+ LAST_APPLIED_TRANSACTION_END_APPLY_TIMESTAMP: 2019-08-11 11:29:52.403051
+ APPLYING_TRANSACTION: 4d22b3e5-a54f-11e9-8bdbace2d35785be:214
+ APPLYING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP: 2019-08-11 11:29:43.092063
+ APPLYING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP: 2019-08-11 11:29:52.685928
+ APPLYING_TRANSACTION_START_APPLY_TIMESTAMP: 2019-08-11 11:29:53.141687
+ LAST_APPLIED_TRANSACTION_RETRIES_COUNT: 0
+ LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER: 0
+ LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE:
+LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+ APPLYING_TRANSACTION_RETRIES_COUNT: 0
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER: 0
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE:
+ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP: 0000-00-00 00:00:00
+```
 
-从performance_schema.复制_applier_status_by_worker
 
-在哪里CHANNEL_NAME = "中继" = G
-
-1.行***************************************************************************************************
-
-CHANNEL_NAME： 继电器
-
-WORKER_ID： 1
-
-​                       THREAD_ID: 54
-
-SERVICE_STATE： 打开
-
-LAST_ERROR_NUMBER： 0
-
-LAST_ERROR_MESSAGE：
-
-LAST_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION：
-
-LAST_APPLIED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION_START_APPLY_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION_END_APPLY_TIMESTAMP： 0000-00-00 00：00：00
-
-APPLYING_TRANSACTION：
-
-APPLYING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-APPLYING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 0000-00-00 00：00：00
-
-APPLYING_TRANSACTION_START_APPLY_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION_RETRIES_COUNT： 0
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER： 0
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE：
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-APPLYING_TRANSACTION_RETRIES_COUNT： 0
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER： 0
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE：
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-2.行***************************************************************************************************
-
-CHANNEL_NAME： 继电器
-
-WORKER_ID： 2
-
-​                       THREAD_ID: 55
-
-SERVICE_STATE： 打开
-
-LAST_ERROR_NUMBER： 0
-
-LAST_ERROR_MESSAGE：
-
-LAST_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-LAST_APPLIED_TRANSACTION： 4d22b3e5- a54f - 11e9 - 8bdb - ace2d35785be： 213
-
-LAST_APPLIED_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 2019-08-11 11：29：36.1076
-
-LAST_APPLIED_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 2019-08-11 11：29：44.822024
-
-LAST_APPLIED_TRANSACTION_START_APPLY_TIMESTAMP： 2019-08-11 11：29：51.910259
-
-LAST_APPLIED_TRANSACTION_END_APPLY_TIMESTAMP： 2019-08-11 11：29：52.403051
-
-APPLYING_TRANSACTION： 4d22b3e5- a54f - 11e9 - 8bdb - ace2d35785be： 214
-
-APPLYING_TRANSACTION_ORIGINAL_COMMIT_TIMESTAMP： 2019-08-11 11：29：43.092063
-
-APPLYING_TRANSACTION_IMMEDIATE_COMMIT_TIMESTAMP： 2019-08-11 11：29：52.685928
-
-APPLYING_TRANSACTION_START_APPLY_TIMESTAMP： 2019-08-11 11：29：53.141687
-
-LAST_APPLIED_TRANSACTION_RETRIES_COUNT： 0
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER： 0
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE：
-
-LAST_APPLIED_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP： 0000-00-00 00：00：00
-
-APPLYING_TRANSACTION_RETRIES_COUNT： 0
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_NUMBER： 0
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_MESSAGE：
-
-APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP： 0000-00-00 00：00：00
 
 时间与之前看到的相同的模式，该模式包含上次处理的事务和当前事务的信息。请注意，对于第一行，所有时间戳均为零，这表明应用者无法利用并行复制。
 
@@ -301,71 +208,45 @@ APPLYING_TRANSACTION_LAST_TRANSIENT_ERROR_TIMESTAMP： 0000-00-00 00：00：00
 
 与复制相关的表是 log_status表它提供有关二进制日志、中继日志和 InnoDB 重做日志的信息，使用日志锁返回对应于同一时间点的数据。引入该表时时时时要牢记查询表需要具有权限。清单显示了使用函数的示例输出，以便更轻松地读取作为 JSON 文档返回的信息。
 
-mysql> 选择SERVER_UUID，
-
-JSON_PRETTY（本地）为本地，
-
-JSON_PRETTY（复制）作为复制，
-
-JSON_PRETTY （STORAGE_ENGINES） AS STORAGE_ENGINES
-
-从 performance_schema.log_状态\G
-
-1.行***************************************************************************************************
-
-SERVER_UUID： 4d46199b - bbc9 - 11e9 - 8780 - ace2d35785be
-
-本地：
-
-"gtid_executed"：" 4d22b3e5-a54f-11e9-8bdb-ace2d35785be：1-380，\ncbffdc28-bbc8-11e9-9aac-ace2d35785be：1-190"，
-
-"binary_log_file"："binlog.000003"，
-
-"binary_log_position"： 199154947
-
+```
+Listing 26-3. The log_status table
+mysql> SELECT SERVER_UUID,
+ JSON_PRETTY(LOCAL) AS LOCAL,
+ JSON_PRETTY(REPLICATION) AS REPLICATION,
+ JSON_PRETTY(STORAGE_ENGINES) AS STORAGE_ENGINES
+ FROM performance_schema.log_status\G
+*************************** 1. row ***************************
+ SERVER_UUID: 4d46199b-bbc9-11e9-8780-ace2d35785be
+ LOCAL: {
+ "gtid_executed": "4d22b3e5-a54f-11e9-8bdb-ace2d35785be:1-380,\ncbffdc28-
+bbc8-11e9-9aac-ace2d35785be:1-190",
+ "binary_log_file": "binlog.000003",
+ "binary_log_position": 199154947
 }
-
-复制： |
-
-"通道"： |
-
-  {
-
-"channel_name"："中继"，
-
-"relay_log_file"："继电器-bin-中继.000006"，
-
-"relay_log_position"： 66383736
-
-},
-
-  {
-
-"channel_name"："源2"，
-
-"relay_log_file"："继电器-bin源2.000009"，
-
-"relay_log_position"： 447
-
-  }
-
- ]
-
-}
-
-STORAGE_ENGINES：
-
-"Innodb"：
-
-"LSN"：15688833970，
-
-"LSN_checkpoint"： 15688833970
-
+ REPLICATION: {
+ "channels": [
+ {
+ "channel_name": "relay",
+ "relay_log_file": "relay-bin-relay.000006",
+ "relay_log_position": 66383736
+ },
+ {
+ "channel_name": "source2",
+ "relay_log_file": "relay-bin-source2.000009",
+ "relay_log_position": 447
  }
-
+ ]
 }
-
+STORAGE_ENGINES: {
+ "InnoDB": {
+ "LSN": 15688833970,
+ "LSN_checkpoint": 15688833970
+ }
+}
 1 row in set (0.0005 sec)
+```
+
+
 
 LOCAL包括有关已执行的全局事务标识符以及二进制日志文件和在此实例上的位置的信息。复制显示与复制过程相关的日志数据，每个通道有一个对象。列包含有关 InnoDB 日志序列号的信息。
 
@@ -400,15 +281,15 @@ MySQL 中用于复制的网络的主要调优选项是使用的接口以及是�
 
 定义如何连接到复制源时，可以使用选项指定要用于连接的接口。例如，如果要使用副本上具有 IP 地址 192.0.2.102 的接口从源复制，则可以使用：
 
-将主MASTER_BIND='192.0.2.102'，
+```
+CHANGE MASTER TO MASTER_BIND='192.0.2.102',
+ MASTER_HOST='192.0.2.101',
+ MASTER_PORT=3306,
+ MASTER_AUTO_POSITION=1,
+ MASTER_SSL=1;
+```
 
-MASTER_HOST='192.0.2.101'，
 
-MASTER_PORT3306，
-
-MASTER_AUTO_POSITION=1，
-
-MASTER_SSL=1;
 
 根据需要替换地址和其他信息。
 
@@ -420,9 +301,12 @@ MASTER_SSL=1;
 
 如果包括算法，则可以使用选项指定压缩级别。支持级别为 1~22（两者包括），默认值为 3。将复制连接配置为使用压缩级别为 5 的或算法的示例是
 
-将主MASTER_COMPRESSION_ALGORITHMS\'zlib，zstd'，
+```
+CHANGE MASTER TO MASTER_COMPRESSION_ALGORITHMS='zlib,zstd',
+ MASTER_ZSTD_COMPRESSION_LEVEL=5;
+```
 
-MASTER_ZSTD_COMPRESSION_LEVEL=5;
+
 
 在 MySQL 8.0.18 之前，您可以指定是否将一起使用。如果源和副本支持算法，则将选项设置为 会使复制连接使用 zlib 压缩。
 
@@ -513,19 +397,23 @@ InnoDBinnodb_flush_log_at_trx_commit，以确定每次事务提交时是否刷�
 
 指定其中一个选项时，可以选择使用规则应应用于和冒号的通道名称为架构/表添加前缀。例如，忽略源 的世界架构更新
 
+```
 [mysqld]
+replicate-do-db = source2:world
+```
 
-复制 - 做 db = 源 2： 世界
+
 
 这些选项只能在 MySQL 配置文件，并且需要重新启动 MySQL 才能生效。您可以多次指定每个选项以添加多个规则。如果需要动态更改配置，可以使用"更改复制筛选器"筛选器，例如：
 
-mysql> 更改复制过滤器
+```
+mysql> CHANGE REPLICATION FILTER
+ REPLICATE_IGNORE_DB = (world)
+ FOR CHANNEL 'source2';
+Query OK, 0 rows affected (0.0003 sec)
+```
 
-REPLICATE_IGNORE_DB = （世界）
 
-对于通道"源2";
-
-查询确定，0 行受到影响（0.0003 秒）
 
 需要使用世界各地的，因为如果需要包含多个数据库，可以指定列表。如果多次指定同一规则，则应用后者，而忽略前者。
 
