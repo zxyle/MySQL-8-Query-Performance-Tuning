@@ -53,3 +53,7 @@
 - [美国亚马逊购买链接](https://www.amazon.com/-/zh/MySQL-Query-Performance-Tuning-Systematic/dp/1484255836)
 - [源代码下载](https://github.com/Apress/mysql-8-query-perf-tuning)
 
+
+## gitbook支持
+[GitBook](https://www.gitbook.com/) 是一个基于`Node.js`的命令行工具，支持 Markdown 和 AsciiDoc 两种语法格式，可以输出 HTML、PDF、epub 等格式的电子书.
+如有必要, 请参考[这篇教程](https://tonydeng.github.io/gitbook-zh/gitbook-howtouse/index.html).
