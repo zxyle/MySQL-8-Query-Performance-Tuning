@@ -35,6 +35,7 @@
 - [第16章-直方图](./第4部分-模式注意事项和查询优化器/Chapter16.md)
 - [第17章-查询优化器](./第4部分-模式注意事项和查询优化器/Chapter17.md)
 - [第18章-锁原理与监控](./第4部分-模式注意事项和查询优化器/Chapter18.md)
+
 ### 第5部分 查询分析
 - [第19章-查找候选查询以进行优化](./第5部分-查询分析/Chapter19.md)
 - [第20章-分析查询](./第5部分-查询分析/Chapter20.md)
@@ -49,7 +50,6 @@
 - [第27章-缓存](./第6部分-改善查询/Chapter27.md)
 
 ## 资源
-
 - [美国亚马逊购买链接](https://www.amazon.com/-/zh/MySQL-Query-Performance-Tuning-Systematic/dp/1484255836)
 - [源代码下载](https://github.com/Apress/mysql-8-query-perf-tuning)
 
