@@ -1,0 +1,14 @@
+{
+  "title": "MySQL8查询性能调优",
+  "description": "一种提高执行速度的系统方法",
+  "language": "zh-hans",
+  "plugins": [
+    "github",
+    "back-to-top-button"
+  ],
+  "pluginsConfig": {
+    "github": {
+      "url": "https://github.com/zxyle"
+    }
+  }
+}
