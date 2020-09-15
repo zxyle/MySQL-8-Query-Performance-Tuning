@@ -42,14 +42,14 @@
 
 最常用的标准基准由 TPC （www.tpc.org/） 定义，新的基准被设计为硬件和软件更改，使得老基准太简单。TPC网站包括基准的详细描述和规格。表3-1总结了当前的企业TPC基准。
 
-| Name    | Type | Description |
-| ------- | ---- | ----------- |
-| TPC-C   |      |             |
-| TPC-DI  |      |             |
-| TPC-DS  |      |             |
-| TPC-DS  |      |             |
-| TPC-H   |      |             |
-| TPC-VMS |      |             |
+| Name    | Type             | Description                                                  |
+| ------- | ---------------- | ------------------------------------------------------------ |
+| TPC-C   | OLTP             | 这也许是TPC基准中最经典的基准，其历史可以追溯到1992年。它模拟了批发供应商的查询，并使用了9个表格。 |
+| TPC-DI  | Data Integration | 测试提取，转换和加载（ETL）工作负载                          |
+| TPC-DS  | Decision Support | 该基准测试包括对数据仓库（星型架构）的复杂查询。             |
+| TPC-DS  | OLTP             | 这意味着可以使用更复杂的架构和查询来代替TPC-C，因此对于现代数据库而言更现实。 它包括33个表。 |
+| TPC-H   | Decision Support | 这是另一个经典基准测试，通常用于测试优化器功能。 它由22个复杂的查询组成，旨在模拟OLTP数据库的报告方。 |
+| TPC-VMS | Virtualization   | 这使用TPC-C，TPC-DS，TPS-E和TPC-H基准来确定虚拟数据库的性能指标。 |
 
 这些标准基准的优点是，您更有可能找到实现它们工具，并且可以与其他人员获得的结果进行比较。
 
@@ -67,9 +67,16 @@
 
 表3-2总结了一些最常用的基准测试工具来测试MySQL的性能。
 
-补充表3-2
-
-
+| Benchmark           | Description                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| Sysbench            | 这是最常用的基准，本章将主要介绍该基准。 它具有针对OLTP工作负载的内置测试，非数据库测试（例如纯I / O，CPU和内存测试）等。 此外，最新版本支持自定义工作负载。 它是开源的，主要在Linux上使用。 可以从https://github.com/akopytov/sysbench下载。 |
+| DBT2                | DBT2可用于使用订单系统（TPC-C）模拟OLTP工作负载。 DBT2也可用于自动化Sysbench，可从https：//dev.mysql获得。 com / downloads / benchmarks.html。 |
+| DBT3                | DBT3实现TPC-H基准，并用于测试复杂查询的性能。 它是MySQL优化器开发人员在实施新的优化器功能后用来验证性能的最喜欢的测试之一。 可从https://sourceforge.net/projects/osdldbt/获得DBT3的副本。 |
+| HammerDB            | HammerDB工具是一个免费的跨数据库工具，同时支持Microsoft Windows和Linux。 它支持TPC-C和TPC-H基准，可从https://hammerdb.com/获得。 |
+| Database Factory    | Database Factory是用于Microsoft Windows的强大基准测试工具，它支持多个数据库和基准。 它支持TPC-H，TPC-C，TPC-D和TPC-E基准测试等等。 它是一种商业产品（可免费试用）：www.quest。 com / products / benchmark-factory /。 |
+| iiBench             | iiBench正在测试将数据插入数据库的速度，因此如果您经常需要摄取大量数据，则iiBench很有用。 可以从https://github.com/tmcallaghan/iibench-mysql下载。 |
+| DVD Store Version 3 | DVD商店将样本DVD商店的数据与基准进行合并。 它可以生成任何给定大小的数据，标准大小为10 MB，1 GB和100 GB。 它也可用作常规测试数据，可以从https：// github下载。 com / dvdstore / ds3。 它基于较旧的Dell DVD Store数据库测试套件。 |
+| mysqlslap           | mysqlslap工具是特殊的，因为它随MySQL安装一起提供。 它可以用于针对您选择的表生成并发工作负载。 这是一个非常简单的工具，因此不能用于太多目的，但易于使用。 可以在https://dev.mysql.com/doc/refman/en/mysqlslap.html上找到mysqlslap的手册页。 |
 
 MySQL最常用的工具是Sysbench，本章其余部分介绍其安装和示例用法。
 
@@ -81,7 +88,7 @@ MySQL最常用的工具是Sysbench，本章其余部分介绍其安装和示例�
 
 ------
 
-**提示 有关所有安装说明的详细信息，包括必需的独立性和使用本机包，请参阅https://github.com/akopytov/sysbench。在系统座 1.0 中，对微软 Windows 的支持已放弃。目前尚不得而知是否将重新引入支持。如果您使用的是 Microsoft Windows，建议通过 Linux （WSL） （https://msdn.microsoft.com/en-us/commandline/wsl/about） 的 Windows 子系统安装 Sysbench，在这种情况下，本章中的说明应稍作修改（具体取决于您选择的 Linux 发行版）。Analtern 是使用虚拟机，例如，在 VirtualBox 中。**
+**提示** 有关所有安装说明的详细信息，包括必需的独立性和使用本机包，请参阅https://github.com/akopytov/sysbench。在系统座 1.0 中，对微软 Windows 的支持已放弃。目前尚不得而知是否将重新引入支持。如果您使用的是 Microsoft Windows，建议通过 Linux （WSL） （https://msdn.microsoft.com/en-us/commandline/wsl/about） 的 Windows 子系统安装 Sysbench，在这种情况下，本章中的说明应稍作修改（具体取决于您选择的 Linux 发行版）。Analtern 是使用虚拟机，例如，在 VirtualBox 中。
 
 ------
 
@@ -97,20 +104,217 @@ shell$ sudo yum install make automake libtool \
 
 您还需要安装 MySQL 8 开发库。在 Linux 上这样做的最简单方法是从计算机安装用于 Linux 分发的 MySQL https://dev.mysql.com/downloads/。清单 3-1 显示了在 Oracle Linux 7 上安装 MySQL 8 开发库的示例。
 
-补充26 27页内容
+```
+Listing 3-1. Installing the MySQL 8 development libraries
+shell$ wget https://dev.mysql.com/get/mysql80-community-release-el7-3.
+noarch.rpm
+...
+Saving to: 'mysql80-community-release-el7-3.noarch.rpm'
+100%[=================>] 26,024 --.-K/s in 0.006s
+2019-10-12 14:21:18 (4.37 MB/s) - 'mysql80-community-release-el7-3.noarch.
+rpm' saved [26024/26024]
+shell$ sudo yum install mysql80-community-release-el7-3.noarch.rpm
+Loaded plugins: langpacks, ulninfo
+Examining mysql80-community-release-el7-3.noarch.rpm: mysql80-communityrelease-el7-3.noarch
+Marking mysql80-community-release-el7-3.noarch.rpm to be installed
+Resolving Dependencies
+--> Running transaction check
+---> Package mysql80-community-release.noarch 0:el7-3 will be installed
+--> Finished Dependency Resolution
+Dependencies Resolved
+===========================================================
+ Package
+ Arch Version
+ Repository Size
+===========================================================
+Installing:
+ mysql80-community-release
+ noarch el7-3
+ /mysql80-community-release-el7-3.noarch 31 k
+Transaction Summary
+===========================================================
+Install 1 Package
+Total size: 31 k
+Installed size: 31 k
+Is this ok [y/d/N]: y
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+ Installing : mysql80-community-release-el7-3.noarc 1/1
+ Verifying : mysql80-community-release-el7-3.noarc 1/1
+Installed:
+ mysql80-community-release.noarch 0:el7-3
+Complete!
+shell$ sudo yum install mysql-devel
+...
+Dependencies Resolved
+===========================================================
+ Package Arch Version Repository Size
+===========================================================
+Installing:
+ mysql-community-client
+ x86_64 8.0.17-1.el7 mysql80-community 32 M
+ replacing mariadb.x86_64 1:5.5.64-1.el7
+ mysql-community-devel
+ x86_64 8.0.17-1.el7 mysql80-community 5.5 M
+ mysql-community-libs
+ x86_64 8.0.17-1.el7 mysql80-community 3.0 M
+ replacing mariadb-libs.x86_64 1:5.5.64-1.el7
+ mysql-community-libs-compat
+ x86_64 8.0.17-1.el7 mysql80-community 2.1 M
+ replacing mariadb-libs.x86_64 1:5.5.64-1.el7
+ mysql-community-server
+ x86_64 8.0.17-1.el7 mysql80-community 415 M
+ replacing mariadb-server.x86_64 1:5.5.64-1.el7
+Installing for dependencies:
+ mysql-community-common
+ x86_64 8.0.17-1.el7 mysql80-community 589 k
+Transaction Summary
+===========================================================
+Install 5 Packages (+1 Dependent package)
+Total download size: 459 M
+...
+Complete!
+```
 
+输出取决于您已经安装的内容。 注意，如何将其他几个MySQL软件包（包括mysql-community-server）作为依赖项引入。 这是因为在这种情况下，mysql-community-devel软件包替换了另一个已存在的软件包，该软件包触发了一系列依赖关系更新。
 
-输出取决于您已经安装过什么。请注意，其他几个 MySQL 包（包括 mysql-社区服务器）是如何作为依赖项拉进的。这是因为在这种情况下，mysql-社区-devel包取代了另一个预先存在的包，该包触发了依赖项更新链。
+------
 
-注意：如果安装了旧版本的 MySQL 或分叉，则将升级所有相关包。因此，最好在主机上编译 Sysbench，您可以在其中自由替换包或已安装正确的 MySQL 8 开发库。
+**注意**：如果安装了旧版本的 MySQL 或分叉，则将升级所有相关包。因此，最好在主机上编译 Sysbench，您可以在其中自由替换包或已安装正确的 MySQL 8 开发库。
+
+------
 
 您现在已准备好考虑 Sysbench 本身。您可以选择克隆GitHub存储库或下载源作为ZIP文件。要克隆存储库，您需要安装 git，然后使用 git 克隆命令：
 
+```
+shell$ git clone https://github.com/akopytov/sysbench.git
+Cloning into 'sysbench'...
+remote: Enumerating objects: 14, done.
+remote: Counting objects: 100% (14/14), done.
+remote: Compressing objects: 100% (12/12), done.
+remote: Total 9740 (delta 4), reused 5 (delta 2), pack-reused 9726
+Receiving objects: 100% (9740/9740), 4.12 MiB | 2.12 MiB/s, done.
+Resolving deltas: 100% (6958/6958), done.
+```
+
+带有源代码的ZIP文件可以从GitHub存储库下载，例如，使用wget：
+
+```
+shell$ wget https://github.com/akopytov/sysbench/archive/master.zip
+...
+Connecting to codeload.github.com (codeload.github.
+com)|52.63.100.255|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [application/zip]
+Saving to: 'master.zip'
+ [ <=> ] 2,282,636 3.48MB/s in 0.6s
+2019-10-12 16:01:33 (3.48 MB/s) - 'master.zip' saved [2282636]
+```
+
+或者，您可以使用浏览器下载ZIP文件，如图3-1所示。
+
+![](../附图/Figure 3-1.png)
+
+单击下载ZIP，文件将下载。 下载源代码后，将其解压缩。
+
+现在您可以配置编译了。 输入带有源代码的顶级目录。 目录清单应类似于以下输出：
+
+```
+shell$ ls
+autogen.sh COPYING Makefile.am rpm tests
+ChangeLog debian missing scripts third_party
+config install-sh mkinstalldirs snap
+configure.ac m4 README.md src
+```
+
+使用autogen.sh脚本和配置命令完成配置，如清单3-2所示。
+
+```
+Listing 3-2. Configuring Sysbench for compilation and installation
+shell$ ./autogen.sh
+autoreconf: Entering directory `.'
+...
+parallel-tests: installing 'config/test-driver'
+autoreconf: Leaving directory `.'
+shell$ ./configure
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-unknown-linux-gnu
+...
+===========================================================================
+sysbench version : 1.1.0-74f3b6b
+CC : gcc -std=gnu99
+CFLAGS : -O3 -funroll-loops -ggdb3 -march=core2 -Wall -Wextra
+-Wpointer-arith -Wbad-function-cast -Wstrictprototypes -Wnested-externs -Wno-format-zero-length
+-Wundef -Wstrict-prototypes -Wmissing-prototypes
+-Wmissing-declarations -Wredundant-decls -Wcast-align
+-Wvla -pthread
+CPPFLAGS : -D_GNU_SOURCE -I$(top_srcdir)/src -I$(abs_top_
+builddir)/third_party/luajit/inc -I$(abs_top_
+builddir)/third_party/concurrency_kit/include
+LDFLAGS : -L/usr/local/lib
+LIBS : -laio -lm
+prefix : /usr/local
+bindir : ${prefix}/bin
+libexecdir : ${prefix}/libexec
+mandir : ${prefix}/share/man
+datadir : ${prefix}/share
+MySQL support : yes
+PostgreSQL support : no
+LuaJIT : bundled
+LUAJIT_CFLAGS : -I$(abs_top_builddir)/third_party/luajit/inc
+LUAJIT_LIBS : $(abs_top_builddir)/third_party/luajit/lib/libluajit5.1.a -ldl
+LUAJIT_LDFLAGS : -rdynamic
+Concurrency Kit : bundled
+CK_CFLAGS : -I$(abs_top_builddir)/third_party/concurrency_kit/
+include
+CK_LIBS : $(abs_top_builddir)/third_party/concurrency_kit/lib/
+libck.a
+configure flags :
+===========================================================================
+```
+
+配置的结尾显示了将用于编译的选项。 确保MySQL支持说是。 默认为安装在/usr /local中。 您可以在执行configure时使用--prefix选项更改它，例如，./configure --prefix=/home/myuser/sysbench。
+
+下一步是编译使用make命令完成的代码：
+
+```
+shell$ make -j
+Making all in third_party/luajit
+...
+make[1]: Nothing to be done for `all-am'.
+make[1]: Leaving directory `/home/myuser/git/sysbench'
+```
+
+-j选项告诉make并行编译源代码，这可以减少编译时间。 但是，Sysbench在所有情况下都可以快速编译，因此在这种情况下它并不是很重要。
+
+最后一步是安装Sysbench的编译版本：
+
+```
+shell$ sudo make install
+Making install in third_party/luajit
+...
+make[2]: Leaving directory `/home/myuser/git/sysbench'
+make[1]: Leaving directory `/home/myuser/git/sysbench'
+```
+
+这就对了。 现在您可以使用Sysbench执行基准测试了
+
+
+
 ## 执行基准
 
-Sysbench 包括几个可供使用的基准。这范围从非数据库内置测试到各种数据库测试。非数据库测试被视为内置测试，因为它们在 Sysbench 源代码本身中定义。其他测试在 Lua 脚本中定义，并安装在目录中（假设您已安装到默认位置）。
+Sysbench包括几个可供使用的基准。 范围从非数据库内置测试到各种数据库测试。 由于非数据库测试是在Sysbench源代码本身中定义的，因此被认为是内置的。 其他测试在Lua脚本中定义，并安装在/usr/local/share/sysbench/目录中（假定您安装在默认位置）。
 
-您可以通过使用参数调用来获取一般帮助来理解参数：
+------
+
+**注意** 本节和下一节假定您有一个MySQL实例可用于在与安装Sysbench相同的主机上进行测试。 如果不是这种情况，则需要根据需要调整主机名。
+
+------
+
+您可以通过使用--help参数调用sysbench来获得了解Sysbench参数的一般帮助：
 
 ```
 shell$ sysbench –help
@@ -137,8 +341,6 @@ oltp_point_select.lua select_random_ranges.lua
 oltp_read_only.lua tests
 oltp_read_write.lua
 ```
-
-
 
 除了 ）之外，具有 .lua 扩展名的文件是可用的测试。Lua 语言是一种轻量级编程语言，通常用于将代码嵌入到程序中。使用 Lua 程序类似于使用脚本语言（如 Python），但代码是通过另一个程序执行的（本例中为 Sysbench）。
 
@@ -214,8 +416,6 @@ mysql> CREATE SCHEMA sbtest;
 Query OK, 1 row affected (0.01 sec)
 ```
 
-
-
 在这种情况下，用户应从本地主机。通常情况并非如此，因此您需要更改帐户的主机名部分，以反映 Sysbench 用户的连接来源。用户名被选为因为这是 Sysbench 使用的默认值。架构也是创建时创建的，因为 Sysbench 测试要求它在第一次连接时。
 
 如果要执行一个基准测试，该基准值使用四个表，每个表包含 20000您可以像清单中所示那样准备该测试。
@@ -249,8 +449,6 @@ Creating a secondary index on 'sbtest4'...
 Creating a secondary index on 'sbtest1'...
 ```
 
-
-
 这将使用四个线程将创建为 在这种情况下，准备步骤将很快，因为表很小;但是，如果使用大型表执行基准测试，则设置测试可能需要大量时间。由于基准测试通常涉及执行一系列测试，因此可以通过创建二进制备份（复制表（使用 MySQL 关闭或使用 MySQL 企业备份等工具）或文件系统快照来加快测试速度。对于每个后续测试，您可以还原备份，而不是重新创建表。
 
 可选地，您可以作为下一步经历预热如清单。
@@ -280,7 +478,7 @@ Preloading table sbtest4
 
 在这里，必须包括 ，否则将仅预加载表的默认行数 （10，000）。预加载包括平均 id 列个简单的 SELECT 查询，这些查询在子查询中获取的行（查询已重新格式化）：
 
-```
+```sql
 SELECT AVG(id)
  FROM (SELECT *
  FROM sbtest1 FORCE KEY (PRIMARY)
@@ -441,8 +639,6 @@ UPDATE 函数用于为插入的 ID 分配会话值，因此可以在 SELECT 语�
 - 支持指定表数、表大小以及是否使用显式事务。
 - 验证每个的行数在 1~99999 范围内。表列创建为并且键前缀为，因此最多只能有五位数字。
 
-。
-
 ![](../附图/Figure%203-2.png)
 
 "准备"、"运行"和"清理"组表示命令，"帮助程序"组包含将从多个命令中使用的两个帮助程序函数。运行是特殊的，因为它们始终存在。根据脚本添加的选项自动生成帮助，因此无需特别考虑。还有一些代码是外部函数，其中第一个代码是理智检查和脚本将支持的选项。
@@ -584,8 +780,6 @@ UPDATE %s
  cnx:query("SELECT LAST_INSERT_ID()")
 end
 ```
-
-
 
 函数基于整数生成表名函数同样基于整数 id 生成键值。表名和键值用于脚本中的其他几个位置，因此通过将逻辑拆分为帮助函数，可以确保在整个脚本中以相同方式生成它们。
 
