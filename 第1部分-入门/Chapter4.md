@@ -42,15 +42,11 @@
 MySQL [localhost ssl] SQL> \source world.sql
 ```
 
-
-
 如果使用旧版命令行客户端，请改为命令：
 
 ```
 mysql> SOURCE world.sql
 ```
-
-
 
 在这两种情况下，如果位于启动 MySQL Shell 或 mysql 的目录中，请将其添加到。
 
@@ -77,8 +73,6 @@ MySQL 8 增加了对 MySQL 文档存储的支持，该存储存储和支持作�
 ```
 MySQL [localhost+ ssl] SQL> \source world_x.sql
 ```
-
-
 
 如果路径不位于world_x，请将路径添加到文件。
 
@@ -147,8 +141,6 @@ MySQL [localhost+ ssl] SQL> \source sakila-schema.sql
 MySQL [localhost+ ssl] SQL> \source sakila-data.sql
 ```
 
-
-
 如果文件不位于当前目录中，请向它们添加路径。
 
 到目前为止，这三个数据集的常见是它们包含的数据很少。虽然这在许多情况下是一个不错的功能，因为它更容易使用，在某些情况下，你需要更多的数据来探索查询计划的差异。员工是包含更多数据的选项。
@@ -189,8 +181,6 @@ PARTITION BY RANGE COLUMNS(from_date)
  PARTITION p19 VALUES LESS THAN (MAXVALUE) ENGINE = InnoDB)
 ```
 
-
-
 表显示了表的行数和请注意，加载数据时大小可能会略有不同）。大小假定您加载非分区数据;分区表稍大一些。
 
 | 表           |    # 行 | 表空间大小 |
@@ -230,8 +220,6 @@ Figure 4-11. The views and routines in the employees database
 Query OK, 0 rows affected (0.02 sec)
 ```
 
-
-
 ### 安装
 
 您可以下载一个ZIP文件，包含安装，也可以在安装时克隆在编写本文时，只有一个名为 master 的。如果您已经下载了 ZIP 文件，它将解压缩到名为"test_db。
@@ -244,8 +232,6 @@ Query OK, 0 rows affected (0.02 sec)
 mysql> SOURCE employees.sql
 ```
 
-
-
 导入需要一点时间，通过显示它所用的时间完成：
 
 ```
@@ -257,15 +243,11 @@ mysql> SOURCE employees.sql
 1 row in set (0.44 sec)
 ```
 
-
-
 或者，您可以通过源对象.sql 文件来加载一些额外的视图程：
 
 ```
 mysql> SOURCE objects.sql
 ```
-
-
 
 除了此处讨论的之外，还有其他一些选择来获取要使用的示例数据。
 

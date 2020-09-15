@@ -555,11 +555,11 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 希望讨论输出格式可以让您了解 EXPLAIN 可以哪些信息。然而，要充分理解它并利用它，有必要更深入地了解信息的含义。
 
-## 解释输出
+## EXPLAIN输出
 
 解释输出中有很多可用的信息，因此值得深入研究此信息的含义。本节首先概述传统和 JSON 格式输出中包含的字段;然后，选择类型和访问类型和额外的信息将更详细地介绍。
 
-### 解释字段
+### EXPLAIN字段
 
 在您的工作中建设性地使用语句来改进查询的第一步是了解哪些信息可用。信息范围从用于查询部件的 ID 到有关可用于查询的索引的详细信息，以及与使用哪些 ID 和应用哪些优化器功能相比。
 
@@ -567,24 +567,24 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 | 传统          | Json                   | 描述                                                         |
 | :------------ | :--------------------- | :----------------------------------------------------------- |
-| Id            | select_id              | 显示表或子查询的查询的哪一部分的数字标识符。顶级表有 id 第一个子查询有等等。对于联合，ID 将为表值设置为另表列），用于表示联合结果聚合的行。 |
+| id            | select_id              | 显示表或子查询的查询的哪一部分的数字标识符。顶级表有 id 第一个子查询有等等。对于联合，ID 将为表值设置为另表列），用于表示联合结果聚合的行。 |
 | select_type   |                        | 这显示了表如何包含在整体语句中。在"选择类型"部分的稍后部分将讨论已知的选择类型。对于 JSON 格式，选择类型由 JSON 文档的结构以及从属和可缓存。 |
 |               | 依赖                   | 它是否是依赖子查询，也就是说，它取决于查询的外部部分。       |
 |               | 缓存                   | 子查询的结果是否可以缓存，或者必须为外部查询中的每一行重新评估子查询的结果。 |
-| 表            | table_name             | 表或子查询的名称。如果已指定别名，则使用的是别名。这可确保每个表名对于 id 列的给定值都的。特殊情况包括联合、派生表和具体化子查询，其中表名为，其中 N 和 M 分别引用查询计划前面部分的 |
-| 分区          | 分区                   | 将为查询包含的分区。您可以使用它来确定分区修剪是否按预期应用。 |
-| 类型          | access_type            | 如何访问数据。这显示了优化器如何决定限制表中检查的行数。这些类型将在"访问类型"部分中讨论。 |
+| table         | table_name             | 表或子查询的名称。如果已指定别名，则使用的是别名。这可确保每个表名对于 id 列的给定值都的。特殊情况包括联合、派生表和具体化子查询，其中表名为，其中 N 和 M 分别引用查询计划前面部分的 |
+| partitions    | partitions             | 将为查询包含的分区。您可以使用它来确定分区修剪是否按预期应用。 |
+| type          | access_type            | 如何访问数据。这显示了优化器如何决定限制表中检查的行数。这些类型将在"访问类型"部分中讨论。 |
 | possible_keys | possible_keys          | 要用于表的候选索引的列表。使用架构的键名称表示自动生成的索引可用。 |
-| 关键          | 关键                   | 为表选择的索引。使用架构键名称意味着使用自动生成的索引。     |
+| key           | key                    | 为表选择的索引。使用架构键名称意味着使用自动生成的索引。     |
 | key_len       | key_length             | 索引使用的字节数。对于由多个列组成的索引，优化器可能只能使用列的子集。在这种情况下，可以使用密钥长度来确定索引的多少对于此查询有用。如果索引中的列支持值，则与 NOT NULL 列的情况相比，将 1中。 |
 |               | used_key_parts         | 使用的索引中的列。                                           |
-| 裁判          | 裁判                   | 对执行筛选时执行的操作。例如，对于"等条件，这可以是常量。    |
-| 行            | rows_examined_per_scan | 包含表的结果的行数的估计值。对于联接到较早表的表，它是估计每个联接找到的行数。特殊情况是当引用是表上的主要键或唯一键时，在这种情况下，行估计值正好是 1。 |
-|               | rows_produced_per_join | 联接产生的估计行数。实际上，预期循环数与的行的百分比相乘。   |
+| ref           | ref                    | 对执行筛选时执行的操作。例如，对于"等条件，这可以是常量。    |
+| rows          | rows_examined_per_scan | 包含表的结果的行数的估计值。对于联接到较早表的表，它是估计每个联接找到的行数。特殊情况是当引用是表上的主要键或唯一键时，在这种情况下，行估计值正好是 1。 |
+| filtered      | rows_produced_per_join | 联接产生的估计行数。实际上，预期循环数与的行的百分比相乘。   |
 | 过滤          | 过滤                   | 这是将包含多少个已检查行的估计值。该值以百分比表示，因此对于值 100.00，将返回所有检查的行。值 100.00 是最佳值，最差值为。注意：传统格式的值的舍入取决于您使用的客户端。例如，MySQL 命令程序将返回命令行客户端返回。 |
 |               | cost_info              | 具有查询部件成本细分的 JSON 对象。                           |
-| 额外          |                        | 有关优化器决策的其他信息。这可能包括有关使用的排序算法、是否使用覆盖索引等的信息。支持的最常见值将在"额外信息"部分中讨论。 |
-|               | 消息                   | 对于 JSON中没有专用字段的传统输出的"额外"列中的信息。一个例子是。 |
+| Extra         |                        | 有关优化器决策的其他信息。这可能包括有关使用的排序算法、是否使用覆盖索引等的信息。支持的最常见值将在"额外信息"部分中讨论。 |
+|               | message                | 对于 JSON中没有专用字段的传统输出的"额外"列中的信息。一个例子是。 |
 |               | using_filesort         | 是否使用文件排序。                                           |
 |               | using_index            | 是否使用覆盖索引。                                           |
 |               | using_temporary_table  | 操作（如子查询或排序）是否需要内部临时表。                   |
@@ -616,24 +616,24 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 有几种选择类型。对于大多数，JSON 输出中没有直接字段;但是，可以从结构和某些其他字段派生选择类型。表显示了当前存在的选择类型，提示如何从 JSON 输出派生类型。在表中，"选择类型的值是用于传统输出列的值。
 
-| 选择类型         | Json                       | 描述                                                       |
-| :--------------- | :------------------------- | :--------------------------------------------------------- |
-| 简单             |                            | 对于不使用派生表、子查询、联合或类似方法的查询。           |
-| 主要             |                            | 对于使用子查询或联合的查询，主要部分是最外层的部分。       |
-| 插入             |                            | 对于语句。                                                 |
-| 删除             |                            | 用于语句。                                                 |
-| 更新             |                            | 对于语句。                                                 |
-| 取代             |                            | 用于语句。                                                 |
-| 联盟             |                            | 对于联合语句，第二个或以后语句。                           |
-| 依赖联合         | 依赖=真实                  | 对于联合语句，第二个或更晚的语句依赖于外部查询。           |
-| 联合结果         | union_result               | 聚合联合语句的结果的查询部分。                             |
-| 子奎里           |                            | 用于列表中的 SELECT 语句。                                 |
-| 依赖子查询       | 依赖=真实                  | 对于从属子挤压，第一个语句。                               |
-| 派生             |                            | 派生表 - 通过查询创建的表，但其行为类似于普通表。          |
-| 依赖派生         | 依赖=真实                  | 依赖于另一个表的派生表。                                   |
-| 物化             | materialized_from_subquery | 物化子查询。                                               |
-| 不可缓存的子查询 | 可缓存=假                  | 必须为外部查询中的每一行计算结果的子查询。                 |
-| 不可缓存的联盟   | 可缓存=假                  | 对于联合语句，第二个或更晚的语句是不可缓存子查询的一部分。 |
+| 选择类型             | Json                       | 描述                                                       |
+| :------------------- | :------------------------- | :--------------------------------------------------------- |
+| SIMPLE               |                            | 对于不使用派生表、子查询、联合或类似方法的查询。           |
+| PRIMARY              |                            | 对于使用子查询或联合的查询，主要部分是最外层的部分。       |
+| INSERT               |                            | 对于语句。                                                 |
+| DELETE               |                            | 用于语句。                                                 |
+| UPDATE               |                            | 对于语句。                                                 |
+| REPLACE              |                            | 用于语句。                                                 |
+| UNION                |                            | 对于联合语句，第二个或以后语句。                           |
+| DEPENDENT UNION      | 依赖=真实                  | 对于联合语句，第二个或更晚的语句依赖于外部查询。           |
+| UNION RESULT         | union_result               | 聚合联合语句的结果的查询部分。                             |
+| SUBQUERY             |                            | 用于列表中的 SELECT 语句。                                 |
+| DEPENDENT SUBQUERY   | 依赖=真实                  | 对于从属子挤压，第一个语句。                               |
+| DERIVED              |                            | 派生表 - 通过查询创建的表，但其行为类似于普通表。          |
+| DEPENDENT DERIVED    | 依赖=真实                  | 依赖于另一个表的派生表。                                   |
+| MATERIALIZED         | materialized_from_subquery | 物化子查询。                                               |
+| UNCACHEABLE SUBQUERY | 可缓存=假                  | 必须为外部查询中的每一行计算结果的子查询。                 |
+| UNCACHEABLE UNION    | 可缓存=假                  | 对于联合语句，第二个或更晚的语句是不可缓存子查询的一部分。 |
 
 某些选择可以视为信息，以便更轻松地了解您正在查看的查询的哪个部分。例如，这包括。但是，某些选择类型指示它是查询的昂贵部分。这尤其适用于不可缓存的类型。依赖类型还意味着优化器在确定执行计划中添加表的哪个部分时的灵活性较低。如果查询速度较慢，并且看到无法缓存或从属部分，则值得研究是否可以重写这些部分或将查询拆分为两个部分。
 
@@ -655,9 +655,12 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 使用系统访问类型的示例是
 
-选择 *
+```sql
+SELECT *
+ FROM (SELECT 1) my_table
+```
 
-从 （选择 1） my_table
+
 
 访问类型是。
 
@@ -671,11 +674,13 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 使用访问类型的查询示例是
 
-选择 *
+```sql
+SELECT *
+ FROM world.city
+ WHERE ID = 130;
+```
 
-来自世界. city
 
-其中 ID = 130;
 
 #### eq_ref
 
@@ -687,17 +692,18 @@ country.`Code`) (cost=100125.16 rows=4314)
 
 使用访问类型eq_ref示例是
 
-选择 *
+```sql
+SELECT *
+ FROM world.city
+ STRAIGHT_JOIN world.country
+ ON CountryCode = Code;
+```
 
-来自世界. city
 
-STRAIGHT_JOIN世界. 国家
-
-关于国家代码 = 代码;
 
 访问是 ref 访问类型的专用，每个查找只能返回一行。
 
-#### 裁判
+#### ref
 
 由非统一辅助索引筛选。可视化解释成本、消息和颜色如下所示：
 
@@ -707,11 +713,13 @@ STRAIGHT_JOIN世界. 国家
 
 使用 ref 访问类型的示例是
 
-选择 *
+```sql
+SELECT *
+ FROM world.city
+ WHERE CountryCode = 'AUS';
+```
 
-来自世界. city
 
-国家代码 = "澳大利亚";
 
 #### ref_or_null
 
@@ -723,13 +731,14 @@ STRAIGHT_JOIN世界. 国家
 
 使用访问类型ref_or_null是
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.payment
+ WHERE rental_id = 1
+ OR rental_id IS NULL;
+```
 
-从 sakila. 付款
 
-在哪里rental_id # 1
-
-或rental_id为空;
 
 #### index_merge
 
@@ -741,13 +750,14 @@ STRAIGHT_JOIN世界. 国家
 
 使用访问类型
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.payment
+ WHERE rental_id = 1
+ OR customer_id = 5;
+```
 
-从 sakila. 付款
 
-在哪里rental_id # 1
-
-或customer_id = 5;
 
 虽然成本被列为中等成本，但最常见的严重性能问题之一是查询通常使用单个索引或执行完整表扫描，并且索引统计信息变得不准确，因此优化器选择索引合并。如果使用索引合并的性能不佳，请尝试告诉优化器忽略索引合并优化或使用的索引，并查看是否有帮助或分析表以更新索引统计信息。或者，查询可以重写为两个查询的联合，每个查询使用筛选器的一部分。这方面的一个示例将在第。
 
@@ -761,13 +771,14 @@ STRAIGHT_JOIN世界. 国家
 
 使用全文访问类型的为：
 
-选择 *
+```sql
+SELECT *
+ FROM sakila.film_text
+ WHERE MATCH(title, description)
+ AGAINST ('Circus' IN BOOLEAN MODE);
+```
 
-从 sakila.film_text
 
-匹配的地方（标题、描述）
-
-反对（布尔模式下的"循环"）;
 
 #### unique_subquery
 
@@ -779,21 +790,18 @@ STRAIGHT_JOIN世界. 国家
 
 使用访问类型unique_subquery示例是
 
-设置optimizer_switch = "实现=关闭，半连";
+```sql
+SET optimizer_switch = 'materialization=off,semijoin=off';
+SELECT *
+ FROM world.city
+ WHERE CountryCode IN (
+ SELECT Code
+ FROM world.country
+ WHERE Continent = 'Oceania');
+SET optimizer_switch = 'materialization=on,semijoin=on';
+```
 
-选择 *
 
-来自世界. city
-
-国家代码在 （
-
-选择代码
-
-来自世界. 国家
-
-大陆 = "大洋洲"）;
-
-设置optimizer_switch = "实现= 打开，半连";
 
 对于或唯一索引的情况访问方法是一种特殊情况。
 
@@ -807,23 +815,20 @@ STRAIGHT_JOIN世界. 国家
 
 使用访问类型index_subquery示例是
 
-设置optimizer_switch = "实现=关闭，半连";
+```sql
+SET optimizer_switch = 'materialization=off,semijoin=off';
+SELECT *
+ FROM world.country
+ WHERE Code IN (
+ SELECT CountryCode
+ FROM world.city
+ WHERE Name = 'Sydney');
+SET optimizer_switch = 'materialization=on,semijoin=on';
+```
 
-选择 *
 
-来自世界. 国家
 
-代码在 （
-
-选择国家/地区代码
-
-来自世界. city
-
-名称 = "悉尼"）;
-
-设置optimizer_switch = "实现= 打开，半连";
-
-#### 范围
+#### range
 
 当用于按顺序或组查找多个值时，使用范围访问类型。它既用于显式范围，如 ID 1 和，用于子句，也用于同一列上的多个条件由。可视化解释成本、消息和颜色如下所示：
 
@@ -833,17 +838,19 @@ STRAIGHT_JOIN世界. 国家
 
 使用范围访问类型的示例是
 
-选择 *
+```sql
+SELECT *
+ FROM world.city
+ WHERE ID IN (130, 3805);
+```
 
-来自世界. city
 
-其中ID在（130，3805）;
 
 使用范围访问的成本在很大程度上取决于范围中包含的行数。在一个极端情况下，范围扫描仅使用主键匹配一行，因此成本非常低。另一方面，范围扫描包括使用辅助索引的表的很大一部分，在这种情况下，执行完整表扫描可能更便宜。
 
 访问类型与索引访问相关，区别在于是否需要部分扫描或完全扫描。
 
-#### 指数
+#### index
 
 优化器已选择执行完整的索引扫描。这可以通过使用覆盖索引的组合进行选择。可视化解释成本、消息和颜色如下所示：
 
@@ -853,13 +860,16 @@ STRAIGHT_JOIN世界. 国家
 
 使用索引访问类型的示例是
 
-选择 ID，国家/地区代码
+```sql
+SELECT ID, CountryCode
+ FROM world.city;
+```
 
-来自世界.城市;
+
 
 由于索引扫描需要使用主键进行第二次查找，因此，除非索引是查询的覆盖索引，否则可能会非常昂贵，以至于执行完整表扫描的成本最终更低。
 
-#### 所有
+#### ALL
 
 最基本的访问类型是扫描的所有行。这也是最昂贵的访问类型，因此该类型是用所有大写编写的。可视化解释成本、消息和颜色如下所示：
 
@@ -869,9 +879,12 @@ STRAIGHT_JOIN世界. 国家
 
 使用访问类型的查询示例是
 
-选择 *
+```sql
+SELECT *
+ FROM world.city;
+```
 
-来自世界.城市;
+
 
 如果使用完整表扫描看到第一个表以外的表，则通常是一个红色标志，指示表上缺少条件或没有可以使用的索引。是否为第一个表的合理访问类型取决于查询所需的表量;所需的表部分越大，完整的表扫描越合理。
 
@@ -905,7 +918,7 @@ STRAIGHT_JOIN世界. 国家
 
 结束关于解释语句输出含义结束。剩下的就是开始使用它来检查查询计划。
 
-## 解释示例
+## EXPLAIN示例
 
 要完成对查询计划的讨论，值得通过几个例子来更好地了解如何将所有这些计划放在一起。此处的示例旨在作为导言。本书的其余部分，特别是第24章，将会发生。
 
@@ -913,7 +926,7 @@ STRAIGHT_JOIN世界. 国家
 
 作为第一个示例，考虑对数据库中的城市查询，该查询的条件在非索引列。由于没有可以使用的索引，因此需要完整的表扫描来评估查询。匹配这些要求的查询示例是
 
-```
+```sql
 SELECT *
  FROM world.city
  WHERE Name = 'London';
@@ -1064,11 +1077,11 @@ possible_keys: CountryCode
 
 key_len不包括索引的主要关键部分，即使它被使用。然而，查看多列索引是很有用的。
 
-### 多列指数
+### 多列索引
 
 国家有一个主键，其中包括国家和列。假设您想要找到在一个国家/地区使用的所有语言;在这种情况下，你需要过滤国家代码索引仍可用于执行筛选，您可以使用查看索引的使用量。一个可用于查找中国所有语言的查询是
 
-```
+```sql
 SELECT *
  FROM world.countrylanguage
  WHERE CountryCode = 'CHN';
@@ -1310,7 +1323,7 @@ Listing 20-11. The optimizer trace for choosing the access type for the ci table
 
 到目前为止，除了解释分析之外整个讨论是关于在查询执行前阶段分析查询。如果要检查实际性能，选择是解释分析。另一个选项是使用性能架构。
 
-## 性能架构事件分析
+## Performance Schema事件分析
 
 性能架构允许您分析在检测的每个事件上花费的时间。您可以使用它来分析执行查询时花费的时间。本节将介绍如何使用性能架构分析存储过程，以查看该过程中哪个语句的用量最长，以及如何使用阶段事件分析单个查询。在本节末尾，将介绍如何使用过程创建线程完成的工作图，以及如何使用收集具有给定摘要的语句的统计信息。
 
@@ -1622,7 +1635,7 @@ mysql> SELECT EVENT_ID,
 
 这样分析查询的主要问题是，您要么受到默认情况下保存的每个线程的 10 个事件限制，要么在检查完之前，可能会从长历史记录表中清除事件。创建过程是为了帮助解决此问题。
 
-### 使用sys.ps_trace_thread() 程序进行分析
+### 使用sys.ps_trace_thread( ) 程序进行分析
 
 当您需要分析执行多个的复杂查询或存储程序时，可以使用在执行过程中自动收集信息的工具。从 sys 架构中执行的选项是过程。
 
@@ -1737,7 +1750,7 @@ Query OK, 0 rows affected (0.0316 sec)
 
 另可以帮助您分析查询的 sys 架构过程是过程。
 
-### 使用ps_trace_statement_digest() 程序进行分析
+### 使用ps_trace_statement_digest( ) 程序进行分析
 
 作为使用性能架构分析查询一个示例，将演示架构中的过程。它需要一个摘要，然后监视与该摘要的语句相关的事件。分析结果包括汇总数据以及详细信息，如运行时间最长的查询的查询计划。
 
@@ -1782,7 +1795,7 @@ Query OK, 0 rows affected (0.0004 sec)
 mysql> CALL sys.ps_trace_statement_digest(@digest, 60, 0.5, TRUE, TRUE);
 
 +-------------------+
-| summary |
+| summary           |
 +-------------------+
 | Disabled 1 thread |
 +-------------------+
@@ -1805,24 +1818,24 @@ examined | tmp_tables | full_scans |
 ------+------------+------------+
 1 row in set (1 min 0.0861 sec)
 +--------------------------------------+-------+-----------+
-| event_name | count | latency |
+| event_name                           | count | latency   |
 +--------------------------------------+-------+-----------+
-| Sending data | 13 | 2.99 ms |
-| freeing items | 13 | 2.02 ms |
-| statistics | 13 | 675.37 us |
-| Opening tables | 13 | 401.50 us |
-| preparing | 13 | 100.28 us |
-| optimizing | 13 | 66.37 us |
-| waiting for handler commit | 13 | 64.18 us |
-| closing tables | 13 | 54.70 us |
-| System lock | 13 | 54.34 us |
-| cleaning up | 26 | 45.22 us |
-| init | 13 | 29.54 us |
-| checking permissions | 13 | 23.34 us |
-| end | 13 | 10.21 us |
-| query end | 13 | 8.02 us |
-| executing | 13 | 4.01 us |
-| Executing hook on transaction begin. | 13 | 3.65 us |
+| Sending data                         | 13    | 2.99 ms   |
+| freeing items                        | 13    | 2.02 ms   |
+| statistics                           | 13    | 675.37 us |
+| Opening tables                       | 13    | 401.50 us |
+| preparing                            | 13    | 100.28 us |
+| optimizing                           | 13    | 66.37 us  |
+| waiting for handler commit           | 13    | 64.18 us  | 
+| closing tables                       | 13    | 54.70 us  |
+| System lock                          | 13    | 54.34 us  |
+| cleaning up                          | 26    | 45.22 us  |
+| init                                 | 13    | 29.54 us  |
+| checking permissions                 | 13    | 23.34 us  |
+| end                                  | 13    | 10.21 us  |
+| query end                            | 13    | 8.02 us   |
+| executing                            | 13    | 4.01 us   |
+| Executing hook on transaction begin. | 13    | 3.65 us   |
 +--------------------------------------+-------+-----------+
 16 rows in set (1 min 0.0861 sec)
 +---------------------------+
@@ -1843,31 +1856,31 @@ examined | tmp_tables | full_scan |
 -----+------------+-----------+
 1 row in set (1 min 0.0861 sec)
 +----------------------------------------------------+
-| sql_text |
+| sql_text                                           |
 +----------------------------------------------------+
 | SELECT * FROM world.city WHERE CountryCode = 'USA' |
 +----------------------------------------------------+
 1 row in set (59.91 sec)
 +--------------------------------------+-----------+
-| event_name | latency |
+| event_name                           | latency   |
 +--------------------------------------+-----------+
 | Executing hook on transaction begin. | 364.67 ns |
-| cleaning up | 3.28 us |
-| checking permissions | 1.46 us |
-| Opening tables | 27.72 us |
-| init | 2.19 us |
-| System lock | 4.01 us |
-| optimizing | 5.11 us |
-| statistics | 46.68 us |
-| preparing | 7.66 us |
-| executing | 364.67 ns |
-| Sending data | 528.41 us |
-| end | 729.34 ns |
-| query end | 729.34 ns |
-| waiting for handler commit | 4.38 us |
-| closing tables | 16.77 us |
-| freeing items | 391.29 us |
-| cleaning up | 364.67 ns |
+| cleaning up                          | 3.28 us   |
+| checking permissions                 | 1.46 us   |
+| Opening tables                       | 27.72 us  |
+| init                                 | 2.19 us   |
+| System lock                          | 4.01 us   |
+| optimizing                           | 5.11 us   |
+| statistics                           | 46.68 us  |
+| preparing                            | 7.66 us   |
+| executing                            | 364.67 ns |
+| Sending data                         | 528.41 us |
+| end                                  | 729.34 ns |
+| query end                            | 729.34 ns |
+| waiting for handler commit           | 4.38 us   |
+| closing tables                       | 16.77 us  |
+| freeing items                        | 391.29 us |
+| cleaning up                          | 364.67 ns |
 +--------------------------------------+-----------+
 17 rows in set (1 min 0.0861 sec)
 +--------------------------------------------------+

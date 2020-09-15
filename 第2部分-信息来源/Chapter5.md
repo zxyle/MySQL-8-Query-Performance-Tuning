@@ -102,8 +102,6 @@ mysql> SELECT THREAD_ID AS TID,
 49 rows in set (0.0615 sec)
 ```
 
-
-
 TID 列是每个线程的 THREAD_ID，THREAD_NAME 列包括线程名称的最后两个组件（第一个组件是所有线程的线程），B 列具有背景线程的星号，PID 列具有前台线程的进程列表 ID。
 
 ------
@@ -172,8 +170,6 @@ PROCESSLIST_COMMAND: Query
  RESOURCE_GROUP: SYS_default
 1 row in set (0.0005 sec)
 ```
-
-
 
 有几个列在性能调优的上下文中提供有用的信息，将在后几章中使用。值得注意的是，这里是他们的名字以PROCESSLIST_。这些等效于 SHOW ProcessLIST 返回的信息，但查询线程表对连接的影响较小。"仪器"和"历史记录"列指定是否为线程收集检测数据，以及是否为线程保留事件历史记录。您可以更新这两列以更改线程的行为，也可以根据 setup_threadstable 中的线程类型或使用 setup_actors 表定义线程的默认行为。这就引出了一个问题，什么是工具和事件。接下来的三节将讨论这一点，以及如何消耗这些仪器。
 
@@ -378,7 +374,7 @@ SELECT FORMAT_PICO_TIME(111577500000);
 1 row in set (0.0004 sec)
 ```
 
-该函数已添加到 MySQL 8.0.16 中。在较早的版本中，您需要使用thesys.format_time（） 函数。
+该函数已添加到 MySQL 8.0.16 中。在较早的版本中，您需要使用thesys.format_time( ) 函数。
 
 ## 演员和对象
 
@@ -419,7 +415,7 @@ Digest: 26b06a0b2f651e04e61751c55f84d0d721d31041ea57cef5998bc475ab9ef773
 
 ------
 
-**注意：在升级 MySQL 时，不能保证给定查询的摘要保持不变。这意味着您不应比较不同 MySQL 版本摘要。**
+**注意**：在升级 MySQL 时，不能保证给定查询的摘要保持不变。这意味着您不应比较不同 MySQL 版本摘要。
 
 ------
 
@@ -453,8 +449,6 @@ Query OK, 1 row affected (0.2674 sec)
 
 Rows matched: 1 Changed: 1 Warnings: 0
 ```
-
-
 
 重新启动MySQL时，此配置不是永久性的，因此，如果在没有配置选项的情况下要更改这些表的配置，请将所需的SQL语句添加到初始化文件中，并通过init_file选项执行它。
 

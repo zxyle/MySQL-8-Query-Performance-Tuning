@@ -411,8 +411,8 @@ mysql> SELECT blocking_pid, COUNT(*)
 +--------------+----------+
 | blocking_pid | COUNT(*) |
 +--------------+----------+
-| 9 | 2 |
-| 7090 | 1 |
+| 9            | 2        |
+| 7090         | 1        |
 +--------------+----------+
 2 rows in set (0.0028 sec)
 ```
@@ -515,15 +515,15 @@ mysql> SELECT ATTR_NAME, ATTR_VALUE
  FROM performance_schema.session_connect_attrs
  WHERE PROCESSLIST_ID = 9;
 +-----------------+------------+
-| ATTR_NAME | ATTR_VALUE |
+| ATTR_NAME       | ATTR_VALUE |
 +-----------------+------------+
-| _pid | 23256 |
-| program_name | mysqlsh |
-| _client_name | libmysql |
-| _thread | 20164 |
-| _client_version | 8.0.18 |
-| _os | Win64 |
-| _platform | x86_64 |
+| _pid            | 23256      |
+| program_name    | mysqlsh    |
+| _client_name    | libmysql   |
+| _thread         | 20164      |
+| _client_version | 8.0.18     |
+| _os             | Win64      |
+| _platform       | x86_64     |
 +-----------------+------------+
 7 rows in set (0.0006 sec)
 ```
@@ -537,7 +537,7 @@ mysql> SELECT ATTR_NAME, ATTR_VALUE
 ```
 mysql> SELECT FORMAT_PICO_TIME(5749876163371648) AS Age;
 +--------+
-| Age |
+| Age    |
 +--------+
 | 1.60 h |
 +--------+
@@ -735,7 +735,7 @@ sql_kill_blocking_connection: KILL 9
 
 防止重大的记录级锁争用主要遵循第 18 章"减少锁定问题"一节。为了重新概括讨论，减少用的方法主要是减少事务的大小和持续时间，使用索引来减少访问的记录数，并可能将事务隔离级别切换到以更早地释放锁并减少间隙锁的数量。
 
-## 僵局
+## 死锁
 
 导致数据库管理员最关心的问题之一是死锁。这部分是因为名称，部分原因是它们不同于讨论的其他锁问题总是会导致错误。但是，与其他锁定问题相比，对于死锁问题没有什么特别担心的。相反，它们会导致错误，这意味着您更快地了解它们，并且锁问题自行解决。
 
@@ -988,9 +988,9 @@ mysql> SELECT *
  ORDER BY CountryCode, ID
  LIMIT 1;
 +------+------+-------------+----------+------------+
-| ID | Name | CountryCode | District | Population |
+| ID   | Name | CountryCode | District | Population |
 +------+------+-------------+----------+------------+
-| 1523 | Wien | AUT | Wien | 1608144 |
+| 1523 | Wien | AUT         | Wien     | 1608144    |
 +------+------+-------------+----------+------------+
 1 row in set (0.0006 sec)
 ```

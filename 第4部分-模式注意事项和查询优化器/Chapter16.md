@@ -89,8 +89,6 @@ MySQL 支持多达 1024 个存储桶。存储桶的量桶越多，每个存储�
 
 在图中，前面的暗列是每个存储桶中值的频率。频率是具有该值的行的百分比。在后台（颜色更亮的列）是累积频率，其值与存储桶 0 的计数列相同，然后逐渐增加，直到存储桶 7 达到 100。什么是累积频率？这是你应该理解的直方图的第二个概念。
 
-
-
 ### 累积频率
 
 存储桶的累积频率是当前存储桶和上一个存储桶中的行的百分比。如果您正在查看存储桶编号 3，并且累积频率为 50%，则 50% 的行适合存储桶 0、1、2 和 3。这使得优化器很容易确定具有直方图的列的选择性。
@@ -157,7 +155,7 @@ MySQL 8 中有两种类型的直方图。创建或更新直方图时，根据值
 
 为了演示单层和等高直方图，可以从 world.city 表创建 city_ 直方图表，其中包含基于八个国家/地区代码的城市子集。可以使用以下查询创建表：
 
-```
+```sql
 use world
 CREATE TABLE city_histogram LIKE city;
 INSERT INTO city_histogram
@@ -206,8 +204,6 @@ Msg_text: Histogram statistics created for column 'length'.
 1 row in set (0.0057 sec)
 ```
 
-
-
 或者，您可以在 ANALYZE 和关键字将语句写入二进制日志。 这与更新索引统计信息时的工作方式相同。
 
 当完成无错误的直方图创建将等于状态显示已创建直方图统计信息以及哪个列。如果发生错误，等于解释问题。 例如，如果尝试为不存在的列创建直方图，则错误将类似于此示例：
@@ -223,8 +219,6 @@ Msg_type: Error
 Msg_text: The column 'len' does not exist.
 1 row in set (0.0004 sec)
 ```
-
-
 
 还可以使用相同的语句更新同一表中多个列的直方图。例如，如果要更新表的长度评级列上的直方图，可以使用像清单。
 
@@ -245,8 +239,6 @@ Msg_type: status
 Msg_text: Histogram statistics created for column 'rating'.
 2 rows in set (0.0119 sec)
 ```
-
-
 
 您应该选择多少桶？如果唯一值少于 1024 个，建议有足够的存储桶来创建单位直方图（即，至少与唯一值一样多的存储桶）。如果选择比值更多的存储桶，MySQL 将只使用存储每个值的频率所需的存储桶。从这个意义上说，存储桶的数量应视为要使用的最大存储桶数。
 
@@ -282,8 +274,6 @@ Msg_type: status
 Msg_text: Histogram statistics removed for column 'rating'.
 2 rows in set (0.0120 sec)
 ```
-
-
 
 ANALYZE TABLE 语句类似于创建统计信息。您还可以在 ANALYZE 和，以避免将语句写入二进制日志。
 
@@ -370,8 +360,6 @@ Number_of_Buckets_Specified: 256
 1 row in set (0.0006 sec)
 ```
 
-
-
 该查询提供直方图的高级别视图。运算符从 JSON 文档中提取一个运算符另外取消引用提取的值，这些值在提取字符串时非常有用。例如，从示例输出中，您可以看到表中长度列直方图具有 140 个存储桶，但请求了 256 个存储桶。您还可以看到它是一个单位直这并不奇怪，因为并非所有请求的存储桶都使用。
 
 ### 列出单个直方图的所有信息
@@ -383,8 +371,6 @@ ANALYZE TABLE world.city_histogram
  UPDATE HISTOGRAM ON CountryCode
  WITH 4 BUCKETS;
 ```
-
-
 
 清单查询此直方图的数据。这与图讨论等直方图时使用的直方图相同。
 
@@ -434,8 +420,6 @@ Histogram: {
 1 row in set (0.0006 sec)
 ```
 
-
-
 此查询有几个有趣的事情。函数用于便于读取直方图信息。如果没有函数，整个文档将作为一行返回。
 
 另请注意，每个字符串的下上限作为 base64 编码字符串返回。这是为了确保字符串和二进制列中的任何值都可以由直方图处理。其他数据类型直接存储其值。
@@ -449,8 +433,6 @@ ANALYZE TABLE world.city_histogram
  UPDATE HISTOGRAM ON CountryCode
  WITH 8 BUCKETS;
 ```
-
-
 
 这与图中讨论单例直方图时用于示例的直方图相同。清单显示了对单例直方图进行此项工作的示例。
 
@@ -519,8 +501,6 @@ Cumulative_Frequency: 100
 8 rows in set (0.0008 sec)
 ```
 
-
-
 查询将 JSON 上的视图，将 JSON 文档转换为 SQL 表。函数采用两个参数，其中第一个参数是 JSON 文档，第二个参数是值的路径，以及生成的表的列定义。列定义包括为每个存储桶创建的三列：
 
 - 此列具有子句，它使它成为一个基于 1 的自动增量计数器，因此可以通过减去 1 来用于存储桶编号。
@@ -540,8 +520,6 @@ ANALYZE TABLE world.city_histogram
  UPDATE HISTOGRAM ON CountryCode
  WITH 4 BUCKETS;
 ```
-
-
 
 清单显示了在具有四个存储桶的代码存储桶信息的示例。
 
@@ -603,8 +581,6 @@ Cumulative_Frequency: 100
 4 rows in set (0.0011 sec)
 ```
 
-
-
 现在，您有一些工具来检查直方图数据，剩下的就是展示直方图如何更改查询计划的示例。
 
 ## 查询示例
@@ -624,8 +600,6 @@ SELECT film_id, title, length,
  WHERE length < 55 AND first_name = 'Elvis'
  GROUP BY film_id;
 ```
-
-
 
 标题和列来自和 如果GROUP_CONCAT猫王，使用"第三个函数。（此查询的替代方法是使用但这样，查询结果中包含了名称为 Elvis 的演员的全名。
 

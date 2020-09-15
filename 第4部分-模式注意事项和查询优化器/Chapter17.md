@@ -22,8 +22,6 @@ SELECT *
  WHERE city.CountryCode = 'AUS';
 ```
 
-
-
 此查询有两个条件：/地区代码"列必须等于"AUS"，代码"列/地区表的列。从这两个条件，可以得出，列还必须等于"AUS"。优化器使用此知识直接筛选国家/地区表。由于"列是国家，这意味着优化器知道只有一行匹配条件，并且优化器可以将视为常量。实际上，查询最终以国家/地区表中的列作为常量在选择列表中执行，并扫描城市表中的条目，使用国家/地区代码=
 
 ```sql
@@ -67,8 +65,6 @@ SELECT *
  WHERE CountryCode = 'IND';
 ```
 
-
-
 在"国家代码"列上具有辅助一索引，从表定义中可以看到：
 
 ```sql
@@ -89,8 +85,6 @@ Create Table: CREATE TABLE `city` (
 COLLATE=utf8mb4_0900_ai_ci
 1 row in set (0.0008 sec)
 ```
-
-
 
 优化器可以选择两种方式来获取匹配的行。一种方法就是使用国家代码上的索引中的匹配行，然后查找请求的行值。另一种方式是执行完整的表扫描并检查每行以确定它是否满足筛选器条件。
 
@@ -155,8 +149,6 @@ SELECT *
  INNER JOIN world.city
  ON CountryCode = Code;
 ```
-
-
 
 图显示了查询的可视化解释图，包括城市表详细信息。
 
@@ -266,8 +258,6 @@ SELECT *
  ON city.CountryCode = country.Code;
 ```
 
-
-
 为了在 Mysql 中执行， 您可以使用国家联盟城市和国家喜欢
 
 ```sql
@@ -281,8 +271,6 @@ SELECT *
  RIGHT OUTER JOIN world.city
  ON city.CountryCode = country.Code;
 ```
-
-
 
 另个限制是嵌套循环联接对于无法使用索引的联接不是很有效。由于嵌套循环一次从联接中的第一个表连接一行，因此需要对第一个表中的每一行进行第二个表的完整扫描。这很快就会变得过于昂贵。考虑较早一点检查的查询，其中发现亚洲所有城市：
 
@@ -302,8 +290,6 @@ SELECT CountryCode, country.Name AS Country,
  WHERE Continent = 'Asia';
 ```
 
-
-
 通过国家/地区表（239 行）上的表扫描和城市表上的索引查找，将检查总共 2005 行（在第二个连接中执行此查询）：
 
 ```sql
@@ -318,8 +304,6 @@ rows_examined: 2005
 1 row in set (0.0539 sec)
 ```
 
-
-
 thd_id 上的需要匹配执行查询的连接的性能架构线程 ID（这可以在 MySQL 8.0.16 及更晚的函数中找到）。2005年检查的行来自检查国家表中的239行，进行完整的表格扫描，然后阅读亚洲国家城市的1766行。
 
 如果 MySQL 不能对联接使用索引，则查询性能将发生巨大变化。您可以使用嵌套循环联接执行查询，而无需以以下方式使用注释是优化器提示）：
@@ -333,8 +317,6 @@ SELECT /*+ NO_BNL(city) */
  ON city.CountryCode = country.Code
  WHERE Continent = 'Asia';
 ```
-
-
 
 忽略 子句是一个索引提示，它告诉 MySQL 忽略括号之间给出的索引。此版本的查询统计信息显示，现在检查超过 200，000 行，并且查询的执行时间比之前长大约十倍（执行此测试的方式与上一个查询相同，其中查询查找亚洲城市在一个连接中执行，中执行 thd_id = 更改为使用第一个连接的线程 ID）：
 
@@ -374,8 +356,6 @@ SELECT /*+ NO_HASH_JOIN(country,city) */
  WHERE Continent = 'Asia';
 ```
 
-
-
 在 MySQL 8.0.17 及更早版本中器提示删除注释。
 
 清单显示了使用Python样代码的块嵌套循环算法的伪代码实现。
@@ -404,8 +384,6 @@ if len(join_buffer) > 0:
  join_buffer = []
 ```
 
-
-
 列表表示存储联接所需的列的联接缓冲区。在伪代码中，使用。对于用作示例的查询，只需要地区表中"列。这是需要注意的一件重要的事情，不久将进一步讨论。当联接缓冲区已满时，将在城市表上执行扫描;如果城市表的"国家列与联接缓冲区中之一匹配，则构造结果行。
 
 图显示了表示联接的。为简单起见，即使对两个表执行完整表扫描，也只包含联接所需的行的主要键值。
@@ -427,8 +405,6 @@ Figure 17-3. An example of a block nested loop join
  WHERE Continent = 'Asia';
 ```
 
-
-
 然后在另一个连接中获取检查的行数和查询延迟以使用第一个连接的线程 ID）：
 
 ```sql
@@ -442,8 +418,6 @@ rows_examined: 4318
  latency: 16.87 ms
 1 row in set (0.0490 sec)s
 ```
-
-
 
 结果假定为 join_buffer_size的默认值。统计数据显示，块嵌套循环的性能明显优于嵌套循环算法，而无需使用索引。相比之下，使用索引执行查询检查了 2005 行，并测量了大约 4 ms，而使用不带索引的嵌套循环联接检查了 208268 行，并且大约需要 45 ms。这看起来与查询执行时间不相干，但国家表都很小。对于大型表，差异将非线性增长，可能意味着查询完成和似乎永远运行之间的差异。
 
@@ -524,8 +498,6 @@ SELECT CountryCode, country.Name AS Country,
  WHERE Continent = 'Asia';
 ```
 
-
-
 执行此联接的伪代码与块嵌套循环的伪代码类似，只不过联接所需的列已散列，并且支持溢出到磁盘。伪在清单。
 
 ```python
@@ -566,8 +538,6 @@ else:
  join_buffer = []
 ```
 
-
-
 伪代码从国家/地区表开始，并计算值，并存储在联接缓冲区中。如果缓冲区已满，则代码将切换到磁盘上算法，并从缓冲区中写出哈希。这也是确定分区数的地方。在此之后，将散/地区表的其余部分。
 
 下一部分，对于内存中算法，在城市表中的行，将哈希值与缓冲区中的哈希值进行比较。对于计算城市表的值并存储在磁盘上;然后一个处理分区。
@@ -591,8 +561,6 @@ SELECT CountryCode, country.Name AS Country,
  WHERE Continent = 'Asia';
 ```
 
-
-
 Then you can look at the Performance Schema statistics for the query by querying the sys.session view in a second connection (change thd_id = 30 to use the thread id of the first connection):
 
 ```
@@ -605,8 +573,6 @@ rows_examined: 4318
  latency: 3.53 ms
 1 row in set (0.0467 sec)
 ```
-
-
 
 您可以看到查询执行得非常好，哈希联接检查的行数与块嵌套循环相同，但它比索引联接快。这不是一个错误：在某些情况下，哈希联接甚至可能优于索引联接。可以使用以下规则来估计哈希联接算法与索引和块嵌套循环联接相比的性能：
 
@@ -658,8 +624,6 @@ CREATE TABLE `payment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 ```
 
-
-
 默认值、自动增量信息和外键定义已从表中删除，以专注于列和索引。该表有四个索引，全部在单个列上，这使得它成为索引合并优化的一个很好的候选项。
 
 索引合并讨论的其余部分将经历每个索引合并算法以及性能注意事项以及如何配置索引合并的使用。这些示例都只包括两列的条件，但算法确实支持涉及更多列的索引合并。
@@ -678,8 +642,6 @@ SELECT *
  WHERE payment_id > 10
  AND customer_id = 318;
 ```
-
-
 
 第一个查询在两个辅助索引上具有相等条件，第二个查询在主键上具有范围条件，在辅助索引上具有相等条件。索引合并优化与第二个查询独占地使用 InnoDB 表。清单显示了使用两种不同格式的两个查询中的第一个的输出。
 
@@ -717,8 +679,6 @@ fk_staff_id) (cost=14.48 rows=20)
 1 row in set (0.0004 sec)
 ```
 
-
-
 请注意中的"使用相交（...）"消息，以及树格式输出中的索引范围扫描。 这表明索引索引的索引。 传统输出还包括键列中的两个并在"字符串"列中提供长度。
 
 #### 联合算法
@@ -735,8 +695,6 @@ SELECT *
  WHERE payment_id > 15000
  OR customer_id = 318;
 ```
-
-
 
 第一个查询在辅助索引上具有两个相等条件，而第二个查询在主键上具有范围条件，在辅助索引上具有相等条件。第二个查询将仅对 InnoDB 表使用索引合并。清单显示了第一个查询的相应 EXPLAIN 输出的示例。
 
@@ -774,8 +732,6 @@ customer_id) (cost=2236.18 rows=8069)
 1 row in set (0.0010 sec)
 ```
 
-
-
 请注意中的"使用（..."）和树格式输出中的索引范围扫描。这表明索引索引的索引。
 
 #### 排序联合算法
@@ -792,8 +748,6 @@ SELECT *
  WHERE customer_id < 30
  OR rental_id > 16000;
 ```
-
-
 
 两个查询在两个辅助索引上都有范围条件。清单第一个查询的传统和树格式的相应 EXPLAIN 输出。
 
@@ -831,8 +785,6 @@ payment_rental) (cost=1040.52 rows=826)
 1 row in set (0.0005 sec)
 ```
 
-
-
 请注意在"sort_union（...）格式输出中的索引范围扫描使用这表明索引索引的索引。
 
 #### 性能注意事项
@@ -868,8 +820,6 @@ SELECT /*+ NO_INDEX_MERGE(
  WHERE staff_id = 1
  AND customer_id = 75;
 ```
-
-
 
 由于索引合并被视为范围优化的特殊情况优化器提示也会禁用索引合并。可以使用 EXPLAIN 输出确认合并不再使用，如清单。
 
@@ -907,8 +857,6 @@ EXPLAIN: -> Filter: (sakila.payment.staff_id = 1) (cost=26.98 rows=21)
 id=75) (cost=26.98 rows=41)
 1 row in set (0.0006 sec)
 ```
-
-
 
 另一个优化是多范围读取。
 
@@ -950,8 +898,6 @@ possible_keys: CountryCode
 1 row in set, 1 warning (0.0006 sec)
 ```
 
-
-
 有必要使用优化器提示显式请求使用读取优化，或者禁用 mrr_cost_based 优化器切换，因为示例查询的估计行数太小，不能将多范围读取优化与基于成本的优化一起使用来选择它。
 
 使用优化时使用随机读取缓冲区来存储索引。缓冲区的大小使用"read_rnd_buffer_size"。
@@ -973,8 +919,6 @@ SET SESSION
  optimizer_switch
  = 'mrr=on,mrr_cost_based=off,batched_key_access=on';
 ```
-
-
 
 当优化已启用此方式时，您还可以使用 优化器提示来影响是否应使用优化。使用时，传统 EXPLAIN中的列批处理密钥访问），在 JSON字段设置为。清单显示了使用批处理访问时的完整 EXPLAIN 输出的示例。
 
@@ -1015,8 +959,6 @@ possible_keys: CountryCode
  Extra: Using join buffer (Batched Key Access)
 2 rows in set, 1 warning (0.0007 sec)
 ```
-
-
 
 在此示例中，使用"国家代码索引在城市表上的联接器提示访问。
 
@@ -1196,8 +1138,6 @@ mysql> FLUSH OPTIMIZER_COSTS;
 Query OK, 0 rows affected (0.0877 sec)
 ```
 
-
-
 如果要更改成本值，建议将值大约翻倍或一半，并评估效果。由于引擎成本是全局的，因此应确保在更改个良好的监视基线，并在更改后比较查询性能，以检测更改是否具有预期效果。
 
 MySQL 还具有一些更通用的服务器成本，可用于影响与查询相关的各种操作。
@@ -1242,8 +1182,6 @@ mysql> FLUSH OPTIMIZER_COSTS;
 Query OK, 0 rows affected (0.1057 sec)
 ```
 
-
-
 更改成本可能并不总是影响查询计划，因为优化器可能别无选择，只能使用给定的查询计划，或者计算的成本是如此不同，因此更改服务器成本以影响查询计划可能会对其他查询产生太大的影响。请记住，所有连接的服务器成本都是全局的，因此只有在存在系统问题时，才应更改成本。如果问题只影响几个查询，最好使用优化器提示来影响查询计划。
 
 影响查询计划的另一个选项是优化器开关。
@@ -1259,8 +1197,6 @@ mysql> SET SESSION optimizer_switch = 'derived_merge=off';
 Query OK, 0 rows affected (0.0003 sec)
 ```
 
-
-
 如果要永久更改该值，可以使用"或方式使用：
 
 ```
@@ -1268,16 +1204,12 @@ mysql> SET PERSIST optimizer_switch = 'derived_merge=off';
 Query OK, 0 rows affected (0.0431 sec)
 ```
 
-
-
 如果您希望将值存储在 MySQL 配置文件中，则同样适用，例如：
 
 ```
 [mysqld]
 optimizer_switch = "derived_merge=off"
 ```
-
-
 
 表列出了截至 MySQL 8.0.18 可用的优化器交换机及其默认值以及交换机操作的简要摘要。优化器开关按它们在"自动"选项中排序。
 
@@ -1322,8 +1254,6 @@ SELECT /*+ MAX_EXECUTION_TIME(2000) */
  FROM world.city
  WHERE CountryCode = 'AUS';
 ```
-
-
 
 本示例将查询的最大执行时间设置为 2000 毫秒。
 
@@ -1382,8 +1312,6 @@ SELECT /*+ NO_INDEX_MERGE(@payment payment) */
  );
 ```
 
-
-
 该示例将 IN 条件中的查询块为。然后在顶层引用此块名称，以禁用付款查询块中的索引合并功能。当您使用这种查询块名称时，提示中列出的所有表都必须来自同一个查询块。指定查询块的替代表示法是在表名之后添加它，例如：
 
 ```
@@ -1397,8 +1325,6 @@ SELECT /*+ NO_INDEX_MERGE(payment@payment) */
  WHERE staff_id = 1 AND customer_id = 75
  );
 ```
-
-
 
 这与上一示例中的相同，但它的优点是，您可以将一个提示用于不同查询块中的表。
 
@@ -1414,8 +1340,6 @@ SELECT /*+ SET_VAR(join_buffer_size = 1048576)
  ON city.CountryCode = country.Code
  WHERE Continent = 'Asia';
 ```
-
-
 
 从示例中需要注意几点。首先提示不支持在同一提示中设置两个选项，因此您需要为每个选项指定一次提示。其次，不支持表达式或单位，因此对于需要直接以字节形式提供值。
 
@@ -1442,8 +1366,6 @@ SELECT ci.CountryCode, co.Name AS Country,
  WHERE co.Continent = 'Asia';
 ```
 
-
-
 请注意主键如何。在示例中，索引提示应用于可以使用表索引的所有操作。可以通过添加 FOR JOIN、"按顺序"或"组 BY"来限制范围以联接、分组，例如：
 
 ```
@@ -1452,8 +1374,6 @@ SELECT *
  WHERE CountryCode = 'AUS'
  ORDER BY ID;
 ```
-
-
 
 虽然在大多数情况下最好限制索引提示的使用以便优化器可以随着索引和数据的变化而自由更改查询计划，但索引提示是可用的功能最强大的工具之一，您不应回避在需要时使用它们。
 
@@ -1509,8 +1429,6 @@ RESOURCE_GROUP_ENABLED: 1
  THREAD_PRIORITY: 0
 2 rows in set (0.0007 sec)
 ```
-
-
 
 默认情况下有两个资源组连接的优先级组和线程的一个资源组。两个组配置相同，允许使用所有 CPU。这两个组既不能删除也不能修改。但是，您可以创建自己的资源组。
 

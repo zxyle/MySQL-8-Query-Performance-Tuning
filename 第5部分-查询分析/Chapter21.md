@@ -313,23 +313,23 @@ mysql> SELECT Variable_name AS Name,
  FROM sys.metrics
  WHERE Type = 'InnoDB Metrics - transaction';
 +---------------------------+-------+---------+
-| Name | Value | Enabled |
+| Name                      | Value | Enabled |
 +---------------------------+-------+---------+
-| trx_active_transactions | 0 | NO |
-| trx_commits_insert_update | 0 | NO |
-| trx_nl_ro_commits | 0 | NO |
-| trx_on_log_no_waits | 0 | NO |
-| trx_on_log_wait_loops | 0 | NO |
-| trx_on_log_waits | 0 | NO |
-| trx_ro_commits | 0 | NO |
-| trx_rollback_active | 0 | NO |
-| trx_rollbacks | 0 | NO |
-| trx_rollbacks_savepoint | 0 | NO |
-| trx_rseg_current_size | 0 | NO |
-| trx_rseg_history_len | 45 | YES |
-| trx_rw_commits | 0 | NO |
-| trx_undo_slots_cached | 0 | NO |
-| trx_undo_slots_used | 0 | NO |
+| trx_active_transactions   | 0     | NO      |
+| trx_commits_insert_update | 0     | NO      |
+| trx_nl_ro_commits         | 0     | NO      |
+| trx_on_log_no_waits       | 0     | NO      |
+| trx_on_log_wait_loops     | 0     | NO      |
+| trx_on_log_waits          | 0     | NO      |
+| trx_ro_commits            | 0     | NO      |
+| trx_rollback_active       | 0     | NO      |
+| trx_rollbacks             | 0     | NO      |
+| trx_rollbacks_savepoint   | 0     | NO      |
+| trx_rseg_current_size     | 0     | NO      |
+| trx_rseg_history_len      | 45    | YES     |
+| trx_rw_commits            | 0     | NO      |
+| trx_undo_slots_cached     | 0     | NO      |
+| trx_undo_slots_used       | 0     | NO      |
 +---------------------------+-------+---------+
 15 rows in set (0.0152 sec)
 ```

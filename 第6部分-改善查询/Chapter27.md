@@ -22,11 +22,11 @@
 
 接下来的三节将介绍更具体的缓存示例，从在MySQL中实现自己的缓存开始。
 
-## Caching Inside MySQL
+## 在MySQL内部缓存
 
 在MySQL内部，实现缓存的合理位置。 如果将缓存的数据与其他表一起使用，这将特别有用。 不利之处在于，它仍然需要从应用程序到数据库的往返查询数据，并且还需要执行查询。 本节介绍了两种在MySQL中缓存数据的方式：缓存表和直方图统计信息。
 
-### Cache Tables
+### 缓存表
 
 缓存表可用于预先计算数据，例如报告或仪表板。它对于经常需要的复杂聚合很有用。
 
@@ -65,7 +65,7 @@ CREATE TABLE message_status_history (
 
 您可以考虑缓存的另一种情况是直方图统计信息。
 
-### Histogram Statistics
+### 直方图统计
 
 回顾一下第16章，直方图统计信息是如何统计列中每个值遇到频率的频率。 您可以利用此优势，并将直方图统计信息用作缓存。 如果该列最多包含1024个唯一值，这是最有用的，因为这是支持的最大存储桶数，因此1024个是可与单身直方图一起使用的最大值数。
 
@@ -277,7 +277,7 @@ shell$ kill -s SIGTERM $(pidof memcached)
 
 如本例中所示，直接使用Memcached的优点是您可以拥有一个守护程序池，并且可以在应用程序附近运行该守护程序，甚至可以在与应用程序相同的主机上运行该守护程序。 缺点是您必须自己维护缓存。 一种替代方法是使用MySQL提供的memcached插件，该插件将为您管理缓存，甚至自动将写入持久保存到缓存中。
 
-### MySQL InnoDB Memcached Plugin
+### MySQL InnoDB Memcache插件
 
 InnoDB Memcached插件是在MySQL 5.6中引入的，它是一种访问InnoDB数据的方式，而无需解析SQL语句。该插件的主要用途是让InnoDB通过其缓冲池处理缓存，而仅将Memcached用作查询数据的机制。以这种方式使用插件的一些不错的功能是：对插件的写入将写入基础的InnoDB表，数据始终是最新的，并且您可以同时使用SQL和Memcached来访问数据。
 
@@ -445,7 +445,7 @@ ProxySQL项目由René Cannaò创建，是一个高级代理，支持负载平�
 
 ------
 
-注意ProxySQL仅在Linux上正式受支持。 有关包括受支持发行版的安装说明的完整文档，请参阅https://github.com/sysown/proxysql/wiki。
+**注意** ProxySQL仅在Linux上正式受支持。 有关包括受支持发行版的安装说明的完整文档，请参阅https://github.com/sysown/proxysql/wiki。
 
 ------
 
@@ -741,7 +741,7 @@ Query OK, 0 rows affected (0.00 sec)
 
 如果要使用ProxySQL，建议您查阅ProxySQL GitHub项目上的Wiki，网址为https://github.com/sysown/proxysql/wiki。
 
-## Caching Tips
+## 缓存技巧
 
 如果您决定为MySQL实例实施缓存，则需要考虑一些事项。本节研究一些常规的缓存技巧。
 
