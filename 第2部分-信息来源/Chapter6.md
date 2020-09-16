@@ -12,8 +12,6 @@ sys schema适用于 MySQL Server 5.6 及更晚版本。在 MySQL 5.7 中，它�
 
 ------
 
-
-
 ## sys Schema配置
 
 sys 架构使用自己的配置系统，因为它最初是独立于 MySQL 服务器实现的。有两种方法可以更改配置，取决于是永久更改设置还是只更改会话设置。
@@ -62,7 +60,7 @@ set_time: 2019-07-13 19:19:29
 
 您可以通过更新配置设置来更新sys_config。这将保留更改并立即应用于所有连接，除非它们已设置自己的会话值（当使用设置语句的 sysschema 中的东西时，将隐式地发生）。由于sys_config是一个正常的 InnoDB 表，因此在重新启动 MySQL 后，更改也将保留。
 
-或者，您可以只更改会话的设置。这是通过使用配置变量的名称和预用系统完成的。并把它变成一个用户可变。清单 6-2 显示了使用 sys_config 表和用户变量来更改statement_truncate_len。结果使用 format_statement（） 函数进行测试，该函数是 sys 架构用于截断声明的函数。
+或者，您可以只更改会话的设置。这是通过使用配置变量的名称和预用系统完成的。并把它变成一个用户可变。清单 6-2 显示了使用 sys_config 表和用户变量来更改statement_truncate_len。结果使用 format_statement( )函数进行测试，该函数是 sys 架构用于截断声明的函数。
 
 ```
 Listing 6-2. Changing the sys schema configuration
@@ -107,15 +105,20 @@ format_statementt( ) 函数用于演示 @query 中的语句格式，首先默认
 
 format_statement( ) 函数并不是 sysschema 中的唯一格式函数，因此让我们来看看所有这些格式。
 
-
-
 ## Formatting Functions
 
 sys 架构包含四个函数，可帮助您格式化与性能架构不同的查询输出，使结果更易于阅读或占用更少的空间。由于添加了本机性能学函数以替换它们，因此在 MySQL 8.0.16 中已弃用其中两个函数。
 
-补充表6-1
+表6-1总结了这四个函数以及在format_time( )和format_bytes( )情况下将替换它们的新本机函数。
 
-清单 6-3 显示了使用格式化函数的示例，对于 format_bytes（） 和 format_time（），结果将比较本地性能学函数。
+| sys Schema Function  | Native Function     | 描述信息                                     |
+| -------------------- | ------------------- | -------------------------------------------- |
+| format_bytes( )      | FORMAT_BYTES( )     |                                              |
+| format_path( )       |                     |                                              |
+| format_ statement( ) |                     |                                              |
+| format_time( )       | FORMAT_PICO_TIME( ) | 将以皮秒为单位的时间转换为人类可读的字符串。 |
+
+清单 6-3 显示了使用格式化函数的示例，对于 format_bytes( )和 format_time( )，结果将比较本地性能学函数。
 
 ```
 Listing 6-3. Using the formatting functions
@@ -150,9 +153,15 @@ P_STime: 123.46 ms
 1 row in set (0.0006 sec)
 ```
 
-请注意，使用 sys.format_bytes（） 会触发警告（但只有第一次连接使用它），因为 sys 架构函数名与本机函数名称相同。"format_path）"函数希望在MicrosoftWindows上对路径名称进行反斜杠，在其他平台上向前斜杠。format_statement（） 函数的结果假定statement_truncate_len选项的值已重置为默认值 64。
+请注意，使用 sys.format_bytes( )会触发警告（但只有第一次连接使用它），因为 sys 架构函数名与本机函数名称相同。"format_path）"函数希望在MicrosoftWindows上对路径名称进行反斜杠，在其他平台上向前斜杠。format_statement( ) 函数的结果假定statement_truncate_len选项的值已重置为默认值 64。
 
-**提示 虽然 format_time（） 和 format_bytes（） 的 sys 架构实现仍然存在，但最好使用新的本机函数，因为系统架构实现可能会在将来的版本中被删除，并且本机函数的速度要快得多。**
+------
+
+**提示** 虽然 format_time（） 和 format_bytes（） 的 sys 架构实现仍然存在，但最好使用新的本机函数，因为系统架构实现可能会在将来的版本中被删除，并且本机函数的速度要快得多。
+
+------
+
+
 
 ## The Views
 
@@ -177,7 +186,7 @@ rows_full_scanned: 18
 2 rows in set (0.0021 sec)
 ```
 
-结果取决于已使用完整的表扫描的表。请注意，延迟的格式与 FORMAT_PICO_TIME（） 或 sys.format_time（） 函数一样。
+结果取决于已使用完整的表扫描的表。请注意，延迟的格式与 FORMAT_PICO_TIME( )或 sys.format_time( )函数一样。
 
 大多数系统架构视图以两种形式存在，其中一种具有语句、路径、字节值和设置格式的计时，另一种形式返回原始数据。如果在控制台上查询视图并自己查看数据，格式化视图非常有用，而未格式化的视图在需要处理程序或想要更改默认排序时会更好地工作。MySQL 工作台中的性能报告使用未格式化的视图，因此您可以在用户界面内更改顺序。
 
@@ -209,9 +218,26 @@ sys 架构提供了多种实用程序，可帮助您使用MySQL时。其中包�
 
 补充表6-2
 
+| Routine Name                   | Routine Type | Description                                                  |
+| ------------------------------ | ------------ | ------------------------------------------------------------ |
+| extract_schema_ from_file_name | Function     | 从每个表的InnoDB表空间文件的路径中提取模式名称。             |
+| extract_table_ from_file_name  | Function     | 从每个表的InnoDB表空间文件的路径中提取表名。                 |
+| list_add                       | Function     | 除非列表中已经存在元素，否则将其添加到列表中。 例如，这在需要更改SQL模式时很有用。 |
+| list_drop                      | Function     | 从列表中删除一个元素                                         |
+| quote_ identifier              | Function     | 用反引号（`）引用标识符（例如表名）。                        |
+| version_major                  | Function     | 返回您要查询的实例的主版本。 例如，对于8.0.18，它返回8。     |
+| version_minor                  | Function     | 返回您要查询的实例的次要版本。 例如，对于8.0.18，它返回0。   |
+| version_patch                  | Function     | 返回您要查询的实例的补丁程序发行版本。 例如，对于8.0.18，它返回18。 |
+| execute_ prepared_stmt         | Procedure    | 执行以字符串形式给出的查询。 使用准备好的语句执行查询，执行完成后，该过程将取消分配准备好的语句。 |
+| table_exists                   | Procedure    | 返回一个表是否存在，如果存在，则返回是基表，临时表还是视图。 |
+
 其中一些实用程序也在系统架构中内部使用。例程的最常规用途是存储的程序中，您需要动态处理数据和问题。
 
-提示 系统架构函数和过程以例程注释的形式提供内置帮助。您可以通过查询数据ROUTINE_COMMENTcolumn获取information_schema。常规视图。
+------
+
+**提示** sys模式功能和过程带有常规注释形式的内置帮助。 您可以通过查询information_schema.ROUTINES视图的ROUTINE_COMMENT列来获取帮助。
+
+------
 
 
 

@@ -20,20 +20,20 @@
 
 默认情况下，不会启用慢查询日志，并且启用日志时，默认只是记录直接在本地实例上执行的非管理查询，并且查询需要 10 秒以上才能执行。表 9-1 总结了用于微调此行为的配置选项。该信息包括默认值以及该选项是否在全局范围或会话范围中使用，或者两者同时使用。选项按字母顺序列出。
 
-| 选项/默认值/范围 | 描述 |
-| ---------------- | ---- |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
-|                  |      |
+| 选项/默认值/范围                                             | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| min_examined_row_limit Default: 0 Scope: Global, Session     | 启用后，会有更多信息，例如查询的Handler_％状态变量的值。 仅在登录文件时以及在MySQL 8.0.14和更高版本中才支持 |
+| log_output Default: FILE Scope: Global                       |                                                              |
+| log_queries_not_using_ indexes Default: OFF Scope: Global    |                                                              |
+| log_short_format Default: OFF Scope: Global                  |                                                              |
+| log_slow_admin_statements Default: OFF Scope: Global         |                                                              |
+| log_slow_extra Default: OFF Scope: Global                    |                                                              |
+| log_slow_slave_statements Default: OFF Scope: Global         |                                                              |
+| log_throttle_queries_not_ using_indexes Default: 0 Scope: Global |                                                              |
+| log_timestamps Default: UTC Scope: Global                    |                                                              |
+| long_query_time Default: 10 Scope: Global, Session           |                                                              |
+| slow_query_log Default: OFF Scope: Global                    |                                                              |
+| slow_query_log_file Default: -slow.log Scope: Global         |                                                              |
 
 建议将事件log_output默认值，然后按"slow_query_log_file"将事件slow_query_log_file。将慢速查询日志作为表获取可能看起来很有吸引力;但是，在这种情况下，数据被保存为逗号分隔值 （CSV），并且与表相对应的查询无法使用索引。还有一些功能，如log_slow_extra，不支持log_output + 表。
 

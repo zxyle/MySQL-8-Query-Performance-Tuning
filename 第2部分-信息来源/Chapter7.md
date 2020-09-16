@@ -49,8 +49,6 @@ privilege(s) for this operation
 
 ------
 
-
-
 ### 系统信息
 
  Information Schema中提供的最高级别信息与整个 MySQL 实例有关。这包括哪些字符集可用以及安装了哪些插件等信息。
@@ -325,8 +323,6 @@ Query OK, 0 rows affected (0.0004 sec)
 
 InnoDB度量标准还与全局状态变量和一些其他度量标准以及何时检索这些度量标准一起包含在sys.metrics视图中。
 其余的Information Schema视图包含有关特权的信息。
-
-
 
 ### Privilege Information
 
