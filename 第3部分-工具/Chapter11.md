@@ -2,11 +2,11 @@
 
 是 Oracle 用于查询和管理 MySQL 服务器的图形用户界面。它可以被看做是使用 MySQL 的两把瑞士军刀之一，另一把是 MySQL Shell下一章将讨论。
 
-MySQL 工作台的主要功能是可以执行查询的查询模式。 但是，还有其他一些功能，如性能报告、可视化解释、管理配置和检查架构的能力等。
+MySQL Workbench的主要功能是可以执行查询的查询模式。 但是，还有其他一些功能，如性能报告、可视化解释、管理配置和检查架构的能力等。
 
-如果将 MySQL 工作台与 MySQL 企业监视器进行比较，则 MySQL 企业监视器专用于监视，是一个服务器解决方案，而 MySQL 工作台是桌面解决方案，主要是用于使用 MySQL 服务器的客户端。同样，MySQL 工作台中包含的监视都是临时监视，而 MySQL 企业监视器作为服务器解决方案包含对存储历史数据的支持。
+如果将 MySQL Workbench与 MySQL 企业监视器进行比较，则 MySQL 企业监视器专用于监视，是一个服务器解决方案，而 MySQL Workbench是桌面解决方案，主要是用于使用 MySQL 服务器的客户端。同样，MySQL Workbench中包含的监视都是临时监视，而 MySQL 企业监视器作为服务器解决方案包含对存储历史数据的支持。
 
-本章将介绍 MySQL 工作台，并介绍安装、基本用法以及如何创建 EER 关系图。性能报告和可视化解释将在后几章中介绍。
+本章将介绍 MySQL Workbench，并介绍安装、基本用法以及如何创建 EER 关系图。性能报告和可视化解释将在后几章中介绍。
 
 ------
 
@@ -18,13 +18,13 @@ MySQL 工作台的主要功能是可以执行查询的查询模式。 但是，�
 
 ## 安装
 
-安装 MySQL 工作台的方式与其他 MySQL 程序相同，只是仅支持使用包管理器（因此没有独立安装）。MySQL 工作台版本号遵循 MySQL 服务器版本，因此 MySQL 工作台 8.0.18 与 MySQL 服务器 8.0.18 同时发布。MySQL 工作台版本支持发布时仍在维护的 MySQL 服务器版本，因此 MySQL 工作台 8.0.18 支持连接到 MySQL 服务器 5.6、5.7 和 8。
+安装 MySQL Workbench的方式与其他 MySQL 程序相同，只是仅支持使用包管理器（因此没有独立安装）。MySQL Workbench版本号遵循 MySQL 服务器版本，因此 MySQL Workbench 8.0.18 与 MySQL 服务器 8.0.18 同时发布。MySQL Workbench版本支持发布时仍在维护的 MySQL 服务器版本，因此 MySQL Workbench8.0.18 支持连接到 MySQL 服务器 5.6、5.7 和 8。
 
 本节将介绍如何在 Microsoft Windows、"企业 Linux 7"（Oracle Linux、红帽企业 Linux 和 CentOS）和 Ubuntu 19.10 上安装 MySQL 工作台的示例。其他 Linux 平台在概念上与两个 Linux 示例类似。
 
 ### 微软视窗
 
-在 Microsoft Windows 上，安装 MySQL 工作台的首选方式是将Windows。如果您安装了其他 MySQL 产品，您可能已经安装了 MySQL 安装程序，在这种情况下，您可以跳过这些说明的第一步，然后单击"，该屏幕将您带至图的点。
+在 Microsoft Windows 上，安装 MySQL Workbench的首选方式是将Windows。如果您安装了其他 MySQL 产品，您可能已经安装了 MySQL 安装程序，在这种情况下，您可以跳过这些说明的第一步，然后单击"，该屏幕将您带至图的点。
 
 你可以从 。图显示了下载部分。
 
