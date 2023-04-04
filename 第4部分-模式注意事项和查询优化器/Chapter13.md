@@ -131,7 +131,7 @@ MySQL中的数据类型可以视为以下类别之一的一部分：
 
 ------
 
-**提示** MySQL参考手册对https://dev.mysql.com/doc/refman/8.0/en/data-types.html中的数据类型及其引用进行了全面的讨论。
+**提示** MySQL参考手册对https://dev.mysql.com/doc/refman/8.0/en/data-types.html 中的数据类型及其引用进行了全面的讨论。
 
 ------
 
@@ -239,7 +239,7 @@ utf8mb4_0900_ai_ci排序规则是 utf8mb4 的通用排序规则。排序规则�
 
 ------
 
-**提示** 字符集和排序规则本身是一个庞大而有趣的主题。如果您想进一步深入探讨该主题，一个起点是本书作者的以下博客及其引用：https://mysql.wisborg.dk/mysql-8_charset。
+**提示** 字符集和排序规则本身是一个庞大而有趣的主题。如果您想进一步深入探讨该主题，一个起点是本书作者的以下博客及其引用：https://mysql.wisborg.dk/mysql-8_charset 。
 
 ------
 
