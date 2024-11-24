@@ -43,8 +43,8 @@ Performance Schema是与MySQL性能相关的诊断信息的主要来源。它最
 Listing 5-1. Threads in MySQL 8
 mysql> SELECT THREAD_ID AS TID,
  SUBSTRING_INDEX(NAME, '/', -2) AS THREAD_NAME,
- IF(TYPE = 'BACKGROUND', '*', ") AS B,
- IFNULL(PROCESSLIST_ID, ") AS PID
+ IF(TYPE = 'BACKGROUND', '*', '') AS B,
+ IFNULL(PROCESSLIST_ID, '') AS PID
  FROM performance_schema.threads;
 +-----+--------------------------------------+---+-----+
 | TID | THREAD_NAME                          | B | PID |
